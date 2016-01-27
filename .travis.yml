@@ -1,0 +1,12 @@
+language: c
+compiler:
+  - gcc
+  - clang
+os:
+  - linux
+  - osx
+
+script:
+  ./configure && make all examples check && make -C tests run_local
+
+sudo: false
