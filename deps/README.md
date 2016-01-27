@@ -1,4 +1,8 @@
 # QPHi/deps
+
 Third part libraries for QPHi.
+
 ------------------------------
-Note:rdkafka can be got from https://github.com/edenhill/librdkafka
+
+* `librdkafka` : [https://github.com/edenhill/librdkafka](https://github.com/edenhill/librdkafka)
+* `http-parser` : [https://github.com/nodejs/http-parser](https://github.com/nodejs/http-parser)
