@@ -1,0 +1,23 @@
+# .gitignore
+*~
+develop_src
+nbproject
+Makefile
+autosave
+*.a
+*.o
+*.so
+*.so.*
+.DS_Store
+moc_*.cpp
+ui_*.h
+qrc_*.cpp
+/.qmake.cache
+/.qmake.stash
+
+# qtcreator generated files
+*.pro.user*
+
+# Vim temporary files
+.*.swp
+*Demo

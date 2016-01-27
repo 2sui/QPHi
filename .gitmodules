@@ -1,0 +1,6 @@
+[submodule "deps/http-parser"]
+	path = deps/http-parser
+	url = https://github.com/nodejs/http-parser.git
+[submodule "deps/librdkafka"]
+	path = deps/librdkafka
+	url = https://github.com/edenhill/librdkafka.git
