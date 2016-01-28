@@ -16,12 +16,13 @@
 int 
 main(int argc, char** argv)
 {
-    bool is_server = false;
-    bool some_error = false;
     qp_socket_t        skt, client;
     qp_ulong_t         beg, end;
-    struct timeval     time;
+    struct timeval     ntime;
+    int                count;
     qp_uchar_t         buf[BUFSIZE];
+    bool is_server = false;
+    bool some_error = false;
     
     if (!(argc < 2 || strcmp(argv[1], "server"))) {
         is_server = true;
@@ -51,23 +52,58 @@ main(int argc, char** argv)
         }
         
         while (qp_socket_accept(&skt, &client)) {
+            end = 0;
+            gettimeofday(&ntime, NULL);
+            beg = ntime.tv_sec * 1000 + ntime.tv_usec / 1000;
+            INFO("Serv accept at %lu. sec:%lu, usec:%lu", beg, ntime.tv_sec, ntime.tv_usec);
             
             while (1) {
                 
-                if (0 > qp_socket_recv(&client, buf, BUFSIZE, 0)) {
+                /* test for Nagle */
+                if (1 > qp_socket_recv(&client, buf, BUFSIZE, 0)) {
                     break;
                 }
                 
-                gettimeofday(&beg, NULL);
-                INFO("Serv recv %l byte at %u.%u", client.socket.retsno, 
-                    beg.tv_sec, beg.tv_usec/1000);
+                gettimeofday(&ntime, NULL);
+                end = ntime.tv_sec * 1000 + ntime.tv_usec / 1000;
+                
+                INFO("Serv recv %ld byte at %lu, Nagle diff time: %lu.", \
+                    client.socket.retsno, end, end - beg);
+                
+                beg = end;
             }
             
             qp_socket_destroy(&client);
+            gettimeofday(&ntime, NULL);
+            beg = ntime.tv_sec * 1000 + ntime.tv_usec / 1000;
+            INFO("Serv peer close at %lu.", beg);
         }
         
     } else {
         
+        if (QP_SUCCESS == qp_socket_connect(&skt)) {
+            count = 10;
+            end = 0;
+            gettimeofday(&ntime, NULL);
+            beg = ntime.tv_sec * 1000 + ntime.tv_usec / 1000;
+            INFO("Client connect at %lu.", beg);
+            
+            while (count--) {
+                
+                if (1 > qp_socket_send(&skt, buf, 16, 0)) {
+                    break;
+                }
+                
+                gettimeofday(&ntime, NULL);
+                end = ntime.tv_sec * 1000 + ntime.tv_usec / 1000;
+                
+                INFO("Client send %ld byte at %lu, send diff time: %lu.", \
+                    skt.socket.retsno, end, (end - beg));
+                
+                beg = end;
+                
+            }
+        }
     }
     
     end:
