@@ -73,7 +73,7 @@ main(int argc, char** argv)
                  * the server will recv 16 byte for first time and recv 114 bytes 
                  * for the second, beacuse the first 16 bytes will be sent at once,
                  * and then the client wait for ACK, but the server will never 
-                 * send any data, so the client will never recv an ACK in 40 ~ 200ms,
+                 * send any data, so the client will never recv an ACK in 40~200ms,
                  * and wait for data number in buffer is MSS or close() is called.
                  * And fortunately, the close is called by client and the rest 
                  * 114 bytes is sent to server.
