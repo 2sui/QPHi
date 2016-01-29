@@ -8,7 +8,7 @@
 
 #include <qpCore.h>
 
-#define SERV_ADDR             "172.16.72.16"
+#define SERV_ADDR             "192.168.11.14"
 #define SERV_PORT             8000
 #define BUFSIZE               1024
 #define INFO(info...)         fprintf(stderr, "\n"info)
@@ -37,8 +37,7 @@ main(int argc, char** argv)
     
     if (is_server) {
         
-        if (QP_ERROR == qp_socket_set_reuse(&skt, QP_SOCKET_SO_REUSE_ADDR 
-            /* | QP_SOCKET_SO_REUSE_PORT*/)) 
+        if (QP_ERROR == qp_socket_set_reuse(&skt, QP_SOCKET_SO_REUSE_ADDR, 1)) 
         {
             some_error = true;
             INFO("Socket set reuse fail.");
@@ -56,6 +55,9 @@ main(int argc, char** argv)
             gettimeofday(&ntime, NULL);
             beg = ntime.tv_sec * 1000 + ntime.tv_usec / 1000;
             INFO("Serv accept at %lu. sec:%lu, usec:%lu", beg, ntime.tv_sec, ntime.tv_usec);
+            /* for disable Nagle */
+            qp_socket_set_nodelay(&client, 1);
+            qp_socket_set_quickack(&client, 1);
             
             while (1) {
                 
@@ -67,6 +69,15 @@ main(int argc, char** argv)
                 gettimeofday(&ntime, NULL);
                 end = ntime.tv_sec * 1000 + ntime.tv_usec / 1000;
                 
+                /* The client send 160 bytes in total , if Nagle is not disabled, 
+                 * the server will recv 16 byte for first time and recv 114 bytes 
+                 * for the second, beacuse the first 16 bytes will be sent at once,
+                 * and then the client wait for ACK, but the server will never 
+                 * send any data, so the client will never recv an ACK in 40 ~ 200ms,
+                 * and wait for data number in buffer is MSS or close() is called.
+                 * And fortunately, the close is called by client and the rest 
+                 * 114 bytes is sent to server.
+                 */
                 INFO("Serv recv %ld byte at %lu, Nagle diff time: %lu.", \
                     client.socket.retsno, end, end - beg);
                 
@@ -82,11 +93,15 @@ main(int argc, char** argv)
     } else {
         
         if (QP_SUCCESS == qp_socket_connect(&skt)) {
-            count = 10;
+            count = 21;
             end = 0;
             gettimeofday(&ntime, NULL);
             beg = ntime.tv_sec * 1000 + ntime.tv_usec / 1000;
             INFO("Client connect at %lu.", beg);
+            
+            /* for disable Nagle */
+            qp_socket_set_nodelay(&skt, 1);
+            qp_socket_set_quickack(&skt, 1);
             
             while (count--) {
                 
@@ -101,6 +116,10 @@ main(int argc, char** argv)
                     skt.socket.retsno, end, (end - beg));
                 
                 beg = end;
+                
+                if (!(count % 3)) {
+                    sleep(1);
+                }
                 
             }
         }

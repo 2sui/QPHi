@@ -169,20 +169,24 @@ qp_socket_recv(qp_socket_t* skt, void* vptr, size_t nbytes, qp_int_t flag);
 
 
 /* option */
-#define QP_SOCKET_SO_REUSE_ADDR    (1<<0)
-#define QP_SOCKET_SO_REUSE_PORT    (1<<1)
+#define QP_SOCKET_SO_REUSE_ADDR    SO_REUSEADDR
+#define QP_SOCKET_SO_REUSE_PORT    SO_REUSEPORT
 
 /* SO_REUSEADDR / SO_REUSEPORT */
 qp_int_t
-qp_socket_set_reuse(qp_socket_t* skt, qp_int_t reuse);
+qp_socket_set_reuse(qp_socket_t* skt, qp_int_t reuse, qp_int_t enable);
 
-/* TCP_NOPUSH / TCP_CORK */
+/* TCP_NOPUSH or TCP_CORK */
 qp_int_t
-qp_socket_set_nopush(qp_socket_t* skt);
+qp_socket_set_nopush(qp_socket_t* skt, qp_int_t enable);
+
+/* TCP_NODELAY */
+qp_int_t
+qp_socket_set_nodelay(qp_socket_t* skt, qp_int_t enable);
 
 /* TCP_QUICKACK */
 qp_int_t
-qp_socket_set_quickack(qp_socket_t* skt);
+qp_socket_set_quickack(qp_socket_t* skt, qp_int_t enable);
 
 
 #ifdef __cplusplus

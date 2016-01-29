@@ -319,7 +319,10 @@ qp_socket_setsockopt(qp_socket_t* skt, qp_int_t level, qp_int_t optname, \
         return QP_ERROR;
     }
     
-    return setsockopt(skt->socket.fd, level, optname, optval, optlen);
+    skt->socket.retsno = setsockopt(skt->socket.fd, level, optname, optval, 
+        optlen);
+    skt->socket.errono = errno;
+    return skt->socket.retsno;
 }
 
 
@@ -438,69 +441,46 @@ qp_socket_recv(qp_socket_t* skt, void* vptr, size_t nbytes, qp_int_t flag)
 
 /* option */
 qp_int_t
-qp_socket_set_reuse(qp_socket_t* skt, qp_int_t reuse)
+qp_socket_set_reuse(qp_socket_t* skt, qp_int_t reuse, qp_int_t enable)
 {
-    qp_int_t  val = 0;
-    
-    if (!qp_fd_is_valid(&skt->socket)) {
-        return QP_ERROR;
+    if (reuse == QP_SOCKET_SO_REUSE_ADDR) {
+        
+        return qp_socket_setsockopt(skt, SOL_SOCKET, SO_REUSEADDR, \
+            (const void *)&enable, sizeof(enable));
     }
     
-    if (reuse & QP_SOCKET_SO_REUSE_ADDR) {
-        val = 1;
-        skt->socket.retsno = setsockopt(skt->socket.fd, SOL_SOCKET, \
-            SO_REUSEADDR, (const void *)&val, sizeof(val));
-        
-        if (QP_ERROR == skt->socket.retsno) {
-            return QP_ERROR;
-        }
-    }
     
-    if (reuse & QP_SOCKET_SO_REUSE_PORT) {
-        val = 1;
-        skt->socket.retsno = setsockopt(skt->socket.fd, SOL_SOCKET, \
-            SO_REUSEPORT, (const void *)&val, sizeof(val));
-        
-        if (QP_ERROR == skt->socket.retsno) {
-            return QP_ERROR;
-        }
+    if (reuse == QP_SOCKET_SO_REUSE_PORT) {
+        return qp_socket_setsockopt(skt, SOL_SOCKET, SO_REUSEPORT, \
+            (const void *)&enable, sizeof(enable));
     }
     
     return QP_SUCCESS;
 }
 
 qp_int_t
-qp_socket_set_nopush(qp_socket_t* skt)
-{
-    qp_int_t  val = 0;
-    
-    if (!qp_fd_is_valid(&skt->socket)) {
-        return QP_ERROR;
-    }
-    
+qp_socket_set_nopush(qp_socket_t* skt, qp_int_t enable)
+{   
 #ifdef QP_OS_BSD4
-    skt->socket.retsno = setsockopt(skt->socket.fd, IPPROTO_TCP, TCP_NOPUSH,\
-        (const void *)&val, sizeof(val));
+    return qp_socket_setsockopt(skt, IPPROTO_TCP, TCP_NOPUSH, \
+        (const void *)&enable, sizeof(enable));
 #else
-    skt->socket.retsno = setsockopt(skt->socket.fd, IPPROTO_TCP, TCP_CORK, \
-        (const void *)&val, sizeof(val));
+    return qp_socket_setsockopt(skt, IPPROTO_TCP, TCP_CORK, \
+        (const void *)&enable, sizeof(enable));
 #endif
-    
-    return skt->socket.retsno;
 }
 
 qp_int_t
-qp_socket_set_quickack(qp_socket_t* skt)
+qp_socket_set_nodelay(qp_socket_t* skt, qp_int_t enable)
 {
-    qp_int_t  val = 0;
-    
-    if (!qp_fd_is_valid(&skt->socket)) {
-        return QP_ERROR;
-    }
-    
-    skt->socket.retsno = setsockopt(skt->socket.fd, IPPROTO_TCP, TCP_QUICKACK, \
-        (const void *)&val, sizeof(val));
-    
-    return skt->socket.retsno;
+    return qp_socket_setsockopt(skt, IPPROTO_TCP, TCP_NODELAY, \
+        (const void *)&enable, sizeof(enable));
+}
+
+qp_int_t
+qp_socket_set_quickack(qp_socket_t* skt, qp_int_t enable)
+{
+    return qp_socket_setsockopt(skt, IPPROTO_TCP, TCP_QUICKACK, \
+        (const void *)&enable, sizeof(enable));
 }
 
