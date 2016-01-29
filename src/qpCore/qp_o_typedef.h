@@ -297,6 +297,8 @@
 /* in auto conf */
 #if defined(QP_OS_UNIX)
 #  define QP_OS_POSIX
+#else
+#  error "QP does not support this OS (1)!"
 #endif
 /* in auto conf */
 #ifdef QP_OS_POSIX
@@ -327,15 +329,22 @@
 #include <aio.h>
 #include <arpa/inet.h>
 #include <dirent.h>
+#include <dlfcn.h>
 #include <fcntl.h>
+#include <fnmatch.h>
 #include <glob.h>
+#include <grp.h>
+//#include <iconv.h>
+//#include <langinfo.h>
 #include <netdb.h>
 #include <net/if.h>         /* <less> */
 #include <netinet/in.h>
 #include <netinet/tcp.h>    /* TCP_NODELAY, TCP_NOPUSH */
+#include <nl_types.h>
 #include <poll.h>
 #include <pthread.h>
 #include <pwd.h>
+#include <regex.h>
 #include <sched.h>
 #include <semaphore.h>
 #include <strings.h>
@@ -349,12 +358,20 @@
 #include <sys/un.h>
 #include <sys/utsname.h>    /* uname() */
 #include <sys/wait.h>
-#include <tar.h>
+//#include <tar.h>
+#include <termios.h>
 #include <unistd.h>
-#include <spawn.h>
+//#include <wordexp.h>
+
+/* option */
+//#include <spawn.h>
 #endif
 
 #ifdef QP_POSIX_XSI
+#include <fmtmsg.h>
+#include <ftw.h>
+//#include <libgen.h>
+#include <search.h>
 #include <syslog.h>
 #include <sys/ipc.h>
 #include <sys/msg.h>
@@ -366,11 +383,13 @@
 #include <sys/file.h>         /* ?? */
 #endif
 
+#if !defined(QP_OS_BSD4) && !defined(QP_OS_SOLARIS) \
+  && !defined(QP_OS_OSX) && !defined(QP_OS_LINUX)
+# error "QP does not support this OS (2)!"
+#endif
 
 #if defined(QP_OS_BSD4)
-#ifdef QP_OS_POSIX
 #include <mqueue.h>
-#endif
 #include <sys/param.h>          /* ALIGN() */
 #include <sys/mount.h>          /* statfs() */
 #include <sys/filio.h>          /* FIONBIO */
@@ -380,9 +399,7 @@
 #include <sys/event.h>
 
 #elif defined(QP_OS_SOLARIS)
-#ifdef QP_OS_POSIX
 #include <mqueue.h>
-#endif
 #include <sys/statvfs.h>        /* statvfs() */
 #include <sys/filio.h>          /* FIONBIO */
 #include <sys/systeminfo.h>
@@ -391,6 +408,7 @@
 #include <sys/devpoll.h>
 #include <port.h>
 #include <sys/sendfile.h>
+#include <utmpx.h>
 
 #elif defined(QP_OS_OSX)
 #include <sys/mount.h>          /* statfs() */
@@ -399,11 +417,10 @@
 #include <sys/sysctl.h>
 #include <xlocale.h>
 #include <sys/event.h>
+#include <utmpx.h>
 
-#elif defined(QP_OS_LINUX)
-#ifdef QP_OS_POSIX
+#else
 #include <mqueue.h>
-#endif
 #include <crypt.h>
 #include <malloc.h>             /* memalign() */
 #include <sys/mount.h>
@@ -416,9 +433,8 @@
 #include <sys/eventfd.h>
 #include <sys/syscall.h>
 #include <linux/aio_abi.h>
+#include <utmpx.h>
 
-#else
-#error "OS not supported."
 #endif
 
 

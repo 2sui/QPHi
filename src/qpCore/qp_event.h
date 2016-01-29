@@ -32,22 +32,31 @@ typedef  void    epoll_event_t;
 #define  QP_EVENT_ERROR              QP_ERROR
 #define  QP_EVENT_COMMONDATA_SIZE    256
 
+struct qp_event_buf_s {
+    qp_uchar_t*    block;
+    struct iovec*  vector;
+};
+
+typedef struct qp_event_buf_s    qp_event_buf_t;
+
+
+enum qp_event_opt_e {
+    QP_EVENT_BLOCK_OPT = 0,  /* do read/write with block buf */
+    QP_EVENT_VECT_OPT,       /* do read/write with iovec buf */
+};
+
+typedef enum qp_event_opt_e    qp_event_opt_t;
+
 
 struct  qp_event_data_s {
-    struct iovec*        readiovec;
-    struct iovec*        writeiovec;
-    qp_char_t*           readbuf;           /* user buffer */
-    qp_char_t*           writebuf;
-    qp_int_t             readiovec_size;
-    qp_int_t             writeiovec_size;
-    size_t               read_max;
-    size_t               write_max;
-
-    size_t               read_offset;       /* buf offset */
-    size_t               write_offset;
-    size_t               read_start;
-    size_t               write_start;
-    void*                data;              /* user data */
+    qp_event_buf_t       readbuf;  /* read buf */
+    qp_event_buf_t       writebuf; /* write buf */
+    size_t               readbuf_max; /* read buf max size/block */
+    size_t               writebuf_max; /* read buf max size/block */
+    size_t               read_bytes; /* size that already read */      
+    size_t               write_bytes; /* size that already writen */
+    void*                data;   /* user data */
+    qp_event_opt_t       opt;    /* use block buf or iovec buf */         
 };
 
 typedef  struct qp_event_data_s    qp_event_data_t;
@@ -116,7 +125,6 @@ typedef  struct qp_event_fd_s    qp_event_fd_t;
 
 struct  qp_event_s {
     qp_fd_t                 evfd;                /* event module fd */
-    
     qp_uint32_t             event_size;          /* event pool size */
     qp_uint32_t             event_listen_size;   /* listen event size */
     
@@ -125,8 +133,8 @@ struct  qp_event_s {
     qp_pool_t               event_pool;      
     qp_list_t               ready;               /* event ready list */
     
-    void*                   (*event_cb)(void*);  /* event call back when no event ready */
-    void*                   event_cb_arg; 
+    void*                   (*event_idle_cb)(void*);  /* event call back when no event ready */
+    void*                   event_idle_cb_arg; 
     
     qp_int_t 
     (*event_fd_init_handler)(qp_event_data_t*, \
@@ -219,6 +227,14 @@ qp_event_destroy(qp_event_t* emodule);
  */
 qp_int_t
 qp_event_add(qp_event_t* evfd, qp_event_fd_t* eventfd);
+
+/**
+ * Add listen fd to event.
+ * 
+ * Note: You need add listen fd before calling qp_event_tiktok().
+ */
+qp_int_t
+qp_event_add_listen(qp_event_t* evfd, qp_int_t listen);
 
 /**
  * Reset event.
