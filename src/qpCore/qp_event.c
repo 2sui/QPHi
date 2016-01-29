@@ -85,55 +85,38 @@ qp_event_create(qp_event_t* emodule)
 }
 
 qp_event_t*
-qp_event_init(qp_event_t *emodule, 
-    qp_int_t     flag,
-    qp_fd_t*     listen_fds, 
-    qp_uint32_t  listen_fd_size,
-    qp_fd_t*     fds, 
-    qp_uint32_t  fd_size,
-    bool         noblock, 
-    bool         edge,
-    qp_int_t (*qp_event_fd_init_handler)(qp_event_data_t*,
-        qp_int_t (**)(qp_int_t, qp_event_data_t*), qp_int_t),
-    qp_int_t (*qp_event_fd_destroy_handler)(qp_event_data_t* edata),
-    void*        (*wait_cb)(void *),
-    void*        wait_arg)
+qp_event_init(qp_event_t* emodule, qp_uint32_t fd_size, bool noblock, bool edge,
+    qp_int_t (*qp_event_fd_init_handler)(qp_event_data_t*),
+    qp_int_t (*qp_event_fd_process_handler)(qp_int_t, qp_event_data_t*),
+    qp_int_t (*qp_event_fd_destroy_handler)(qp_event_data_t*),
+    void* (*idle_cb)(void *), void* idle_arg)
 {
-    (NULL != fds) ? \
-        (listen_fds = NULL, listen_fd_size = 0) :
-        ((0 == listen_fd_size || NULL == listen_fds) ? (fd_size = 0) : 1);
-
-    if (1 > fd_size) {
+    qp_int_t        mod = EPOLLIN /*| EPOLLOUT*/ | EPOLLRDHUP;
+    qp_uint32_t     findex = 0;
+    qp_event_fd_t*  eventfd = NULL;
+    
+    if (0 == fd_size) {
         return NULL;
     }
+    
+#ifndef QP_OS_LINUX
+    return NULL;
+#endif
     
     emodule = qp_event_create(emodule);
     
     if (NULL == emodule) {
         return NULL;
     }
-
-#ifndef QP_OS_LINUX
-    return NULL;
-#endif
-
-    qp_int_t        mod = EPOLLIN /*| EPOLLOUT*/ | flag;
-    qp_uint32_t     findex = 0;
-    qp_event_fd_t*  eventfd = NULL;
     
-    if (NULL == fds) {
-        mod |= EPOLLRDHUP;
-    }
-
     if (edge) {
         mod |= EPOLLET /*| EPOLLONESHOT */;  /* use for mult thread */
     }
 
     emodule->available = 0;
     emodule->event_size = fd_size;
-    emodule->event_listen_size = listen_fd_size;
-    emodule->event_cb = wait_cb;
-    emodule->event_cb_arg = wait_arg;
+    emodule->event_idle_cb = idle_cb;
+    emodule->event_idle_cb_arg = idle_arg;
     emodule->event_fd_init_handler = qp_event_fd_init_handler;
     emodule->event_fd_destory_handler = qp_event_fd_destroy_handler;
     qp_list_init(&(emodule->ready));
@@ -148,7 +131,7 @@ qp_event_init(qp_event_t *emodule,
     
     /* init event pool */
     if (NULL == qp_pool_init(&(emodule->event_pool), sizeof(qp_event_fd_t), \
-        emodule->event_size + emodule->event_listen_size))
+        emodule->event_size))
     {
         qp_event_destroy(emodule);
         return NULL;
@@ -157,12 +140,10 @@ qp_event_init(qp_event_t *emodule,
     /* init poollist */
     
     
-    for (findex = emodule->event_size + emodule->event_listen_size; \
-        findex; findex--) 
-    {   
+    for (findex = 0; findex < emodule->event_size; findex++) {   
         eventfd = \
-            (qp_event_fd_t*)qp_pool_to_array(&(emodule->event_pool), findex - 1);
-        eventfd->index = findex - 1;
+            (qp_event_fd_t*)qp_pool_to_array(&(emodule->event_pool), findex);
+        eventfd->index = findex;
         eventfd->efd = -1;
         eventfd->flag = mod;
         eventfd->listen = 0;
@@ -175,104 +156,39 @@ qp_event_init(qp_event_t *emodule,
         eventfd->write = 0;
         eventfd->readhup = 0;
         eventfd->read = 0;
-        eventfd->do_myself = NULL;
-
-        memset(&(eventfd->field), 0, sizeof(qp_event_data_t));
-        eventfd->field.readbuf = emodule->combuf;
-        eventfd->field.read_max = QP_EVENT_COMMONDATA_SIZE;
-        eventfd->field.writebuf = emodule->combuf;
-        eventfd->field.write_max = QP_EVENT_COMMONDATA_SIZE;
+        eventfd->do_myself = qp_event_fd_process_handler;
         qp_list_init(&(eventfd->ready_next));
+        memset(&(eventfd->field), 0, sizeof(qp_event_data_t));
         
         if (emodule->event_fd_init_handler) {
-            emodule->event_fd_init_handler(&(eventfd->field), \
-                &(eventfd->do_myself),
-                eventfd->efd);
+            emodule->event_fd_init_handler(&(eventfd->field));
         }
     }
     
-    /* allocate listen fd list */
-    for (findex = 0; findex < emodule->event_listen_size; findex++) {
-        
-        if (listen_fds[findex].fd < 1) {
-            continue;
-        }
-        
-        eventfd = (qp_event_fd_t*)qp_pool_alloc(&(emodule->event_pool), \
-            sizeof(qp_event_fd_t));
-        
-        if (!eventfd) {
-            qp_event_destroy(emodule);
-            return NULL;
-        }
-        
-        eventfd->efd = listen_fds[findex].fd;
-        eventfd->listen = 1;
-        eventfd->closed = 0;
-        eventfd->do_myself = NULL;
-        
-        if (QP_EVENT_ERROR == qp_event_add(emodule, eventfd)) {
-            qp_pool_free(&(emodule->event_pool), eventfd);
-            continue;
-        }
-        
-        emodule->available++;
-    }
-    
-    if (!fds)  {
-        return emodule;
-    }
-    
-    /* allocate fd list */
-    for (findex = 0; findex < emodule->event_size; findex++) {
-        
-        if (fds[findex].fd < 1) {
-            continue;
-        }
-        
-        eventfd = (qp_event_fd_t*)qp_pool_alloc(&(emodule->event_pool), \
-            sizeof(qp_event_fd_t));
-        
-        if (!eventfd) {
-            qp_event_destroy(emodule);
-            return NULL;
-        }
-        
-        eventfd->efd = fds[findex].fd;
-        eventfd->closed = 0;
-        
-        if (QP_EVENT_ERROR == qp_event_add(emodule, eventfd)) {
-            qp_pool_free(&(emodule->event_pool), eventfd);
-            continue;
-        }
-
-        emodule->available++;
-    }
-
     return emodule;
 }
 
 
 qp_int_t
-qp_event_tiktok(qp_event_t *emodule, int queue, int *runstat)
+qp_event_tiktok(qp_event_t *emodule, qp_int_t *runstat)
 {
-    if (!qp_fd_is_valid(&(emodule->evfd))) {
-        return QP_EVENT_ERROR;
-    }
-
-    qp_int_t          revent_num = 0;
     qp_uint32_t       rflag = 0;
+    qp_int_t          revent_num = 0;
     qp_int_t          (*readhandler)(qp_event_t*, qp_event_fd_t*);
     qp_int_t          (*writehandler)(qp_event_t*, qp_event_fd_t*);
     qp_event_fd_t*    revent = NULL;
     qp_event_fd_t*    eevent = NULL;
     epoll_event_t*    event_queue = NULL;
     ssize_t           ret = 0;
-    qp_int_t          timeout = (NULL == emodule->event_cb) ? -1 : 0;
+    qp_int_t          timeout = (NULL == emodule->event_idle_cb) ? -1 : 0;
     qp_int_t          acceptfd = -1;
     qp_int_t          itr = 0;
+    
+    if (!qp_fd_is_valid(&(emodule->evfd))) {
+        return QP_EVENT_ERROR;
+    }
 
-    event_queue = qp_alloc(queue * sizeof(epoll_event_t));
+    event_queue = qp_alloc(emodule->event_size * sizeof(epoll_event));
     
     if (NULL == event_queue) {
         QP_LOGOUT_ERROR("[qp_event_t]Event list create fail.");
@@ -281,7 +197,8 @@ qp_event_tiktok(qp_event_t *emodule, int queue, int *runstat)
 
     while (*runstat && emodule->available) {
         revent_num = \
-            epoll_wait(emodule->evfd.fd, event_queue, queue, timeout);
+            epoll_wait(emodule->evfd.fd, event_queue, emodule->event_size, \
+            timeout);
 
         /* do with error */
         if (0 > revent_num) {
@@ -292,8 +209,8 @@ qp_event_tiktok(qp_event_t *emodule, int queue, int *runstat)
                 break;
             }
 
-            if (emodule->event_cb) {
-                emodule->event_cb(emodule->event_cb_arg);
+            if (emodule->event_idle_cb) {
+                emodule->event_idle_cb(emodule->event_idle_cb_arg);
             }
 
             continue;
