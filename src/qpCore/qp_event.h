@@ -20,16 +20,14 @@ extern "C" {
     
     
 #ifdef  QP_OS_LINUX
-typedef  struct epoll_event    epoll_event_t;
+typedef  struct epoll_event    qp_epoll_event_t;
 #else
-typedef  void    epoll_event_t;
+typedef  void    qp_epoll_event_t;
 #define          EPOLLIN        1
 #define          EPOLLOUT       2
 #define          EPOLLHUP       3
 #endif
 
-#define  QP_EVENT_SUCCESS            QP_SUCCESS
-#define  QP_EVENT_ERROR              QP_ERROR
 #define  QP_EVENT_COMMONDATA_SIZE    256
 
 struct qp_event_buf_s {
@@ -53,11 +51,15 @@ struct  qp_event_data_s {
     qp_event_buf_t       writebuf; /* write buf */
     size_t               readbuf_max; /* read buf max size/block */
     size_t               writebuf_max; /* read buf max size/block */
-    size_t               read_bytes; /* size that already read */      
-    size_t               write_bytes; /* size that already writen */
+    size_t               read_done; /* size that already read, it will be set when read done */      
+    size_t               write_done; /* size that already writen, it will be set when write done */
+    size_t               read_atleast; /* it will not call do_myself callback untill read_atleast bytes are read */
+    size_t               write_atleast; /* it will not call do_myself callback untill write_atleast bytes are writen */
+    qp_event_opt_t       next_read_opt;    /* use block buf or iovec buf for next step */ 
+    qp_event_opt_t       next_write_opt;    /* use block buf or iovec buf for next step */  
+    qp_int_t
+    (*process_handler)(qp_event_data_t*, qp_int_t);
     void*                data;   /* user data */
-    qp_event_opt_t       next_opt;    /* use block buf or iovec buf for next step */ 
-    qp_event_opt_t       last_opt;    /* use block buf or iovec buf from last step */ 
 };
 
 typedef  struct qp_event_data_s    qp_event_data_t;
@@ -71,79 +73,40 @@ struct qp_event_fd_s {
     qp_uint32_t            closed:1;      /* need close */
     qp_uint32_t            noblock:1;     /* need noblock */
     qp_uint32_t            edge:1;        /* ET mod */
-    qp_uint32_t            nativeclose:1;
-    qp_uint32_t            peerclose:1;
+    qp_uint32_t            nativeclose:1; /* native closed */
+    qp_uint32_t            peerclose:1;   /* peer closed */
     qp_uint32_t            write:1;       /* write event(set by do_mysel call) */
-    qp_uint32_t            writehup:1;
+    qp_uint32_t            writehup:1;    /* write done */
     qp_uint32_t            read:1;        /* read event(set by EPOLLIN) */
-    qp_uint32_t            readhup:1;
+    qp_uint32_t            readhup:1;     /* read done */
     qp_uint32_t            :22;
+    qp_list_t              ready_next;
     qp_event_data_t        field;
-
-    /**
-     * When data recved or sent, do_myself will be called ,you decide how to do 
-     * with current data. And do_myself also do the same thing.
-     *
-     * If the fd is closed by peer the [fd] will be passed with [-1].([readbuf 
-     * and writebuf] is still the right buf linked to the fd, but the readoffset 
-     * or writeoffset  will not change).
-     *
-     * [readstart],[writestart] and [writeoffset] can be changed by user.
-     *
-     * For read event:
-     * [readbuf] is the read buffer which set by user, [readstart] can be 
-     * changed by user for start index for next read event,  and [readoffset] 
-     * is the offset index of last read event.[max_read_bucket] is the max 
-     * buffer size, [readstart] should not bigger than that.
-     *
-     * For write event:
-     * [writebuf] is the write buffer which set by user,[writestart]  and 
-     * [writeoffset] can be changed by user to show where is the start index 
-     * and where is the end index to be sent in [writebuf](start from index 
-     * [writestart] and end before [writeoffset]),if [writebuf] is NULL , or 
-     * [writestart] and [writeoffset] (which are passed in) are not equal,it 
-     * means last write event has not finished.
-     *
-     * Note: If use readv or writev, you need to point the iovec of 
-     * qp_event_data_t to your struct iovec[], then next read/write event 
-     * will use readv or writev,otherwise you need to set iovec to NULL to tell
-     * qp_event_tiktok to just use read or write function.
-     *
-     * For return:
-     * Return QP_EVENT_SUCCESS or EPOLLIN or EPOLLOUT  or EPOLLHUP that means 
-     * nothing to do(just wait for read event) or make up a write/read event 
-     * or close the connection; return QP_EVENT_ERROR means some error happend 
-     * and should close the connection.
-     */
-    qp_int_t
-    (*do_myself)(qp_int_t  fd, qp_event_data_t*  data);
-
-    qp_list_t                 ready_next;
 };
 
 typedef  struct qp_event_fd_s    qp_event_fd_t;
 
 
 struct  qp_event_s {
-    qp_fd_t                 evfd;                /* event module fd */
-    qp_uint32_t             event_size;          /* event pool size */
-    qp_uint32_t             available;           /* event number in pool */ 
+    qp_fd_t                 evfd;         /* event module fd */
+    qp_uint32_t             event_size;   /* event pool size */
+    qp_uint32_t             available;    /* event number in pool */ 
+    qp_pool_t               event_pool;   /* mem pool */       
+    qp_list_t               ready;    /* event ready list */
+    void*                   (*event_idle_cb)(void*);  /* idle event callback when no event ready */
+    void*                   event_idle_cb_arg;   /* idle event callback arg */
     
-    qp_pool_t               event_pool;      
-    qp_list_t               ready;               /* event ready list */
-    
-    void*                   (*event_idle_cb)(void*);  /* event call back when no event ready */
-    void*                   event_idle_cb_arg; 
-    
+    /* qp_event_data_t init handler */
     qp_int_t 
     (*event_fd_init_handler)(qp_event_data_t*);
     
+    /* qp_event_data_t destroy handler */
     qp_int_t 
-    (*event_fd_destory_handler)(qp_event_data_t*);
+    (*event_fd_destory_handler)(qp_event_data_t*); 
     
-    epoll_event_t           setter;   
-    bool                    is_alloced; 
-    qp_char_t               combuf[QP_EVENT_COMMONDATA_SIZE];
+    bool                     is_alloced; 
+    /* read buf if user not assign */
+    qp_char_t                combuf[QP_EVENT_COMMONDATA_SIZE];
 };
 
 typedef  struct  qp_event_s    qp_event_t;
@@ -152,55 +115,35 @@ typedef  struct  qp_event_s    qp_event_t;
 inline bool
 qp_event_is_alloced(qp_event_t* evfd);
 
+/**
+ * It is recommended that one qp_event_t should be used by only one thread.
+ */
 
 /**
- * Init qp_event module.If [fds] is NOT NULL which mean [fds] are all 
- * established fds and the [listenfds] event will be not available.
- * And if [listenfds] is set ,the fdsize must be bigger than 0 which means 
- * the pool size of  socket poll.
- *
- * @param [emodule] is qp_event_t handler that will be inited;
- * @param [flag] events flags that user needed.
- * @param [fds] is fd queue that have been inited;
- * @param [fdsize] is element number of fds;
- * @param [listenfds] is the element that used for socket accept event;
- * @param [listenfdsize] is the numer of listenfds elements;
- * @param [noblock]  the event is noblock;
- * @param [edge]   the event is oneshut;
- * @param [qp_event_fd_init_handler]  Function handler that use to init the 
- *            event fd elements in qp_event_t .Param [fd] is file descrpition 
- *            that need link to  and the [efd] is the mq_event_fd_t you need to 
- *            init. (Note: if fd in [fds] is unavailble this function will not 
- *            be called.)
- *
- * @param [wait_cb] is callback handler that will be called when waiting for 
- *            events(if NULL it will do nothing and block till events happend).
- *
- * @return If success return the count that inited elements, otherwise 
- *        return QP_EVENT_ERROR.
-*/
+ * Init a event module.
+ * It need fd_size to tell this function the size of event bucket, and
+ * if noblock is true the event loop will use noblocking mode , and if edge is 
+ * true the event loop will use ET mode.
+ * qp_event_fd_init_handler and qp_event_fd_destroy_handler are handler that how 
+ * to init or destroy a qp_event_data_t for every event fd in event pool.
+ * 
+ * If success return emodule pointer(if emodule is not NULL the return pointer is 
+ * equal to it.), and return NULL if some error happen.
+ */
 qp_event_t*
-qp_event_init(qp_event_t* emodule, qp_uint32_t fd_size, bool noblock, bool edge,
-    qp_int_t (*qp_event_fd_init_handler)(qp_event_data_t*, qp_int_t),
-    qp_int_t (*qp_event_fd_process_handler)(qp_int_t, qp_event_data_t*),
-    qp_int_t (*qp_event_fd_destroy_handler)(qp_event_data_t* edata),
-    void* (*idle_cb)(void *), void* idle_arg);
-
+qp_event_init(qp_event_t* emodule, qp_uint32_t fd_size, 
+    qp_int_t (*qp_event_fd_init_handler)(qp_event_data_t*),
+    qp_int_t (*qp_event_fd_destroy_handler)(qp_event_data_t*),
+    bool noblock, bool edge, void* (*idle_cb)(void *), void* idle_arg);
 
 /**
- * Process event loop.
- *
- * @param [emodule] Inited qp_event_t struct.
- * @param [queue] Max event queue number.
- * @param [arg] Argurement that be passed into do_myself callback.
- * @param [wait_arg] Argument that be passed into waiting callback.
- * @param [runstat]   If bigger than 0 , run the event loop, otherwise quit.
- *
- * @return
+ * Start event loop.
+ * You can controll when to quit the event loop by runstat.
+ * 
+ * If quit nomally it return QP_SUCCESS , otherwise return QP_ERROR.
  */
 qp_int_t
 qp_event_tiktok(qp_event_t* emodule, qp_int_t *runstat);
-
 
 /**
  * Destory a mq_event handler.
