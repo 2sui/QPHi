@@ -47,18 +47,25 @@ typedef enum qp_event_opt_e    qp_event_opt_t;
 
 
 struct  qp_event_data_s {
-    qp_event_buf_t       readbuf;  /* read buf */
-    qp_event_buf_t       writebuf; /* write buf */
-    size_t               readbuf_max; /* read buf max size/block */
-    size_t               writebuf_max; /* read buf max size/block */
-    size_t               read_done; /* size that already read, it will be set when read done */      
-    size_t               write_done; /* size that already writen, it will be set when write done */
-    size_t               read_atleast; /* it will not call do_myself callback untill read_atleast bytes are read */
-    size_t               write_atleast; /* it will not call do_myself callback untill write_atleast bytes are writen */
-    qp_event_opt_t       next_read_opt;    /* use block buf or iovec buf for next step */ 
-    qp_event_opt_t       next_write_opt;    /* use block buf or iovec buf for next step */  
+    /* read buf */
+    qp_event_buf_t       readbuf; 
+    /* write buf */
+    qp_event_buf_t       writebuf;
+    /* read buf max size/block */
+    size_t               readbuf_max; 
+    /* read buf max size/block */
+    size_t               writebuf_max; 
+    /* it will not call do_myself callback untill read_atleast bytes are read */
+    size_t               read_atleast; 
+    /* it will not call do_myself callback untill write_atleast bytes are writen (it will not effect for now) */
+    size_t               write_atleast; 
+    /* use block buf or iovec buf for next step */ 
+    qp_event_opt_t       next_read_opt;    
+    /* use block buf or iovec buf for next step */  
+    qp_event_opt_t       next_write_opt;    
     qp_int_t
-    (*process_handler)(qp_event_data_t*, qp_int_t);
+    (*process_handler)(qp_event_data_t* /* fd_data */, qp_int_t /*fd*/, 
+        qp_int_t /* stat */, size_t /* read_cnt */, size_t /* write_cnt */);
     void*                data;   /* user data */
 };
 
@@ -76,10 +83,13 @@ struct qp_event_fd_s {
     qp_uint32_t            nativeclose:1; /* native closed */
     qp_uint32_t            peerclose:1;   /* peer closed */
     qp_uint32_t            write:1;       /* write event(set by do_mysel call) */
-    qp_uint32_t            writehup:1;    /* write done */
     qp_uint32_t            read:1;        /* read event(set by EPOLLIN) */
-    qp_uint32_t            readhup:1;     /* read done */
+    qp_uint32_t            process:1;
     qp_uint32_t            :22;
+    /* size that already read, it will be set when read done */  
+    size_t                 read_done;     
+    /* size that already writen, it will be set when write done */
+    size_t                 write_done; 
     qp_list_t              ready_next;
     qp_event_data_t        field;
 };
@@ -89,10 +99,11 @@ typedef  struct qp_event_fd_s    qp_event_fd_t;
 
 struct  qp_event_s {
     qp_fd_t                 evfd;         /* event module fd */
+    qp_atom_t               available;    /* event number in pool */ 
     qp_uint32_t             event_size;   /* event pool size */
-    qp_uint32_t             available;    /* event number in pool */ 
     qp_pool_t               event_pool;   /* mem pool */       
     qp_list_t               ready;    /* event ready list */
+    qp_list_t               listen_ready;
     void*                   (*event_idle_cb)(void*);  /* idle event callback when no event ready */
     void*                   event_idle_cb_arg;   /* idle event callback arg */
     

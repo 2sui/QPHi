@@ -21,7 +21,7 @@ extern "C" {
 #define  QP_FD_INVALID        -1
     
 enum qp_fd_type_e {
-    QP_FD_TYPE_UNKNOW,
+    QP_FD_TYPE_UNKNOW = 0,
     QP_FD_TYPE_FILE,
     QP_FD_TYPE_SOCKET,
     QP_FD_TYPE_EVENT
