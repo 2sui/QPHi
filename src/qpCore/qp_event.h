@@ -108,7 +108,9 @@ struct qp_event_fd_s {
     qp_uint32_t            nativeclose:1; /* native closed */
     qp_uint32_t            peerclose:1;   /* peer closed */
     qp_uint32_t            write:1;       /* write event(set by do_mysel call) */
+    qp_uint32_t            writehup:1;
     qp_uint32_t            read:1; 
+    qp_uint32_t            readhup:1;
     
     qp_uint32_t            :20;
     /* size that already read, it will be set when read done */  
@@ -190,7 +192,7 @@ qp_event_destroy(qp_event_t* emodule);
  * Note: You need add listen fd before calling qp_event_tiktok().
  */
 qp_int_t
-qp_event_addevent(qp_event_t* evfd, qp_int_t listen);
+qp_event_addevent(qp_event_t* evfd, qp_int_t fd, bool listen, bool auto_close);
 
 
 #ifdef __cplusplus
