@@ -8,9 +8,10 @@
 
 #include <qpCore.h>
 
-#define SERV_ADDR             "192.168.11.14"
-#define SERV_PORT             8000
+#define SERV_ADDR             "127.0.0.1"
+#define SERV_PORT             80
 #define BUFSIZE               1024
+#define USER                  "nobody"
 #define INFO(info...)         fprintf(stderr, "\n"info)
 
 int 
@@ -50,12 +51,18 @@ main(int argc, char** argv)
             goto end;
         }
         
+        if (QP_ERROR == qp_change_user_by_name(USER)) {
+            some_error = true;
+            INFO("Change user fail");
+            goto end;
+        }
+        
         while (qp_socket_accept(&skt, &client)) {
             end = 0;
             gettimeofday(&ntime, NULL);
             beg = ntime.tv_sec * 1000 + ntime.tv_usec / 1000;
             INFO("Serv accept at %lu. sec:%lu, usec:%lu", beg, ntime.tv_sec, ntime.tv_usec);
-            /* for disable Nagle */
+            /* disable Nagle */
             qp_socket_set_nodelay(&client, 1);
             qp_socket_set_quickack(&client, 1);
             
@@ -99,7 +106,7 @@ main(int argc, char** argv)
             beg = ntime.tv_sec * 1000 + ntime.tv_usec / 1000;
             INFO("Client connect at %lu.", beg);
             
-            /* for disable Nagle */
+            /* disable Nagle */
             qp_socket_set_nodelay(&skt, 1);
             qp_socket_set_quickack(&skt, 1);
             
