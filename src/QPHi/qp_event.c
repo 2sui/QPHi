@@ -104,6 +104,7 @@ qp_event_create(qp_event_t* emodule)
 
 qp_event_t*
 qp_event_init(qp_event_t* emodule, qp_uint32_t fd_size, bool noblock, bool edge,
+    qp_event_data_opt_handler init, qp_event_data_opt_handler destroy,
     void* (*idle_cb)(void *), void* idle_arg)
 {
     qp_int_t        mod = QP_EPOLL_IN /*| QP_EPOLL_OUT*/ | QP_EPOLL_RDHUP;
@@ -130,6 +131,8 @@ qp_event_init(qp_event_t* emodule, qp_uint32_t fd_size, bool noblock, bool edge,
 
     emodule->available = 0;
     emodule->event_size = 0;
+    emodule->data_init = init;
+    emodule->data_destroy = destroy;
     emodule->event_idle_cb = idle_cb;
     emodule->event_idle_cb_arg = idle_arg;
     qp_list_init(&emodule->ready);
@@ -145,7 +148,7 @@ qp_event_init(qp_event_t* emodule, qp_uint32_t fd_size, bool noblock, bool edge,
     
     /* init event pool */
     if (NULL == qp_pool_init(&emodule->event_pool, sizeof(qp_event_fd_t), \
-        emodule->event_size))
+        fd_size))
     {
         qp_event_destroy(emodule);
         return NULL;
@@ -164,6 +167,10 @@ qp_event_init(qp_event_t* emodule, qp_uint32_t fd_size, bool noblock, bool edge,
         qp_event_clear_flag(eventfd);
         qp_list_init(&eventfd->ready_next);
         memset(&eventfd->field, 0, sizeof(qp_event_data_t));
+        
+        if (emodule->data_init) {
+            emodule->data_init(&eventfd->field);
+        }
     }
     
     return emodule;
@@ -444,6 +451,10 @@ qp_event_destroy(qp_event_t *emodule)
             
             if (eventfd->closed && (QP_FD_INVALID != eventfd->efd)) {
                 qp_event_close(eventfd);
+            }
+            
+            if (emodule->data_destroy) {
+                emodule->data_destroy(&eventfd->field);
             }
         }
 

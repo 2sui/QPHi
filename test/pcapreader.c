@@ -6,7 +6,7 @@
  */
 
 
-#include <qpCore.h>
+#include <qphi.h>
 
 
 #define  MAX_SNAPLEN    65535

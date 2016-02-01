@@ -131,6 +131,8 @@ struct  qp_event_s {
     qp_pool_t               event_pool;   /* mem pool */       
     qp_list_t               ready;    /* event ready list */
     qp_list_t               listen_ready;
+    qp_event_data_opt_handler    data_init;
+    qp_event_data_opt_handler    data_destroy;
     void*                   (*event_idle_cb)(void*);  /* idle event callback when no event ready */
     void*                   event_idle_cb_arg;   /* idle event callback arg */
     bool                    is_alloced; 
@@ -140,6 +142,8 @@ struct  qp_event_s {
 
 typedef  struct  qp_event_s    qp_event_t;
 
+
+typedef  void (*qp_event_data_opt_handler)(qp_event_data_t*);
 
 inline bool
 qp_event_is_alloced(qp_event_t* evfd);
@@ -153,7 +157,7 @@ qp_event_is_alloced(qp_event_t* evfd);
  * It need fd_size to tell this function the size of event bucket, and
  * if noblock is true the event loop will use noblocking mode , and if edge is 
  * true the event loop will use ET mode.
- * qp_event_fd_init_handler and qp_event_fd_destroy_handler are handler that how 
+ * init handler and destroy handler are handlers that how 
  * to init or destroy a qp_event_data_t for every event fd in event pool.
  * 
  * If success return emodule pointer(if emodule is not NULL the return pointer is 
@@ -161,6 +165,7 @@ qp_event_is_alloced(qp_event_t* evfd);
  */
 qp_event_t*
 qp_event_init(qp_event_t* emodule, qp_uint32_t fd_size, bool noblock, bool edge,
+    qp_event_data_opt_handler init, qp_event_data_opt_handler destroy,
     void* (*idle_cb)(void *), void* idle_arg);
 
 /**

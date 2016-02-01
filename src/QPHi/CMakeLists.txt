@@ -46,7 +46,7 @@ INSTALL(FILES ${BUILD_LIBS}/lib${PROJECT_NAME}.a
         ${BUILD_LIBS}/lib${PROJECT_NAME}.so
         DESTINATION lib) 
 
-INSTALL(FILES ${PROJECT_SOURCE_DIR}/qpCore.h
+INSTALL(FILES ${PROJECT_SOURCE_DIR}/qphi.h
         ${PROJECT_SOURCE_DIR}/qp_debug.h
         ${PROJECT_SOURCE_DIR}/qp_event.h
         ${PROJECT_SOURCE_DIR}/qp_file.h
