@@ -8,10 +8,9 @@
 
 #include <qpCore.h>
 
-#define SERV_ADDR             "127.0.0.1"
-#define SERV_PORT             80
+#define SERV_ADDR             "192.168.11.14"
+#define SERV_PORT             8000
 #define BUFSIZE               1024
-#define USER                  "nobody"
 #define INFO(info...)         fprintf(stderr, "\n"info)
 
 int 
@@ -48,12 +47,6 @@ main(int argc, char** argv)
         if (QP_ERROR == qp_socket_listen(&skt, 0)) {
             some_error = true;
             INFO("Socket set listen fail.");
-            goto end;
-        }
-        
-        if (QP_ERROR == qp_change_user_by_name(USER)) {
-            some_error = true;
-            INFO("Change user fail");
             goto end;
         }
         

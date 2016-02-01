@@ -139,7 +139,7 @@ qp_int_t
 qp_change_user_by_id(uid_t uid, gid_t gid)
 {
 
-    if (!qp_check_root()) {
+    if (qp_check_root()) {
 
         if ((0 == uid) && (0 == gid)) {
             return QP_ERROR;
