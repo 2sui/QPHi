@@ -20,7 +20,16 @@ extern "C" {
     
     
 #ifdef  QP_OS_LINUX
+    
+#define  QP_EPOLL_ET           EPOLLET
+#define  QP_EPOLL_ONESHOT      EPOLLONESHOT
+#define  QP_EPOLL_IN           EPOLLIN               
+#define  QP_EPOLL_OUT          EPOLLOUT
+#define  QP_EPOLL_ERR          EPOLLERR              
+#define  QP_EPOLL_HUP          EPOLLHUP             
+#define  QP_EPOLL_RDHUP        EPOLLRDHUP     
 typedef  struct epoll_event    qp_epoll_event_t;
+
 #else
 typedef  void    qp_epoll_event_t;
 #define          EPOLLIN        1
@@ -46,6 +55,9 @@ enum qp_event_stat_e {
     QP_EVENT_CLOSE   /* event is closed */
 };
 
+typedef enum qp_event_stat_e    qp_event_stat_t;
+
+
 struct qp_event_buf_s {
     qp_uchar_t*    block;
     struct iovec*  vector;
@@ -53,6 +65,8 @@ struct qp_event_buf_s {
 
 typedef struct qp_event_buf_s    qp_event_buf_t;
 
+
+typedef  struct qp_event_data_s    qp_event_data_t;
 
 struct  qp_event_data_s {
     /* read buf */
@@ -72,12 +86,10 @@ struct  qp_event_data_s {
     /* use block buf or iovec buf for next step */  
     qp_event_opt_t       next_write_opt;    
     qp_int_t
-    (*process_handler)(qp_event_data_t* /* fd_data */, qp_int_t /*fd*/, 
-        qp_uint32_t /* stat */, size_t /* read_cnt */, size_t /* write_cnt */);
+    (*process_handler)(qp_event_data_t*/* fd_data */, qp_event_stat_t/* stat */, 
+        size_t /* read_cnt */, size_t /* write_cnt */);
     void*                data;   /* user data */
 };
-
-typedef  struct qp_event_data_s    qp_event_data_t;
 
 
 struct qp_event_fd_s {
@@ -121,7 +133,7 @@ struct  qp_event_s {
     void*                   event_idle_cb_arg;   /* idle event callback arg */
     bool                    is_alloced; 
     /* read buf if user not assign */
-    qp_char_t               combuf[QP_EVENT_COMMONDATA_SIZE];
+    qp_uchar_t              combuf[QP_EVENT_COMMONDATA_SIZE];
 };
 
 typedef  struct  qp_event_s    qp_event_t;
@@ -146,10 +158,8 @@ qp_event_is_alloced(qp_event_t* evfd);
  * equal to it.), and return NULL if some error happen.
  */
 qp_event_t*
-qp_event_init(qp_event_t* emodule, qp_uint32_t fd_size, 
-    qp_int_t (*qp_event_fd_init_handler)(qp_event_data_t*),
-    qp_int_t (*qp_event_fd_destroy_handler)(qp_event_data_t*),
-    bool noblock, bool edge, void* (*idle_cb)(void *), void* idle_arg);
+qp_event_init(qp_event_t* emodule, qp_uint32_t fd_size, bool noblock, bool edge,
+    void* (*idle_cb)(void *), void* idle_arg);
 
 /**
  * Start event loop.
@@ -173,8 +183,6 @@ qp_event_destroy(qp_event_t* emodule);
 /**
  * Add events to this event module.
  */
-qp_int_t
-qp_event_add(qp_event_t* evfd, qp_event_fd_t* eventfd);
 
 /**
  * Add listen fd to event.
@@ -182,19 +190,7 @@ qp_event_add(qp_event_t* evfd, qp_event_fd_t* eventfd);
  * Note: You need add listen fd before calling qp_event_tiktok().
  */
 qp_int_t
-qp_event_addon(qp_event_t* evfd, qp_int_t listen);
-
-/**
- * Reset event.
- */
-qp_int_t
-qp_event_reset(qp_event_t* evfd, qp_event_fd_t* eventfd, qp_int_t flag);
-
-/**
- * Delete event from event module.
- */
-qp_int_t
-qp_event_del(qp_event_t* evfd, qp_event_fd_t* eventfd);
+qp_event_addevent(qp_event_t* evfd, qp_int_t listen);
 
 
 #ifdef __cplusplus
