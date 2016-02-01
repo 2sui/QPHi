@@ -169,22 +169,20 @@ qp_event_init(qp_event_t* emodule, qp_uint32_t fd_size,
         eventfd->index = findex;
         eventfd->efd = QP_FD_INVALID;
         eventfd->flag = mod;
-        eventfd->listen = 0;
-        eventfd->closed = 1;
         eventfd->noblock = noblock;
         eventfd->edge = edge;
+        
+        eventfd->listen = 0;
+        eventfd->closed = 0;
+        
         eventfd->nativeclose = 0;
         eventfd->peerclose = 0;
-//        eventfd->writehup = 0;
         eventfd->write = 0;
-//        eventfd->readhup = 0;
         eventfd->read = 0;
+        eventfd->stat = QP_EVENT_IDL;
+        
         qp_list_init(&(eventfd->ready_next));
         memset(&(eventfd->field), 0, sizeof(qp_event_data_t));
-        
-        if (emodule->event_fd_init_handler) {
-            emodule->event_fd_init_handler(&(eventfd->field));
-        }
     }
     
     return emodule;
@@ -293,9 +291,10 @@ qp_event_tiktok(qp_event_t *emodule, qp_int_t *runstat)
                         /* add event to pool */
                         if (QP_ERROR != qp_event_add(emodule, revent)){
                             qp_atom_add(&emodule->available);
+                            revent->stat = QP_EVENT_NEW;
                                 
                         } else {
-                            qp_pool_free(&(emodule->event_pool), revent);
+                            qp_pool_free(&emodule->event_pool, revent);
                             close(acceptfd);
                             QP_LOGOUT_ERROR("[qp_event_t]Add event fail.");
                             continue;
@@ -389,7 +388,17 @@ qp_event_tiktok(qp_event_t *emodule, qp_int_t *runstat)
 
             /* process the events */
             if (eevent->field.process_handler && eevent->process) {
-                ret = eevent->field.process_handler(&eevent->field, eevent->efd);
+                
+                if (QP_FD_INVALID == eevent->efd) {
+                    eevent->stat = QP_EVENT_CLOSE;    
+                }
+                
+                ret = eevent->field.process_handler(&eevent->field, eevent->efd,
+                    eevent->stat, eevent->read_done, eevent->write_done);
+                
+                if (QP_EVENT_NEW == eevent->stat) {
+                    eevent->stat = QP_EVENT_PROCESS;
+                }
                 
                 if (QP_FD_INVALID != eevent->efd) {
                     
