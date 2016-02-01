@@ -13,6 +13,9 @@ SET(tcp_delay_src tcp_delay.c)
 # lock
 SET(lock test_lock)
 SET(lock_src lock.c)
+# events
+SET(events test_events)
+SET(events_src events.c)
 
 # libs output path
 SET(BUILD_LIBS  ${PROJECT_SOURCE_DIR}/../build/libs)
@@ -61,3 +64,10 @@ ADD_EXECUTABLE(${lock}
     ${DEP_QP_CORE} 
     ${DEP_QP_CORE_QP_TINY_STACK})
 TARGET_LINK_LIBRARIES(${lock}  pthread dl rt)
+
+# events
+ADD_EXECUTABLE(${events}  
+    ${events_src} 
+    ${DEP_QP_CORE} 
+    ${DEP_QP_CORE_QP_TINY_STACK})
+TARGET_LINK_LIBRARIES(${events}  pthread dl rt)

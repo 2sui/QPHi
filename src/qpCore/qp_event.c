@@ -415,7 +415,7 @@ qp_event_tiktok(qp_event_t *emodule, qp_int_t *runstat)
             }
             
             if (QP_FD_INVALID == eevent->efd) {
-                QP_LOGOUT_LOG("[qp_event]Current available : [%d].", \
+                QP_LOGOUT_LOG("[qp_event]Current available : [%lu].", \
                     emodule->available);
                 qp_event_del(emodule, eevent);
                 qp_event_clear_flag(eevent);
@@ -492,8 +492,7 @@ qp_event_addevent(qp_event_t* evfd, qp_int_t fd, bool listen, bool auto_close)
         }
         
         QP_LOGOUT_LOG("[qp_event_t]Using connection [%d]", revent->index);
-        QP_LOGOUT_LOG("[qp_event_t]Current available : [%lu].", 
-            efd->available);
+        QP_LOGOUT_LOG("[qp_event_t]Current available : [%lu].", evfd->available);
         return QP_SUCCESS;
     } 
     
