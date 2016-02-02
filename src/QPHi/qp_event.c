@@ -191,7 +191,8 @@ qp_event_tiktok(qp_event_t *emodule)
     qp_int_t          acceptfd = QP_FD_INVALID;
     qp_int_t          itr = 0;
     
-    if (!qp_fd_is_valid(&emodule->evfd) || emodule->is_run) {
+    if (!qp_fd_is_valid(&emodule->evfd)) {
+        QP_LOGOUT_ERROR("[qp_event_t]Event Not vaild.");
         return QP_ERROR;
     }
 
@@ -291,10 +292,9 @@ qp_event_tiktok(qp_event_t *emodule)
                         revent->closed = 1;
                         revent->stat = QP_EVENT_NEW;
 
-                        QP_LOGOUT_LOG("[qp_event_t]Using connection [%d]", \
-                            revent->index);
                         QP_LOGOUT_LOG("[qp_event_t]Current available : "
-                            "[%lu].", emodule->available);
+                            "[%lu], free [%lu].", emodule->available, 
+                            emodule->event_pool.nfree);
 
                     } else {
                         /* connection pool used up */
@@ -315,6 +315,10 @@ qp_event_tiktok(qp_event_t *emodule)
                         qp_event_clear_flag(eevent);
                         qp_pool_free(&emodule->event_pool, eevent);
                         qp_atom_sub(&emodule->available);
+                        
+                        QP_LOGOUT_LOG("[qp_event_t]Current available : "
+                            "[%lu], free [%lu].", emodule->available, 
+                            emodule->event_pool.nfree);
                     }
 
                     break;
@@ -382,7 +386,7 @@ qp_event_tiktok(qp_event_t *emodule)
             /* if read/write event was hupped */
             if ((QP_FD_INVALID != eevent->efd) 
                 && (eevent->writehup || eevent->readhup)) 
-            {  
+            {   
                 rflag = eevent->writehup ? QP_EPOLL_OUT : 0;
                 qp_event_reset(emodule, eevent, rflag);
                 eevent->writehup = 0;
@@ -395,11 +399,12 @@ qp_event_tiktok(qp_event_t *emodule)
             }
             
             /* process the events */
-            if (eevent->process) {
+            if (eevent->write_finish || eevent->read_finish) {
                 
-                if (eevent->field.process) {
-                    ret = eevent->field.process(&eevent->field,eevent->stat, 
-                        eevent->read_done, eevent->write_done);
+                if (eevent->field.process_handler) {
+                    ret = eevent->field.process_handler(&eevent->field,
+                    eevent->efd, eevent->stat, eevent->read_finish, 
+                    eevent->read_done,eevent->write_finish, eevent->write_done);
                 
                     if (QP_FD_INVALID != eevent->efd) {
                     
@@ -415,11 +420,16 @@ qp_event_tiktok(qp_event_t *emodule)
                             }
                         }
                     }
-                
-                    eevent->read_done = 0;
                 }
                 
-                eevent->process = 0;
+                if (eevent->read_finish) {
+                    eevent->read_done = 0;
+                    eevent->read_finish = 0;
+                }
+                
+                if (eevent->write_finish) {
+                    eevent->write_finish = 0;   
+                }
             }
             
             /* stat change */
@@ -428,12 +438,14 @@ qp_event_tiktok(qp_event_t *emodule)
             }
             
             if (QP_FD_INVALID == eevent->efd) {
-                QP_LOGOUT_LOG("[qp_event]Current available : [%lu].", \
-                    emodule->available);
                 qp_event_del(emodule, eevent);
                 qp_event_clear_flag(eevent);
                 qp_pool_free(&emodule->event_pool, eevent);
                 qp_atom_sub(&emodule->available);
+                
+                QP_LOGOUT_LOG("[qp_event_t]Current available : "
+                    "[%lu], free [%lu].", emodule->available, 
+                    emodule->event_pool.nfree);
             }
         }  // while
     }  // while
@@ -517,6 +529,10 @@ qp_event_addevent(qp_event_t* evfd, qp_int_t fd, bool listen, bool auto_close)
     return QP_ERROR;
 }
 
+inline void
+qp_event_disable(qp_event_t* emodule)
+{ emodule->is_run = false; }
+
 qp_int_t
 qp_epoll_create(qp_int_t size)
 {
@@ -541,7 +557,7 @@ qp_epoll_wait(qp_event_t* emodule, qp_epoll_event_t *events, qp_int_t maxevents,
 void
 qp_event_close(qp_event_fd_t* efd)
 {
-    if (efd->closed && (QP_FD_INVALID == efd->efd)) {
+    if (efd->closed && (QP_FD_INVALID != efd->efd)) {
         close(efd->efd);
     }
 
@@ -625,7 +641,7 @@ qp_event_write(qp_event_fd_t* efd)
                 {
                     /* need close */
                     qp_event_close(efd);
-                    efd->process |= 1;
+                    efd->write_finish = 1;
                     return QP_ERROR;
                 }
 
@@ -638,8 +654,8 @@ qp_event_write(qp_event_fd_t* efd)
 
         } else {
             /* write finish */
-            efd->process |= 1;
             efd->write = 0;
+            efd->write_finish = 1;
         }
     }
 
@@ -655,6 +671,7 @@ qp_event_writev(qp_event_fd_t* efd)
         ret = writev(efd->efd, efd->field.writebuf.vector, \
             efd->field.writebuf_max);
         efd->write = 0;
+        efd->write_finish = 1;
 
         if (1 > ret) {
 
@@ -662,14 +679,11 @@ qp_event_writev(qp_event_fd_t* efd)
                 || !(EAGAIN == errno || EWOULDBLOCK == errno || EINTR == errno))
             {
                 qp_event_close(efd);
-                efd->process |= 1;
                 return QP_ERROR;
             }
         }
     }
     
-    efd->process |= 1;
-
     return QP_SUCCESS;
 }
 
@@ -696,16 +710,16 @@ qp_event_read(qp_event_fd_t* efd)
                     || EINTR == errno))
                 {
                     qp_event_close(efd);
-                    efd->process = 1;
+                    efd->read_finish = 1;
                     return QP_ERROR;
                 }
                 
                 if (efd->field.read_atleast) {
-                    efd->process |= \
+                    efd->read_finish = \
                         efd->field.read_atleast > efd->read_done ? 0 : 1;
                     
                 } else {
-                    efd->process |= 1;
+                    efd->read_finish = 1;
                 }
 
             } else {
@@ -714,7 +728,7 @@ qp_event_read(qp_event_fd_t* efd)
 
         } else {
             efd->read = 0;
-            efd->process = 1;
+            efd->read_finish = 1;
 
             if (efd->edge) {
                 /* we will rest beacues kernel buf still have data */
@@ -734,6 +748,7 @@ qp_event_readv(qp_event_fd_t* efd)
     if (efd->read && efd->field.readbuf_max && (QP_FD_INVALID != efd->efd)) {
         ret = readv(efd->efd, efd->field.readbuf.vector, efd->field.readbuf_max);
         efd->read = 0;
+        efd->read_finish = 1;
 
         if (1 > ret) {
 
@@ -741,13 +756,11 @@ qp_event_readv(qp_event_fd_t* efd)
                 || !(EAGAIN == errno || EWOULDBLOCK == errno || EINTR == errno))
             {
                 qp_event_close(efd);
-                efd->process = 1;
                 return QP_ERROR;
             }
         }
     }
     
-    efd->process |= 1;
 
     return QP_SUCCESS;
 }
@@ -757,14 +770,15 @@ qp_event_clear_flag(qp_event_fd_t* fd)
 {
     fd->listen = 0;
     fd->closed = 0;
-    fd->process = 0;
     fd->stat = QP_EVENT_IDL;
     fd->nativeclose = 0;
     fd->peerclose = 0;
     fd->write = 0;
     fd->writehup = 0;
+    fd->write_finish = 0;
     fd->read = 0;
     fd->readhup = 0;
+    fd->read_finish = 0;
     fd->read_done = 0;
     fd->write_done = 0;
 }

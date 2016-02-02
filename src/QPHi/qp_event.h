@@ -40,6 +40,7 @@ typedef  void    qp_epoll_event_t;
 #define  QP_EVENT_COMMONDATA_SIZE    256
 
 
+/* buf type */
 enum qp_event_opt_e {
     QP_EVENT_BLOCK_OPT = 0,  /* do read/write with block buf */
     QP_EVENT_VECT_OPT,       /* do read/write with iovec buf */
@@ -48,6 +49,7 @@ enum qp_event_opt_e {
 typedef enum qp_event_opt_e    qp_event_opt_t;
 
 
+/* event fd stat */
 enum qp_event_stat_e {
     QP_EVENT_IDL = 0,
     QP_EVENT_NEW, /* event is new */
@@ -57,6 +59,9 @@ enum qp_event_stat_e {
 
 typedef enum qp_event_stat_e    qp_event_stat_t;
 
+typedef qp_uint32_t             qp_event_done_t;
+#define  QP_EVENT_READ_DONE    (1 < 0)
+#define  QP_EVENT_WRITE_DONE    (1 < 1)
 
 struct qp_event_buf_s {
     qp_uchar_t*    block;
@@ -68,8 +73,9 @@ typedef struct qp_event_buf_s    qp_event_buf_t;
 
 typedef  struct qp_event_data_s    qp_event_data_t;
 typedef  void (*qp_event_opt_handler)(qp_event_data_t*);
-typedef  qp_int_t (*qp_event_process_handler)(qp_event_data_t*/* fd_data */, 
-    qp_event_stat_t/* stat */, size_t /* read_cnt */, size_t /* write_cnt */);
+typedef  qp_int_t (*qp_event_process_handler)(qp_event_data_t* /* fd_data */, 
+    qp_int_t /*fd*/, qp_event_stat_t /* stat */, bool /*read_finish*/, 
+    size_t /* read_cnt */, bool /*write_finish*/, size_t /* write_cnt */);
 
 struct  qp_event_data_s {
     /* read buf */
@@ -89,7 +95,7 @@ struct  qp_event_data_s {
     /* use block buf or iovec buf for next step */  
     qp_event_opt_t            next_write_opt;  
     /* event process handler for user */
-    qp_event_process_handler  process;
+    qp_event_process_handler  process_handler;
     /* user data */
     void*                     data;   /* user data */
 };
@@ -98,22 +104,22 @@ struct  qp_event_data_s {
 struct qp_event_fd_s {
     qp_int_t               index;
     qp_int_t               efd;
-    qp_uint32_t            flag;      /* need close */
+    qp_uint32_t            flag;          /* need close */
     qp_uint32_t            noblock:1;     /* need noblock */
     qp_uint32_t            edge:1;        /* ET mod */
     
     qp_uint32_t            listen:1;      /* is listen event */
     qp_uint32_t            closed:1;
-           
-    qp_uint32_t            process:1;
     qp_uint32_t            stat:2;
     
     qp_uint32_t            nativeclose:1; /* native closed */
     qp_uint32_t            peerclose:1;   /* peer closed */
-    qp_uint32_t            write:1;       /* write event(set by do_mysel call) */
+    qp_uint32_t            write:1;       
     qp_uint32_t            writehup:1;
+    qp_uint32_t            write_finish:1;
     qp_uint32_t            read:1; 
     qp_uint32_t            readhup:1;
+    qp_uint32_t            read_finish:1;
     
     qp_uint32_t            :20;
     /* size that already read, it will be set when read done */  
@@ -201,12 +207,7 @@ qp_int_t
 qp_event_addevent(qp_event_t* evfd, qp_int_t fd, bool listen, bool auto_close);
 
 inline void
-qp_event_enable(qp_event_t* emodule)
-{ emodule->is_run = true; }
-
-inline void
-qp_event_disable(qp_event_t* emodule)
-{ emodule->is_run = false; }
+qp_event_disable(qp_event_t* emodule);
 
 
 #ifdef __cplusplus
