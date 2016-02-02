@@ -66,7 +66,7 @@ qp_list_head(qp_list_t* list)
  */
 inline qp_list_t* 
 qp_list_first(qp_list_t* list)
-{ return list->next;}
+{ return qp_list_is_empty(list) ? NULL : list->next;}
     
 
 /*
@@ -115,14 +115,14 @@ qp_queue_insert_after_tail(qp_queue_t* queue, qp_queue_t* node)
 */
 inline qp_queue_t*
 qp_queue_first(qp_queue_t* queue)
-{ return queue->next;}
+{ return qp_queue_is_empty(queue) ? NULL : queue->next;}
 
 /*
  * Ge last element of queue.
 */
 inline qp_queue_t*
 qp_queue_last(qp_queue_t* queue)
-{ return queue->prev;}
+{ return qp_queue_is_empty(queue) ? NULL : queue->prev;}
         
 
 /*

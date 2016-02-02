@@ -74,7 +74,7 @@ qp_pool_create(qp_pool_t* pool)
         memset(pool, 0, sizeof(qp_pool_t));
     }
     
-    qp_list_init(&(pool->idle));
+    qp_list_init(&pool->idle);
     qp_pool_set_inited(pool);
     return pool;
 }
@@ -92,8 +92,7 @@ qp_pool_init(qp_pool_t* pool, size_t elmsize, size_t count)
     pool->nsize = count;
     pool->nfree = pool->nsize;
     
-    if (NULL == (pool->room = \
-        (qp_uchar_t*)qp_alloc(\
+    if (NULL == (pool->room = (qp_uchar_t*)qp_alloc(\
         (pool->esize + sizeof(qp_pool_elm_t)) * pool->nsize))) 
     {   
         qp_pool_destroy(pool, true);
@@ -103,9 +102,10 @@ qp_pool_init(qp_pool_t* pool, size_t elmsize, size_t count)
     
     size_t i = 0, offset = 0;
     qp_pool_elm_t* elements;
+    
     for (; i < pool->nsize; i++, offset += pool->esize + sizeof(qp_pool_elm_t)){
         elements = (qp_pool_elm_t*)(pool->room + offset);
-        qp_list_push(&(pool->idle), &(elements->next));
+        qp_list_push(&pool->idle, &elements->next);
         elements->root = pool;
     }
     
@@ -148,15 +148,15 @@ qp_pool_alloc(qp_pool_t* pool, size_t size)
     if (qp_pool_is_inited(pool)) {
         
         if ((size > pool->esize)
-            || qp_list_is_empty(&(pool->idle))) {
+            || qp_list_is_empty(&pool->idle)) {
             QP_LOGOUT_ERROR("[qp_pool_t]Alloc size tool large or room used up.");
             return NULL;
         }
         
-        qp_pool_elm_t* elements = qp_list_data(qp_list_first(&(pool->idle)), \
+        qp_pool_elm_t* elements = qp_list_data(qp_list_first(&pool->idle), \
             qp_pool_elm_t, next);
         
-        qp_list_pop(&(pool->idle));
+        qp_list_pop(&pool->idle);
         pool->nfree--;
         return (void*)((qp_uchar_t*)elements + sizeof(qp_pool_elm_t));
     }
@@ -178,7 +178,7 @@ qp_pool_free(qp_pool_t* pool, void* ptr)
             return QP_ERROR;
         }
         
-        qp_list_push(&(pool->idle), &(elements->next));
+        qp_list_push(&pool->idle, &elements->next);
         pool->nfree++;
         return QP_SUCCESS;
     }

@@ -45,12 +45,6 @@ qp_int_t
 qp_epoll_wait(qp_event_t* emodule, qp_epoll_event_t *events, qp_int_t maxevents, 
     qp_int_t timeout);
 
-void
-qp_event_close(qp_event_fd_t* efd);
-
-qp_int_t
-qp_event_check_close(qp_event_fd_t* efd);
-
 qp_int_t
 qp_event_add(qp_event_t* evfd, qp_event_fd_t* eventfd);
 
@@ -59,6 +53,15 @@ qp_event_reset(qp_event_t* evfd, qp_event_fd_t* eventfd, qp_int_t flag);
 
 qp_int_t
 qp_event_del(qp_event_t* evfd, qp_event_fd_t* eventfd);
+
+qp_int_t
+qp_event_accept(qp_event_fd_t* efd);
+
+qp_int_t
+qp_event_close(qp_event_fd_t* efd);
+
+qp_int_t
+qp_event_check_close(qp_event_fd_t* efd);
 
 qp_int_t
 qp_event_write(qp_event_fd_t* efd);
@@ -240,10 +243,11 @@ qp_event_tiktok(qp_event_t *emodule)
         }
         
         /* listen event */
-        while (!qp_list_is_empty(&emodule->listen_ready)) {
+        while (!qp_list_is_empty(&emodule->listen_ready) 
+            && qp_pool_available(&emodule->event_pool)) 
+        {
             eevent = qp_list_data(qp_list_first(&emodule->listen_ready), \
                 qp_event_fd_t, ready_next);
-            qp_list_pop(&emodule->listen_ready);
             
             do {
                 acceptfd = accept(eevent->efd, NULL, NULL);
@@ -302,6 +306,7 @@ qp_event_tiktok(qp_event_t *emodule)
 
             } while (revent->edge);
                 
+            qp_list_pop(&emodule->listen_ready);
         }
             
         /* do read/write event */
@@ -542,28 +547,6 @@ qp_epoll_wait(qp_event_t* emodule, qp_epoll_event_t *events, qp_int_t maxevents,
 #endif
 }
 
-void
-qp_event_close(qp_event_fd_t* efd)
-{
-    if (efd->closed && (QP_FD_INVALID != efd->efd)) {
-        close(efd->efd);
-    }
-
-    efd->efd = QP_FD_INVALID;
-}
-
-
-qp_int_t
-qp_event_check_close(qp_event_fd_t* efd)
-{
-    if (efd->nativeclose) {
-        qp_event_close(efd);
-        return QP_ERROR;
-    }
-
-    return QP_SUCCESS;
-}
-
 qp_int_t
 qp_event_add(qp_event_t *evfd, qp_event_fd_t *eventfd)
 {
@@ -594,7 +577,6 @@ qp_event_reset(qp_event_t *evfd, qp_event_fd_t *eventfd, qp_int_t flag)
 #endif
 }
 
-
 qp_int_t
 qp_event_del(qp_event_t *evfd, qp_event_fd_t *eventfd)
 {
@@ -606,6 +588,35 @@ qp_event_del(qp_event_t *evfd, qp_event_fd_t *eventfd)
 #else
     return QP_ERROR;
 #endif
+}
+
+qp_int_t
+qp_event_accept(qp_event_fd_t* efd)
+{
+    
+}
+
+qp_int_t
+qp_event_close(qp_event_fd_t* efd)
+{
+    if (efd->closed && (QP_FD_INVALID != efd->efd)) {
+        close(efd->efd);
+    }
+
+    efd->efd = QP_FD_INVALID;
+    return QP_SUCCESS;
+}
+
+
+qp_int_t
+qp_event_check_close(qp_event_fd_t* efd)
+{
+    if (efd->nativeclose) {
+        qp_event_close(efd);
+        return QP_ERROR;
+    }
+
+    return QP_SUCCESS;
 }
 
 qp_int_t
