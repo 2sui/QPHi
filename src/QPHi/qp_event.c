@@ -228,17 +228,7 @@ qp_event_tiktok(qp_event_t *emodule)
 
         for (itr = 0; itr < revent_num; itr++) { 
             revent = (qp_event_fd_t*)(event_queue[itr].data.ptr);
-            rflag =  event_queue[itr].events;
-            
-            revent->nativeclose |= (QP_EPOLL_HUP | QP_EPOLL_ERR) & rflag;
-            revent->peerclose |= QP_EPOLL_RDHUP & rflag;
-            revent->write &= !revent->peerclose;
-            revent->read = QP_EPOLL_IN & rflag;
-
-            /* if no event */
-            if (!(revent->read | revent->write | revent->nativeclose)) {
-                continue;
-            }
+            revent->eflag =  event_queue[itr].events;
 
             /* add read/write event to ready list */
             if (revent->listen) {
@@ -255,17 +245,6 @@ qp_event_tiktok(qp_event_t *emodule)
                 qp_event_fd_t, ready_next);
             qp_list_pop(&emodule->listen_ready);
             
-            if (eevent->nativeclose) {
-                QP_LOGOUT_ERROR("[qp_event_t] Listen event error at [%d].", 
-                    eevent->index);
-                qp_event_close(eevent);
-                qp_event_del(emodule, eevent);
-                qp_event_clear_flag(eevent);
-                qp_pool_free(&emodule->event_pool, eevent);
-                qp_atom_sub(&emodule->available);
-                continue;
-            }
-            
             do {
                 acceptfd = accept(eevent->efd, NULL, NULL);
 
@@ -277,24 +256,25 @@ qp_event_tiktok(qp_event_t *emodule)
                             &emodule->event_pool, sizeof(qp_event_fd_t));
                            
                         revent->efd = acceptfd;
+                        revent->closed = 1;
+                        revent->stat = QP_EVENT_NEW;
 
                         /* add event to pool */
                         if (QP_ERROR != qp_event_add(emodule, revent)){
                             qp_atom_add(&emodule->available);
                                 
                         } else {
+                            qp_event_clear_flag(revent);
                             qp_pool_free(&emodule->event_pool, revent);
                             close(acceptfd);
                             QP_LOGOUT_ERROR("[qp_event_t]Add event fail.");
                             continue;
                         }
-                        
-                        revent->closed = 1;
-                        revent->stat = QP_EVENT_NEW;
-
+                        /*
                         QP_LOGOUT_LOG("[qp_event_t]Current available : "
                             "[%lu], free [%lu].", emodule->available, 
                             emodule->event_pool.nfree);
+                         */
 
                     } else {
                         /* connection pool used up */
@@ -315,10 +295,6 @@ qp_event_tiktok(qp_event_t *emodule)
                         qp_event_clear_flag(eevent);
                         qp_pool_free(&emodule->event_pool, eevent);
                         qp_atom_sub(&emodule->available);
-                        
-                        QP_LOGOUT_LOG("[qp_event_t]Current available : "
-                            "[%lu], free [%lu].", emodule->available, 
-                            emodule->event_pool.nfree);
                     }
 
                     break;
@@ -333,6 +309,17 @@ qp_event_tiktok(qp_event_t *emodule)
             eevent = qp_list_data(qp_list_first(&emodule->ready), qp_event_fd_t,\
                 ready_next);
             qp_list_pop(&emodule->ready);
+            
+            eevent->nativeclose |= (QP_EPOLL_HUP | QP_EPOLL_ERR) & eevent->eflag;
+            eevent->peerclose |= QP_EPOLL_RDHUP & eevent->eflag;
+//            eevent->write &= !revent->peerclose;
+            eevent->read = QP_EPOLL_IN & eevent->eflag;
+
+            /* if no event */
+            if (!(eevent->read | eevent->write | eevent->nativeclose)) {
+                continue;
+            }
+
             
             writehandler = (QP_EVENT_BLOCK_OPT == eevent->field.next_write_opt)?\
                 qp_event_write : qp_event_writev;
@@ -442,10 +429,11 @@ qp_event_tiktok(qp_event_t *emodule)
                 qp_event_clear_flag(eevent);
                 qp_pool_free(&emodule->event_pool, eevent);
                 qp_atom_sub(&emodule->available);
-                
+                /*
                 QP_LOGOUT_LOG("[qp_event_t]Current available : "
                     "[%lu], free [%lu].", emodule->available, 
                     emodule->event_pool.nfree);
+                 */
             }
         }  // while
     }  // while

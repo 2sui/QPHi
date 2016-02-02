@@ -104,6 +104,7 @@ struct  qp_event_data_s {
 struct qp_event_fd_s {
     qp_int_t               index;
     qp_int_t               efd;
+    qp_int_t               eflag;
     qp_uint32_t            flag;          /* need close */
     qp_uint32_t            noblock:1;     /* need noblock */
     qp_uint32_t            edge:1;        /* ET mod */
