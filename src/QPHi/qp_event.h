@@ -67,28 +67,31 @@ typedef struct qp_event_buf_s    qp_event_buf_t;
 
 
 typedef  struct qp_event_data_s    qp_event_data_t;
+typedef  void (*qp_event_opt_handler)(qp_event_data_t*);
+typedef  qp_int_t (*qp_event_process_handler)(qp_event_data_t*/* fd_data */, 
+    qp_event_stat_t/* stat */, size_t /* read_cnt */, size_t /* write_cnt */);
 
 struct  qp_event_data_s {
     /* read buf */
-    qp_event_buf_t       readbuf; 
+    qp_event_buf_t            readbuf; 
     /* write buf */
-    qp_event_buf_t       writebuf;
+    qp_event_buf_t            writebuf;
     /* read buf max size/block */
-    size_t               readbuf_max; 
+    size_t                    readbuf_max; 
     /* read buf max size/block */
-    size_t               writebuf_max; 
+    size_t                    writebuf_max; 
     /* it will not call do_myself callback untill read_atleast bytes are read */
-    size_t               read_atleast; 
+    size_t                    read_atleast; 
     /* it will not call do_myself callback untill write_atleast bytes are writen (it will not effect for now) */
-    size_t               write_atleast; 
+    size_t                    write_atleast; 
     /* use block buf or iovec buf for next step */ 
-    qp_event_opt_t       next_read_opt;    
+    qp_event_opt_t            next_read_opt;    
     /* use block buf or iovec buf for next step */  
-    qp_event_opt_t       next_write_opt;    
-    qp_int_t
-    (*process_handler)(qp_event_data_t*/* fd_data */, qp_event_stat_t/* stat */, 
-        size_t /* read_cnt */, size_t /* write_cnt */);
-    void*                data;   /* user data */
+    qp_event_opt_t            next_write_opt;  
+    /* event process handler for user */
+    qp_event_process_handler  process;
+    /* user data */
+    void*                     data;   /* user data */
 };
 
 
@@ -131,19 +134,17 @@ struct  qp_event_s {
     qp_pool_t               event_pool;   /* mem pool */       
     qp_list_t               ready;    /* event ready list */
     qp_list_t               listen_ready;
-    qp_event_data_opt_handler    data_init;
-    qp_event_data_opt_handler    data_destroy;
     void*                   (*event_idle_cb)(void*);  /* idle event callback when no event ready */
     void*                   event_idle_cb_arg;   /* idle event callback arg */
+    qp_event_opt_handler    init;
+    qp_event_opt_handler    destroy;
     bool                    is_alloced; 
+    bool                    is_run;
     /* read buf if user not assign */
     qp_uchar_t              combuf[QP_EVENT_COMMONDATA_SIZE];
 };
 
 typedef  struct  qp_event_s    qp_event_t;
-
-
-typedef  void (*qp_event_data_opt_handler)(qp_event_data_t*);
 
 inline bool
 qp_event_is_alloced(qp_event_t* evfd);
@@ -165,7 +166,7 @@ qp_event_is_alloced(qp_event_t* evfd);
  */
 qp_event_t*
 qp_event_init(qp_event_t* emodule, qp_uint32_t fd_size, bool noblock, bool edge,
-    qp_event_data_opt_handler init, qp_event_data_opt_handler destroy,
+    qp_event_opt_handler init, qp_event_opt_handler destroy, 
     void* (*idle_cb)(void *), void* idle_arg);
 
 /**
@@ -175,7 +176,7 @@ qp_event_init(qp_event_t* emodule, qp_uint32_t fd_size, bool noblock, bool edge,
  * If quit nomally it return QP_SUCCESS , otherwise return QP_ERROR.
  */
 qp_int_t
-qp_event_tiktok(qp_event_t* emodule, qp_int_t *runstat);
+qp_event_tiktok(qp_event_t* emodule);
 
 /**
  * Destory a mq_event handler.
@@ -198,6 +199,14 @@ qp_event_destroy(qp_event_t* emodule);
  */
 qp_int_t
 qp_event_addevent(qp_event_t* evfd, qp_int_t fd, bool listen, bool auto_close);
+
+inline void
+qp_event_enable(qp_event_t* emodule)
+{ emodule->is_run = true; }
+
+inline void
+qp_event_disable(qp_event_t* emodule)
+{ emodule->is_run = false; }
 
 
 #ifdef __cplusplus

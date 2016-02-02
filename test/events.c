@@ -8,18 +8,35 @@
 #include <qphi.h>
 
 
+#define  HTTP_RSP  \
+"HTTP/1.1 OK 200\r\n"\
+"Server: qp_test\r\n"\
+"connection: close"
+
+
+static qp_pool_manager_t    manager;
+
 qp_int_t
 process_handler(qp_event_data_t* data, qp_event_stat_t stat, size_t read_cnt, 
     size_t write_cnt)
-{}
-
-void
-init_handler(qp_event_data_t* data)
-{}
-
-void
-destroy_handler(qp_event_data_t* data)
-{}
+{
+    switch (stat) {
+        
+        case QP_EVENT_NEW: {
+            
+        }break;
+        
+        case QP_EVENT_PROCESS: {
+            
+        }break;
+        
+        default: {
+            
+        }break;
+    }
+    
+    return QP_ERROR;
+}
 
 int
 main(int argc, char** argv)
@@ -28,10 +45,14 @@ main(int argc, char** argv)
     qp_socket_t   skt;
     qp_int_t      run = 0;
     
+    if (!qp_pool_manager_init(&manager, 1024, 1025)) {
+        return -1;
+    }
+    
     
     if (!qp_socket_init(&skt, AF_INET, SOCK_STREAM, "0.0.0.0", 8080, true) 
-        || !qp_event_init(&emodule, 1024, true, true, 
-        init_handler, destroy_handler, NULL, NULL)) 
+        || !qp_event_init(&emodule, 1024, true, true, process_handler, 
+        NULL, NULL)) 
     {
         goto end;
     }
@@ -52,5 +73,7 @@ main(int argc, char** argv)
     end:
     qp_socket_destroy(&skt);
     qp_event_destroy(&emodule);
+    qp_pool_manager_destroy(&manager, true);
     return 0;
 }
+
