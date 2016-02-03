@@ -147,14 +147,19 @@ qp_pool_alloc(qp_pool_t* pool, size_t size)
 {
     if (qp_pool_is_inited(pool)) {
         
-        if ((size > pool->esize)
-            || qp_list_is_empty(&pool->idle)) {
-            QP_LOGOUT_ERROR("[qp_pool_t]Alloc size tool large or room used up.");
+        if (size > pool->esize) {
+            QP_LOGOUT_ERROR("[qp_pool_t]Alloc size tool large.");
             return NULL;
         }
         
-        qp_pool_elm_t* elements = qp_list_data(qp_list_first(&pool->idle), \
-            qp_pool_elm_t, next);
+        qp_pool_elm_t* elements = (qp_pool_elm_t*) qp_list_first(&pool->idle);
+        
+        if (!elements) {
+            QP_LOGOUT_ERROR("[qp_pool_t]Pool used up.");
+            return NULL;
+        }
+
+        elements = qp_list_data((qp_list_t*)elements, qp_pool_elm_t, next);
         
         qp_list_pop(&pool->idle);
         pool->nfree--;
@@ -234,7 +239,7 @@ qp_pool_manager_create(qp_pool_manager_t* manager)
         memset(manager, 0, sizeof(qp_pool_manager_t));
     }
     
-    qp_queue_init(&(manager->pool_queue));
+    qp_queue_init(&manager->pool_queue);
     qp_pool_manager_set_inited(manager);
     return manager;
 }
@@ -262,11 +267,11 @@ qp_pool_manager_destroy(qp_pool_manager_t* manager, bool force)
 #ifdef QP_DEBUG
         size_t counter = 0;
 #endif 
-        while (!qp_queue_is_empty(&(manager->pool_queue))) {
-            pool = qp_queue_data(qp_queue_first(&(manager->pool_queue)), \
+        while (!qp_queue_is_empty(&manager->pool_queue)) {
+            pool = qp_queue_data(qp_queue_first(&manager->pool_queue), \
                 qp_pool_manager_elm_t, queue);
-            qp_queue_remove(&(pool->queue));
-            qp_pool_destroy(&(pool->pool), force);
+            qp_queue_remove(&pool->queue);
+            qp_pool_destroy(&pool->pool, force);
             qp_free(pool);
             
 #ifdef QP_DEBUG
@@ -290,13 +295,13 @@ qp_pool_manager_alloc(qp_pool_manager_t* manager, size_t size, qp_pool_t** npool
         
         /* if not say current pool, find or create one */
         if ((NULL == manager->current) 
-            || !qp_pool_available(&(manager->current->pool))) 
+            || !qp_pool_available(&manager->current->pool)) 
         {
-            qp_queue_t* node = qp_queue_first(&(manager->pool_queue));
+            qp_queue_t* node = qp_queue_first(&manager->pool_queue);
             manager->current = NULL;
             
             /* find available pool */
-            while (node != qp_queue_head(&(manager->pool_queue))) {
+            while (node && (node != &manager->pool_queue)) {
                 manager->current = \
                     qp_queue_data(node, qp_pool_manager_elm_t, queue);
         

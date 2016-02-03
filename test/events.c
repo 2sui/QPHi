@@ -35,7 +35,7 @@ process_handler(qp_event_data_t* data, qp_int_t fd, qp_event_stat_t stat,
           
             
 //            fprintf(stderr, "\nGet [%d]", fd);
-             sprintf((char*) data->writebuf.block, "%s", HTTP_RSP);
+            sprintf((char*) data->writebuf.block, "%s", HTTP_RSP);
             data->writebuf_max = strlen(HTTP_RSP);
             return QP_EPOLL_OUT;
             
