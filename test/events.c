@@ -24,20 +24,19 @@ process_handler(qp_event_data_t* data, qp_int_t fd, qp_event_stat_t stat,
 {
     switch (stat) {
         
-        case QP_EVENT_NEW: 
+        case QP_EVENT_NEW: {
+            sprintf((char*) data->writebuf.block, "%s", HTTP_RSP);
+            data->writebuf_max = strlen(HTTP_RSP);
+            fprintf(stderr, "\nAccept: %lu", ++count);
+            return QP_EPOLL_OUT;
+        }break;
+        
         case QP_EVENT_PROCESS: {
             
             if (write_finish) {
-                count++;
-                fprintf(stderr, "\nClose [%lu]", count);
+                fprintf(stderr, "\nClose [%lu]", count--);
                 return QP_ERROR;
             }
-          
-            
-//            fprintf(stderr, "\nGet [%d]", fd);
-            sprintf((char*) data->writebuf.block, "%s", HTTP_RSP);
-            data->writebuf_max = strlen(HTTP_RSP);
-            return QP_EPOLL_OUT;
             
         }break;
         

@@ -145,13 +145,7 @@ qp_pool_destroy(qp_pool_t* pool, bool force)
 void* 
 qp_pool_alloc(qp_pool_t* pool, size_t size)
 {
-    if (qp_pool_is_inited(pool)) {
-        
-        if (size > pool->esize) {
-            QP_LOGOUT_ERROR("[qp_pool_t]Alloc size tool large.");
-            return NULL;
-        }
-        
+    if (qp_pool_is_inited(pool) || (size > pool->esize)) {
         qp_pool_elm_t* elements = (qp_pool_elm_t*) qp_list_first(&pool->idle);
         
         if (!elements) {
@@ -205,9 +199,8 @@ void*
 qp_pool_to_array(qp_pool_t* pool, size_t index)
 {
     if (qp_pool_is_inited(pool)) {
-        return (void*)(pool->room + \
-            (index * (pool->esize + sizeof(qp_pool_elm_t))) +\
-            sizeof(qp_pool_elm_t));
+        return (void*)(pool->room + (index * (pool->esize + 
+            sizeof(qp_pool_elm_t))) + sizeof(qp_pool_elm_t));
     }
     
     return NULL;
@@ -343,7 +336,7 @@ qp_pool_manager_alloc(qp_pool_manager_t* manager, size_t size, qp_pool_t** npool
             }
         }
         
-        ptr =  qp_pool_alloc(&(manager->current->pool), size);
+        ptr =  qp_pool_alloc(&manager->current->pool, size);
         
         if (NULL == ptr) {
             return ptr;

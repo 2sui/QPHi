@@ -96,6 +96,9 @@ qp_pool_destroy(qp_pool_t* pool, bool force);
 /**
  * Allocate a room from memory pool. The size should not
  * bigger than pool element size.
+ * 
+ * If success return a memory block, and if some error happen or pool used up 
+ * it will return NULL.
  */
 void*
 qp_pool_alloc(qp_pool_t* pool, size_t size);

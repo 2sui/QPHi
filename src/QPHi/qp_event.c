@@ -55,7 +55,7 @@ qp_int_t
 qp_event_del(qp_event_t* evfd, qp_event_fd_t* eventfd);
 
 qp_int_t
-qp_event_accept(qp_event_fd_t* efd, qp_event_fd_t* new);
+qp_event_accept(qp_event_fd_t* efd);
 
 qp_int_t
 qp_event_close(qp_event_fd_t* efd);
@@ -183,6 +183,7 @@ qp_int_t
 qp_event_tiktok(qp_event_t *emodule)
 {
     qp_int_t          revent_num = 0;
+    qp_int_t          accept_fd = -1;
     qp_int_t          (*readhandler)(qp_event_fd_t*);
     qp_int_t          (*writehandler)(qp_event_fd_t*);
     qp_uint32_t       rflag = 0;
@@ -209,8 +210,8 @@ qp_event_tiktok(qp_event_t *emodule)
 
     /* event loop */
     while (emodule->is_run && emodule->available) {
-        revent_num = \
-            qp_epoll_wait(emodule, event_queue, emodule->event_size, 0/*timeout*/);
+        revent_num = qp_epoll_wait(emodule, event_queue, emodule->event_size,\
+            timeout);
 
         /* do with error */
         if (0 > revent_num) {
@@ -249,37 +250,39 @@ qp_event_tiktok(qp_event_t *emodule)
             eevent = qp_list_data(qp_list_first(&emodule->listen_ready), \
                 qp_event_fd_t, ready_next);
             
+            /* if not enable ET , remove it from ready list */
             if (!eevent->edge) {
                 qp_list_pop(&emodule->listen_ready);
             }
             
             do {
-                revent = (qp_event_fd_t*) qp_pool_alloc(\
-                    &emodule->event_pool, sizeof(qp_event_fd_t));
+                accept_fd = qp_event_accept(eevent);
                 
-                /* pool used up but accept event not be done */
-                if (!revent) {
-                    break;
-                }
-                
-                /* accept done */
-                if (QP_ERROR == qp_event_accept(eevent, revent)) {
-                    
+                /* accept error */
+                if (QP_FD_INVALID == accept_fd 
+                    || (NULL == (revent = (qp_event_fd_t*)qp_pool_alloc(\
+                    &emodule->event_pool, sizeof(qp_event_fd_t))))) 
+                {
+                    /* if error happen or accept done, remove event */
                     if (eevent->edge) {
                         qp_list_pop(&emodule->listen_ready);
                     }
                     
-                    if (QP_FD_INVALID == eevent->efd) {
+                    if (!(EAGAIN == errno || EWOULDBLOCK == errno || 
+                        EINTR == errno))
+                    {
+                        QP_LOGOUT_ERROR("[qp_event_t]Listen event error [%d].",
+                            eevent->efd);
                         qp_event_del(emodule, eevent);
                         qp_event_clear_flag(eevent);
                         qp_pool_free(&emodule->event_pool, eevent);
                         qp_atom_sub(&emodule->available);
                     }
                     
-                    qp_pool_free(&emodule->event_pool, revent);
                     break;
                 } 
                 
+                revent->efd = accept_fd;
                 revent->closed = 1;
                 revent->stat = QP_EVENT_NEW;
                 
@@ -293,7 +296,7 @@ qp_event_tiktok(qp_event_t *emodule)
                     QP_LOGOUT_ERROR("[qp_event_t]Add event fail.");
                 }
 
-            } while (revent->edge);
+            } while (eevent->edge);
  
         }
             
@@ -579,24 +582,9 @@ qp_event_del(qp_event_t *evfd, qp_event_fd_t *eventfd)
 }
 
 qp_int_t
-qp_event_accept(qp_event_fd_t* efd, qp_event_fd_t* new)
+qp_event_accept(qp_event_fd_t* efd)
 {
-    new->efd = accept(efd->efd, NULL, NULL);
-    
-    if (QP_FD_INVALID == new->efd) {
-        
-        if (!((EAGAIN == errno) || (ECONNABORTED == errno) || (EPROTO == errno) 
-            || (EINTR == errno)))
-        {
-            QP_LOGOUT_ERROR("[qp_event]Listen on [%d] error:[%d][%s]",\
-                efd->efd, errno, strerror(errno));
-            qp_event_close(efd);
-        }
-        
-        return QP_ERROR;
-    }
-    
-    return QP_SUCCESS;
+    return accept(efd->efd, NULL, NULL);
 }
 
 qp_int_t
