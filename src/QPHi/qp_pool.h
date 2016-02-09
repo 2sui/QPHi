@@ -22,8 +22,8 @@ typedef struct qp_pool_s        qp_pool_t;
 
 
 struct qp_pool_elm_s {
-    qp_pool_t*    root;
     qp_list_t     next;
+    qp_pool_t*    root;
 };
 
 
@@ -32,6 +32,7 @@ struct qp_pool_s {
     size_t           esize;     /* element size */
     qp_uchar_t*      room;      /* data room */
     qp_list_t        idle;
+    qp_list_t        used;
     size_t           nfree;
     bool             is_inited;
     bool             is_alloced;

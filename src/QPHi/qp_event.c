@@ -308,7 +308,7 @@ qp_event_tiktok(qp_event_t *emodule)
             
             eevent->nativeclose |= (QP_EPOLL_HUP | QP_EPOLL_ERR) & eevent->eflag;
             eevent->peerclose |= QP_EPOLL_RDHUP & eevent->eflag;
-//            eevent->write &= !revent->peerclose;
+            eevent->write &= !revent->peerclose;
             eevent->read = QP_EPOLL_IN & eevent->eflag;
 
             /* if no event */

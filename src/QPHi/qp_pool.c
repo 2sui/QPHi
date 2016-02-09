@@ -75,6 +75,7 @@ qp_pool_create(qp_pool_t* pool)
     }
     
     qp_list_init(&pool->idle);
+    qp_list_init(&pool->used);
     qp_pool_set_inited(pool);
     return pool;
 }
@@ -82,6 +83,8 @@ qp_pool_create(qp_pool_t* pool)
 qp_pool_t*
 qp_pool_init(qp_pool_t* pool, size_t elmsize, size_t count)
 {
+    size_t i = 0, offset = 0;
+    qp_pool_elm_t* elements = NULL;
     pool = qp_pool_create(pool);
     
     if (NULL == pool) {
@@ -99,9 +102,6 @@ qp_pool_init(qp_pool_t* pool, size_t elmsize, size_t count)
         QP_LOGOUT_ERROR("[qp_pool_t]Pool element room create fail.");
         return NULL;
     }
-    
-    size_t i = 0, offset = 0;
-    qp_pool_elm_t* elements;
     
     for (; i < pool->nsize; i++, offset += pool->esize + sizeof(qp_pool_elm_t)){
         elements = (qp_pool_elm_t*)(pool->room + offset);
@@ -145,16 +145,19 @@ qp_pool_destroy(qp_pool_t* pool, bool force)
 void* 
 qp_pool_alloc(qp_pool_t* pool, size_t size)
 {
-    if (qp_pool_is_inited(pool) || (size > pool->esize)) {
-        qp_pool_elm_t* elements = (qp_pool_elm_t*) qp_list_first(&pool->idle);
+    qp_pool_elm_t* elements = NULL;
+    qp_list_t      node = NULL;
+    
+    if (qp_pool_is_inited(pool) && (size <= pool->esize)) {
+        node = qp_list_first(&pool->idle);
         
-        if (!elements) {
+        if (!node) {
             QP_LOGOUT_ERROR("[qp_pool_t]Pool used up.");
             return NULL;
         }
 
-        elements = qp_list_data((qp_list_t*)elements, qp_pool_elm_t, next);
-        
+        elements = qp_list_data(node, qp_pool_elm_t, next);
+//        qp_list_push(&pool->used, &elements->next);
         qp_list_pop(&pool->idle);
         pool->nfree--;
         return (void*)((qp_uchar_t*)elements + sizeof(qp_pool_elm_t));
@@ -166,9 +169,9 @@ qp_pool_alloc(qp_pool_t* pool, size_t size)
 qp_int_t
 qp_pool_free(qp_pool_t* pool, void* ptr)
 {
+    qp_pool_elm_t* elements = qp_pool_belong_to(ptr);
+    
     if (qp_pool_is_inited(pool)) {
-        
-        qp_pool_elm_t* elements = qp_pool_belong_to(ptr);
         
         if (elements->root != pool) {
             QP_LOGOUT_ERROR("[qp_pool_t]Free ptr error: Need pool 0x%lx,"
@@ -178,6 +181,7 @@ qp_pool_free(qp_pool_t* pool, void* ptr)
         }
         
         qp_list_push(&pool->idle, &elements->next);
+//        qp_list_pop(&elments->next);
         pool->nfree++;
         return QP_SUCCESS;
     }
@@ -188,11 +192,7 @@ qp_pool_free(qp_pool_t* pool, void* ptr)
 size_t
 qp_pool_available(qp_pool_t* pool)
 {
-    if (qp_pool_is_inited(pool)) {
-        return pool->nfree;
-    }
-    
-    return 0;
+    return qp_pool_is_inited(pool) ? pool->nfree : 0;
 }
 
 void*
@@ -295,11 +295,11 @@ qp_pool_manager_alloc(qp_pool_manager_t* manager, size_t size, qp_pool_t** npool
             
             /* find available pool */
             while (node && (node != &manager->pool_queue)) {
-                manager->current = \
-                    qp_queue_data(node, qp_pool_manager_elm_t, queue);
+                manager->current = qp_queue_data(node, qp_pool_manager_elm_t, \
+                    queue);
         
                 /* have room in this pool, use it */
-                if (qp_pool_available(&(manager->current->pool))) {
+                if (qp_pool_available(&manager->current->pool)) {
                     break;
                 } 
                 
