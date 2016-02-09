@@ -146,7 +146,7 @@ void*
 qp_pool_alloc(qp_pool_t* pool, size_t size)
 {
     qp_pool_elm_t* elements = NULL;
-    qp_list_t      node = NULL;
+    qp_list_t*     node = NULL;
     
     if (qp_pool_is_inited(pool) && (size <= pool->esize)) {
         node = qp_list_first(&pool->idle);
@@ -193,6 +193,12 @@ size_t
 qp_pool_available(qp_pool_t* pool)
 {
     return qp_pool_is_inited(pool) ? pool->nfree : 0;
+}
+
+size_t
+qp_pool_used(qp_pool_t* pool)
+{
+    return qp_pool_is_inited(pool) ? (pool->nsize - pool->nfree) : 0;
 }
 
 void*

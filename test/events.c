@@ -13,8 +13,6 @@
 "Server: qp_test\r\n"\
 "connection: close"
 
-static qp_ulong_t   count = 0;
-
 
 static qp_pool_manager_t    manager;
 
@@ -27,14 +25,12 @@ process_handler(qp_event_data_t* data, qp_int_t fd, qp_event_stat_t stat,
         case QP_EVENT_NEW: {
             sprintf((char*) data->writebuf.block, "%s", HTTP_RSP);
             data->writebuf_max = strlen(HTTP_RSP);
-            fprintf(stderr, "\nAccept: %lu", ++count);
             return QP_EPOLL_OUT;
         }break;
         
         case QP_EVENT_PROCESS: {
             
             if (write_finish) {
-                fprintf(stderr, "\nClose [%lu]", count--);
                 return QP_ERROR;
             }
             

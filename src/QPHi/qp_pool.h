@@ -116,6 +116,9 @@ qp_pool_free(qp_pool_t* pool, void* ptr);
 size_t
 qp_pool_available(qp_pool_t* pool);
 
+size_t
+qp_pool_used(qp_pool_t* pool);
+
 /**
  * Change the pool to array, and return the ptr in index.
  */

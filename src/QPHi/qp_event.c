@@ -42,6 +42,9 @@ qp_int_t
 qp_epoll_create(qp_int_t size);
 
 qp_int_t
+qp_event_removeevent(qp_event_t* emodule, qp_event_fd_t* evfd);
+
+qp_int_t
 qp_epoll_wait(qp_event_t* emodule, qp_epoll_event_t *events, qp_int_t maxevents, 
     qp_int_t timeout);
 
@@ -132,7 +135,6 @@ qp_event_init(qp_event_t* emodule, qp_uint32_t fd_size, bool noblock, bool edge,
         mod |= QP_EPOLL_ET /*| QP_EPOLL_ONESHOT */;  /* use for mult thread */
     }
 
-    emodule->available = 0;
     emodule->event_size = 0;
     emodule->event_idle_cb = idle_cb;
     emodule->event_idle_cb_arg = idle_arg;
@@ -182,15 +184,14 @@ qp_event_init(qp_event_t* emodule, qp_uint32_t fd_size, bool noblock, bool edge,
 qp_int_t
 qp_event_tiktok(qp_event_t *emodule)
 {
-    qp_int_t          revent_num = 0;
-    qp_int_t          accept_fd = -1;
     qp_int_t          (*readhandler)(qp_event_fd_t*);
     qp_int_t          (*writehandler)(qp_event_fd_t*);
-    qp_uint32_t       rflag = 0;
-    qp_event_fd_t*    revent = NULL;
     qp_event_fd_t*    eevent = NULL;
     qp_epoll_event_t* event_queue = NULL;
     ssize_t           ret = 0;
+    qp_int_t          eevent_num = 0;
+    qp_int_t          accept_fd = -1;
+    qp_int_t          rflag = 0;
     qp_int_t          timeout = (NULL == emodule->event_idle_cb) ? -1 : 0;
     qp_int_t          itr = 0;
     
@@ -209,15 +210,15 @@ qp_event_tiktok(qp_event_t *emodule)
     emodule->is_run = true;
 
     /* event loop */
-    while (emodule->is_run && emodule->available) {
-        revent_num = qp_epoll_wait(emodule, event_queue, emodule->event_size,\
+    while (emodule->is_run && qp_pool_used(&emodule->event_pool)) {
+        eevent_num = qp_epoll_wait(emodule, event_queue, emodule->event_size,\
             timeout);
 
         /* do with error */
-        if (0 > revent_num) {
+        if (0 > eevent_num) {
 
             if (EINTR != errno) {
-                QP_LOGOUT_ERROR("[qp_event_t] Epollwait error.");
+                QP_LOGOUT_ERROR("[qp_event_t] Epoll wait error.");
                 break;
             }
 
@@ -230,70 +231,47 @@ qp_event_tiktok(qp_event_t *emodule)
             continue;
         }
 
-        for (itr = 0; itr < revent_num; itr++) { 
-            revent = (qp_event_fd_t*)(event_queue[itr].data.ptr);
-            revent->eflag =  event_queue[itr].events;
+        for (itr = 0; itr < eevent_num; itr++) { 
+            eevent = (qp_event_fd_t*)(event_queue[itr].data.ptr);
+            eevent->eflag = event_queue[itr].events;
 
             /* add read/write event to ready list */
-            if (revent->listen) {
-                qp_list_push(&emodule->listen_ready, &revent->ready_next);
+            if (eevent->listen) {
+                qp_list_push(&emodule->listen_ready, &eevent->ready_next);
                 
             } else {
-                qp_list_push(&emodule->ready, &revent->ready_next);
+                qp_list_push(&emodule->ready, &eevent->ready_next);
             }
         }
         
         /* listen event */
-        while (!qp_list_is_empty(&emodule->listen_ready) 
-            && qp_pool_available(&emodule->event_pool)) 
-        {
+        while (!qp_list_is_empty(&emodule->listen_ready)) {
             eevent = qp_list_data(qp_list_first(&emodule->listen_ready), \
                 qp_event_fd_t, ready_next);
-            
-            /* if not enable ET , remove it from ready list */
-            if (!eevent->edge) {
-                qp_list_pop(&emodule->listen_ready);
-            }
+            qp_list_pop(&emodule->listen_ready);
             
             do {
                 accept_fd = qp_event_accept(eevent);
                 
                 /* accept error */
-                if (QP_FD_INVALID == accept_fd 
-                    || (NULL == (revent = (qp_event_fd_t*)qp_pool_alloc(\
-                    &emodule->event_pool, sizeof(qp_event_fd_t))))) 
-                {
-                    /* if error happen or accept done, remove event */
-                    if (eevent->edge) {
-                        qp_list_pop(&emodule->listen_ready);
-                    }
+                if (QP_FD_INVALID == accept_fd) {
                     
                     if (!(EAGAIN == errno || EWOULDBLOCK == errno || 
                         EINTR == errno))
                     {
-                        QP_LOGOUT_ERROR("[qp_event_t]Listen event error [%d].",
-                            eevent->efd);
-                        qp_event_del(emodule, eevent);
-                        qp_event_clear_flag(eevent);
-                        qp_pool_free(&emodule->event_pool, eevent);
-                        qp_atom_sub(&emodule->available);
+                        QP_LOGOUT_ERROR("[qp_event_t]Listen fail [%d],[%s].",
+                            eevent->efd, strerror(errno));
+                        qp_event_close(eevent);
+                        qp_event_removeevent(emodule, eevent);
                     }
                     
                     break;
                 } 
                 
-                revent->efd = accept_fd;
-                revent->closed = 1;
-                revent->stat = QP_EVENT_NEW;
-                
-                if (QP_ERROR != qp_event_add(emodule, revent)){
-                    qp_atom_add(&emodule->available);
-                                
-                } else {
-                    qp_event_close(revent);
-                    qp_event_clear_flag(revent);
-                    qp_pool_free(&emodule->event_pool, revent);
-                    QP_LOGOUT_ERROR("[qp_event_t]Add event fail.");
+                if (QP_ERROR == \
+                    qp_event_addevent(emodule, accept_fd, false, true))
+                {
+                    close(accept_fd);
                 }
 
             } while (eevent->edge);
@@ -308,14 +286,13 @@ qp_event_tiktok(qp_event_t *emodule)
             
             eevent->nativeclose |= (QP_EPOLL_HUP | QP_EPOLL_ERR) & eevent->eflag;
             eevent->peerclose |= QP_EPOLL_RDHUP & eevent->eflag;
-            eevent->write &= !revent->peerclose;
+            eevent->write &= !eevent->peerclose;
             eevent->read = QP_EPOLL_IN & eevent->eflag;
 
             /* if no event */
             if (!(eevent->read | eevent->write | eevent->nativeclose)) {
                 continue;
             }
-
             
             writehandler = (QP_EVENT_BLOCK_OPT == eevent->field.next_write_opt)?\
                 qp_event_write : qp_event_writev;
@@ -398,7 +375,7 @@ qp_event_tiktok(qp_event_t *emodule)
                         
                             if (ret & QP_EPOLL_OUT) {
                                 qp_event_reset(emodule, eevent, QP_EPOLL_OUT);
-                                revent->write = 1;
+                                eevent->write = 1;
                                 eevent->write_done = 0;
                             }
                         }
@@ -421,17 +398,11 @@ qp_event_tiktok(qp_event_t *emodule)
             }
             
             if (QP_FD_INVALID == eevent->efd) {
-                qp_event_del(emodule, eevent);
-                qp_event_clear_flag(eevent);
-                qp_pool_free(&emodule->event_pool, eevent);
-                qp_atom_sub(&emodule->available);
-                /*
-                QP_LOGOUT_LOG("[qp_event_t]Current available : "
-                    "[%lu], free [%lu].", emodule->available, 
-                    emodule->event_pool.nfree);
-                 */
+                qp_event_removeevent(emodule, eevent);
             }
+            
         }  // while
+        
     }  // while
 
     emodule->is_run = false;
@@ -474,23 +445,20 @@ qp_event_destroy(qp_event_t *emodule)
 }
 
 qp_int_t
-qp_event_addevent(qp_event_t* evfd, qp_int_t fd, bool listen, bool auto_close)
+qp_event_addevent(qp_event_t* emodule, qp_int_t fd, bool listen,bool auto_close)
 {
     qp_event_fd_t* revent = NULL;
     
-    if (qp_pool_available(&evfd->event_pool) && (fd > QP_FD_INVALID)) {
+    if (qp_pool_available(&emodule->event_pool) && (fd > QP_FD_INVALID)) {
         /* get the first idle element */
-        revent = (qp_event_fd_t*)qp_pool_alloc(&evfd->event_pool, \
+        revent = (qp_event_fd_t*)qp_pool_alloc(&emodule->event_pool, \
             sizeof(qp_event_fd_t));
         revent->efd = fd;
 
         /* add event to pool */
-        if (QP_ERROR != qp_event_add(evfd, revent)){
-            qp_atom_add(&evfd->available);
-        
-        } else {
+        if (QP_ERROR == qp_event_add(emodule, revent)) {
             revent->efd = QP_FD_INVALID;
-            qp_pool_free(&evfd->event_pool, revent);
+            qp_pool_free(&emodule->event_pool, revent);
             QP_LOGOUT_ERROR("[qp_event_t]Add event fail.");
             return QP_ERROR;
         }
@@ -505,12 +473,23 @@ qp_event_addevent(qp_event_t* evfd, qp_int_t fd, bool listen, bool auto_close)
             revent->stat = QP_EVENT_NEW;
         }
         
-        QP_LOGOUT_LOG("[qp_event_t]Using connection [%d]", revent->index);
-        QP_LOGOUT_LOG("[qp_event_t]Current available : [%lu].", evfd->available);
+        QP_LOGOUT_LOG("[qp_event_t]Add event,using connection [%d],current "
+            "available [%lu]", revent->index, emodule->event_pool.nfree);
         return QP_SUCCESS;
     } 
     
     return QP_ERROR;
+}
+
+qp_int_t
+qp_event_removeevent(qp_event_t* emodule, qp_event_fd_t* evfd)
+{
+    qp_event_del(emodule, evfd);
+    qp_event_clear_flag(evfd);
+    qp_pool_free(&emodule->event_pool, evfd);
+    QP_LOGOUT_LOG("[qp_event_t]Remove event,current available [%lu]", 
+        emodule->event_pool.nfree);
+    return QP_SUCCESS;
 }
 
 inline void

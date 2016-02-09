@@ -135,8 +135,7 @@ typedef  struct qp_event_fd_s    qp_event_fd_t;
 
 
 struct  qp_event_s {
-    qp_fd_t                 evfd;         /* event module fd */
-    qp_atom_t               available;    /* event number in pool */ 
+    qp_fd_t                 evfd;          /* event number in pool */ 
     qp_uint32_t             event_size;   /* event pool size */
     qp_pool_t               event_pool;   /* mem pool */       
     qp_list_t               ready;    /* event ready list */
@@ -205,7 +204,7 @@ qp_event_destroy(qp_event_t* emodule);
  * Note: You need add listen fd before calling qp_event_tiktok().
  */
 qp_int_t
-qp_event_addevent(qp_event_t* evfd, qp_int_t fd, bool listen, bool auto_close);
+qp_event_addevent(qp_event_t* emodule, qp_int_t fd, bool listen,bool auto_close);
 
 inline void
 qp_event_disable(qp_event_t* emodule);

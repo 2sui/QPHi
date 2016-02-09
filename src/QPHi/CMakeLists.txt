@@ -28,7 +28,7 @@ SET(CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR}/../../auto_build/packet)
 
 
 # add flag or definitions
-ADD_DEFINITIONS(-W -Wall -D_REENTRANT -D_FILE_OFFSET_BITS=64 ) # -DQP_DEBUG -g) 
+ADD_DEFINITIONS(-W -Wall -D_REENTRANT -D_FILE_OFFSET_BITS=64 -DQP_DEBUG -g) 
 
 # lib target
 ADD_LIBRARY(output_shared  SHARED  ${SRC_ROOT} ${SRC_QP_TINY_STACK})
