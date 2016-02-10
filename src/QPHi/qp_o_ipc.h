@@ -1,6 +1,6 @@
 
 /**
- * Copyright (C) sui
+ * Copyright (C) 2sui.
  *
  * Basic IPC and control operations.We use POSIX ipc instead of SYSTEM V.
 */

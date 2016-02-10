@@ -1,7 +1,7 @@
 # cmake version
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 # project name
-PROJECT(qpCore)
+PROJECT(QPHi)
 
 # libs output path
 SET(BUILD_LIBS  ${PROJECT_SOURCE_DIR}/../../build/libs)

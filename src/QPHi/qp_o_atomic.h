@@ -1,6 +1,6 @@
 
 /**
-  * Copyright (C) sui
+  * Copyright (C) 2sui.
   *
   * Atomic operation with gcc 4.1 or later.
   */

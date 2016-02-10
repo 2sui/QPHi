@@ -1,7 +1,7 @@
 
 
 /**
-  * Copyright (C) sui
+  * Copyright (C) 2sui.
   *
   * File I/O operations : basic I/O, direct I/O, AIO.
   * 

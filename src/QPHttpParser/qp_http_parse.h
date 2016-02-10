@@ -1,9 +1,14 @@
 
+/**
+ * Copyright (C) 2sui.
+ */
+
+
 #ifndef MQ_HTTP_PARSE_H
 #define MQ_HTTP_PARSE_H
 
 
-#include <qp_o_typedef.h>
+#include <qphi.h>
 #include <http_parser.h>
 
 #define  QP_HTTP_PARSER_DEBUG
@@ -92,8 +97,7 @@ struct  qp_http_request_s {
     const qp_char_t*         method;
     qp_ushort_t              method_code;
     qp_ushort_t              chuncked;
-    qp_char_t*               URL;
-    size_t                   URL_len;
+    qp_char_t                URL[QP_HTTP_REQSTLINE_SIZE];
     size_t                   URL_offset;
     size_t                   content_len;
     const qp_char_t*         content;     /* body */
@@ -130,8 +134,7 @@ public:
      * @param request_callbacks   User callback of http_parser_settings.
      * @param request_line_size    Max URL line size in request.
      */
-    qp_http_parse(http_parser_settings* request_callbacks = NULL,
-                  size_t  request_line_size = QP_HTTP_REQSTLINE_SIZE);
+    qp_http_parse(http_parser_settings* request_callbacks = NULL);
     
     virtual ~qp_http_parse();
 

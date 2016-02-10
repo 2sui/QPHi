@@ -1,6 +1,6 @@
 
 /**
-  * Copyright (C) sui
+  * Copyright (C) 2sui.
   * 
   * Event process module. 
   */

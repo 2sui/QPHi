@@ -1,33 +1,33 @@
 
+/**
+ * Copyright (C) 2sui.
+ */
+
+
 #include <qp_http_parse.h>
 #include <exception>
 
 
 static const qp_char_t* qp_http_parse_responce_code[] = {
-//    #define  QP_HTTP_RESPON_200_STAT 0
     #define  QP_HTTP_RESPON_200_STAT_LEN    17
     "HTTP/1.1 200 OK\r\n",
-//    #define  QP_HTTP_RESPON_400_STAT 1
     #define  QP_HTTP_RESPON_400_STAT_LEN    26
     "HTTP/1.1 400 Bad Request\r\n",
-//    #define  QP_HTTP_RESPON_500_STAT 2
     #define  QP_HTTP_RESPON_500_STAT_LEN    36
     "HTTP/1.1 500 Internal Server Error\r\n",
     NULL
 };
 
 
-#define  QP_HTTP_RESPON_SERVER_LEN          12
+#define  QP_HTTP_RESPON_SERVER_LEN    14
 static const qp_char_t*  qp_http_parse_responce_server = \
-    "QP_HTTP\r\n";
+    "server: QPHi\r\n";
 
 
 static const  qp_char_t* qp_http_parse_responce_keepalive[] = {
-//    #define QP_HTTP_RESPON_CLOSE          0
-    #define QP_HTTP_RESPON_CLOSE_LEN        21
+    #define QP_HTTP_RESPON_CLOSE_LEN    21
     "connection: close\r\n\r\n",
-//    #define  QP_HTTP_RESPON_KEEPALIVE     1
-    #define  QP_HTTP_RESPON_KEEPALIVE_LEN   26
+    #define  QP_HTTP_RESPON_KEEPALIVE_LEN    26
     "connection: keep-alive\r\n\r\n",
     NULL
 };
@@ -59,7 +59,7 @@ request_on_url(http_parser* parser, const char* at, size_t length)
 {
     qp_http_request_t* request = (qp_http_request_t*)(parser->data);
 
-    if ((request->URL_offset + length) > request->URL_len) {
+    if ((request->URL_offset + length) > QP_HTTP_REQSTLINE_SIZE) {
         QP_LOGOUT_LOG("[qp_http_parse] Request line too long [current: %lu].", \
             request->URL_len);
         return QP_PARSER_ERROR;
@@ -236,20 +236,11 @@ request_on_chunk_complete(http_parser* parser)
 }
 
 
-qp_http_parse::qp_http_parse(http_parser_settings *request_callbacks,
-    size_t request_line_size)
+qp_http_parse::qp_http_parse(http_parser_settings *request_callbacks)
 {
     memset(&request, 0, sizeof(qp_http_request_t));
-    request.user_setting = request_callbacks;
-    request.URL_len = \
-        request_line_size ? request_line_size : QP_HTTP_REQSTLINE_SIZE;
-    request.URL = new char[request.URL_len];
-
-    if (!request.URL) {
-        throw  std::exception();
-    }
-
     memset(&responce, 0, sizeof(qp_http_responce_t));
+    request.user_setting = request_callbacks;
     responce.server.iov_base = \
         (void*)qp_http_parse_responce_server;
     responce.server.iov_len = QP_HTTP_RESPON_SERVER_LEN;
@@ -277,9 +268,6 @@ qp_http_parse::qp_http_parse(http_parser_settings *request_callbacks,
 
 qp_http_parse::~qp_http_parse()
 {
-    if (request.URL) {
-        delete[] request.URL;
-    }
 }
 
 qp_int_t
