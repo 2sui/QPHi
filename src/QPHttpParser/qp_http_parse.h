@@ -4,22 +4,27 @@
  */
 
 
-#ifndef MQ_HTTP_PARSE_H
-#define MQ_HTTP_PARSE_H
-
-
-#include <qphi.h>
-#include <http_parser.h>
+#ifndef QP_HTTP_PARSER_H
+#define QP_HTTP_PARSER_H
 
 #define  QP_HTTP_PARSER_DEBUG
 
+#ifndef MQ_HTTP_PARSE_H
+#define MQ_HTTP_PARSE_H
+#endif
+
+#ifdef QP_HTTP_PARSER_DEBUG
+#ifndef QP_DEBUG
+#define QP_DEBUG
+#endif
+#endif
+
+
+#include <qp_core.h>
+#include <http_parser.h>
+
 
 #define  HTTP_TO_PARSE              HTTP_REQUEST
-
-#define   QP_PARSER_SUCCESS         QP_SUCCESS
-#define   QP_PARSER_ERROR           QP_ERROR
-#define   QP_PARSER_PARSING         1
-
 #ifndef HTTP_PARSER_STRICT
 #define  HTTP_PARSER_STRICT         1  /* if 0 means make less check but run faster */
 #endif
@@ -61,6 +66,7 @@
 #define   QP_PARSER_METHED_LINK         31
 #define   QP_PARSER_METHED_UNLINK       32
 
+#define   QP_PARSER_PARSING         1
 
 #define  QP_HTTP_RESPON_200_STAT    0  /* HTTP responce 200 OK */
 #define  QP_HTTP_RESPON_400_STAT    1  /* HTTP responce 400 Bad request */
@@ -83,13 +89,6 @@ struct iovec {
   */
 #define  QP_HTTP_REQSTLINE_SIZE         1024 /* URL line string size */
 #define  QP_HTTP_CONTENTLEN_CACHE_SIZE  64   /* content-length cache size */
-
-
-#ifdef QP_HTTP_PARSER_DEBUG
-#ifndef QP_DEBUG
-#define QP_DEBUG
-#endif
-#endif
 
 
 struct  qp_http_request_s {
@@ -139,7 +138,7 @@ public:
     virtual ~qp_http_parse();
 
     /**
-     * Parse HTTP request.If return QP_PARSER_SUCCESS that the request parse 
+     * Parse HTTP request.If return QP_SUCCESS that the request parse 
      * done, if return QP_PARSER_ERROR means some error happend when parsing, 
      * and return QP_PARSER_PARSING if it is parsing and waiting for more data.
      *
@@ -198,4 +197,4 @@ private:
 
 };
 
-#endif // MQ_HTTP_PARSE_H
+#endif // QP_HTTP_PARSER

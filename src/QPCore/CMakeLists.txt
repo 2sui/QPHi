@@ -1,14 +1,12 @@
 # cmake version
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 # project name
-PROJECT(QPHi)
+PROJECT(QPCore)
 
 # libs output path
 SET(BUILD_LIBS  ${PROJECT_SOURCE_DIR}/../../build/libs)
 # exec output path
 SET(BUILD_BIN  ${PROJECT_SOURCE_DIR}/../../build/bin)
-#deps dir
-#SET(DEPS_DIR ./)
 
 # sources dir
 AUX_SOURCE_DIRECTORY(${PROJECT_SOURCE_DIR}  SRC_ROOT)
@@ -22,9 +20,9 @@ SET(LIBRARY_OUTPUT_PATH  ${BUILD_LIBS})
 # set exec output path
 #SET(EXECUTABLE_OUTPUT_PATH ${BUILD_BIN})
 
-#SET(CMAKE_INSTALL_PREFIX /usr)
+SET(CMAKE_INSTALL_PREFIX /usr)
 # debug
-SET(CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR}/../../auto_build/packet)
+#SET(CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR}/../../auto_build/packet)
 
 
 # add flag or definitions
@@ -46,7 +44,7 @@ INSTALL(FILES ${BUILD_LIBS}/lib${PROJECT_NAME}.a
         ${BUILD_LIBS}/lib${PROJECT_NAME}.so
         DESTINATION lib) 
 
-INSTALL(FILES ${PROJECT_SOURCE_DIR}/qphi.h
+INSTALL(FILES ${PROJECT_SOURCE_DIR}/qp_core.h
         ${PROJECT_SOURCE_DIR}/qp_debug.h
         ${PROJECT_SOURCE_DIR}/qp_event.h
         ${PROJECT_SOURCE_DIR}/qp_file.h

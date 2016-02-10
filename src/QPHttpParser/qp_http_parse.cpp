@@ -48,10 +48,10 @@ request_on_message_begin(http_parser* parser)
     if (request->user_setting) {
 
         return (NULL == request->user_setting->on_message_begin) ? \
-            QP_PARSER_SUCCESS : request->user_setting->on_message_begin(parser);
+            QP_SUCCESS : request->user_setting->on_message_begin(parser);
     }
 
-    return QP_PARSER_SUCCESS;
+    return QP_SUCCESS;
 }
 
 qp_int_t
@@ -60,9 +60,9 @@ request_on_url(http_parser* parser, const char* at, size_t length)
     qp_http_request_t* request = (qp_http_request_t*)(parser->data);
 
     if ((request->URL_offset + length) > QP_HTTP_REQSTLINE_SIZE) {
-        QP_LOGOUT_LOG("[qp_http_parse] Request line too long [current: %lu].", \
-            request->URL_len);
-        return QP_PARSER_ERROR;
+        QP_LOGOUT_LOG("[qp_http_parse] Request line too long [current: %d].", \
+            QP_HTTP_REQSTLINE_SIZE);
+        return QP_ERROR;
     }
 
     /* overflow */
@@ -73,12 +73,12 @@ request_on_url(http_parser* parser, const char* at, size_t length)
     if (request->user_setting) {
 
         return (NULL == request->user_setting->on_url) ? \
-            QP_PARSER_SUCCESS : \
+            QP_SUCCESS : \
             request->user_setting->on_url(parser, request->URL, \
             request->URL_offset);
     }
 
-    return QP_PARSER_SUCCESS;
+    return QP_SUCCESS;
 }
 
 qp_int_t
@@ -89,11 +89,11 @@ request_on_status(http_parser* parser, const char* at, size_t length)
     if (request->user_setting) {
 
         return (NULL == request->user_setting->on_status) ? \
-            QP_PARSER_SUCCESS : \
+            QP_SUCCESS : \
             request->user_setting->on_status(parser, at, length);
     }
 
-    return QP_PARSER_SUCCESS;
+    return QP_SUCCESS;
 }
 
 qp_int_t
@@ -123,11 +123,11 @@ request_on_header_field(http_parser* parser, const char* at, size_t length)
     if (request->user_setting) {
 
         return (NULL == request->user_setting->on_header_field) ? \
-            QP_PARSER_SUCCESS : \
+            QP_SUCCESS : \
             request->user_setting->on_header_field(parser, at, length);
     }
 
-    return QP_PARSER_SUCCESS;
+    return QP_SUCCESS;
 }
 
 qp_int_t
@@ -141,7 +141,7 @@ request_on_header_value(http_parser* parser, const char* at, size_t length)
         if (length > QP_HTTP_CONTENTLEN_CACHE_SIZE) {
             QP_LOGOUT_LOG("[qp_http_parse] Request content-length too long"\
                 " [current: %u].", QP_HTTP_CONTENTLEN_CACHE_SIZE);
-            return QP_PARSER_ERROR;
+            return QP_ERROR;
         }
 
         for ( ; length; length--, at++) {
@@ -152,11 +152,11 @@ request_on_header_value(http_parser* parser, const char* at, size_t length)
     if (request->user_setting) {
 
         return (NULL == request->user_setting->on_header_value) ? \
-            QP_PARSER_SUCCESS : \
+            QP_SUCCESS : \
             request->user_setting->on_header_value(parser, at, length);
     }
 
-    return QP_PARSER_SUCCESS;
+    return QP_SUCCESS;
 }
 
 qp_int_t
@@ -169,11 +169,11 @@ request_on_headers_complete(http_parser* parser)
     if (request->user_setting) {
 
         return (NULL == request->user_setting->on_headers_complete) ? \
-            QP_PARSER_SUCCESS : \
+            QP_SUCCESS : \
             request->user_setting->on_headers_complete(parser);
     }
 
-    return QP_PARSER_SUCCESS;
+    return QP_SUCCESS;
 }
 
 qp_int_t
@@ -186,26 +186,26 @@ request_on_body(http_parser* parser, const char* at, size_t length)
     if (request->user_setting) {
 
         return (NULL == request->user_setting->on_body) ? \
-            QP_PARSER_SUCCESS : \
+            QP_SUCCESS : \
             request->user_setting->on_body(parser, at, length);
     }
 
-    return QP_PARSER_SUCCESS;
+    return QP_SUCCESS;
 }
 
 qp_int_t
 request_on_message_complete(http_parser* parser)
 {
     qp_http_request_t* request = (qp_http_request_t*)(parser->data);
-    request->stat = QP_PARSER_SUCCESS;
+    request->stat = QP_SUCCESS;
 
     if (request->user_setting) {
 
         return (NULL == request->user_setting->on_message_begin) ? \
-            QP_PARSER_SUCCESS : request->user_setting->on_message_begin(parser);
+            QP_SUCCESS : request->user_setting->on_message_begin(parser);
     }
 
-    return QP_PARSER_SUCCESS;
+    return QP_SUCCESS;
 }
 
 qp_int_t
@@ -216,10 +216,10 @@ request_on_chunk_header(http_parser* parser)
     if (request->user_setting) {
 
         return (NULL == request->user_setting->on_chunk_header) ? \
-            QP_PARSER_SUCCESS : request->user_setting->on_chunk_header(parser);
+            QP_SUCCESS : request->user_setting->on_chunk_header(parser);
     }
     
-    return QP_PARSER_SUCCESS;
+    return QP_SUCCESS;
 }
 
 qp_int_t
@@ -230,9 +230,9 @@ request_on_chunk_complete(http_parser* parser)
     if (request->user_setting) {
 
         return (NULL == request->user_setting->on_chunk_complete) ? \
-            QP_PARSER_SUCCESS : request->user_setting->on_chunk_complete(parser);
+            QP_SUCCESS : request->user_setting->on_chunk_complete(parser);
     }
-    return QP_PARSER_SUCCESS;
+    return QP_SUCCESS;
 }
 
 
@@ -275,7 +275,7 @@ qp_http_parse::request_parse(const char *req, size_t req_size)
 {
     switch (request.stat) {
 
-    case QP_PARSER_SUCCESS: {
+    case QP_SUCCESS: {
         http_parser_init(&parser, HTTP_TO_PARSE);
         parser.data = &request;
 
@@ -283,7 +283,7 @@ qp_http_parse::request_parse(const char *req, size_t req_size)
             req, req_size))
         {
             request_parse_done();
-            return QP_PARSER_ERROR;
+            return QP_ERROR;
         }
 
         return request.stat;
@@ -296,7 +296,7 @@ qp_http_parse::request_parse(const char *req, size_t req_size)
             req, req_size))
         {
             request_parse_done();
-            return QP_PARSER_ERROR;
+            return QP_ERROR;
         }
 
         return request.stat;
@@ -310,13 +310,13 @@ qp_http_parse::request_parse(const char *req, size_t req_size)
         break;
     }
 
-    return QP_PARSER_ERROR;
+    return QP_ERROR;
 }
 
 void
 qp_http_parse::request_parse_done()
 {
-    request.stat = QP_PARSER_SUCCESS;
+    request.stat = QP_SUCCESS;
     http_parser_execute(&parser, &parser_setting, NULL, 0);
 }
 
@@ -353,7 +353,7 @@ qp_http_parse::responce_set_code(int code)
         break;
     }
 
-    return QP_PARSER_SUCCESS;
+    return QP_SUCCESS;
 }
 
 qp_int_t
@@ -383,7 +383,7 @@ qp_http_parse::responce_set_connection(int connection)
         break;
     }
 
-    return QP_PARSER_SUCCESS;
+    return QP_SUCCESS;
 }
 
 qp_int_t
@@ -403,7 +403,7 @@ qp_http_parse::responce_set_body(const char *body)
     /* overflow */
     responce.content_len_cache[QP_HTTP_CONTENTLEN_CACHE_SIZE - 1] = 0;
     responce.content_len.iov_len = strlen(responce.content_len_cache);
-    return QP_PARSER_SUCCESS;
+    return QP_SUCCESS;
 }
 
 size_t
