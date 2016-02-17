@@ -16,7 +16,7 @@ There are some directories in `QPHi/src`:
 ----
 
 ## Usage
-There are also some examples that how to use those libraries in 'QPHi/test' and `QPHi/example`:
+There are also some examples that how to use those libraries in `QPHi/test` and `QPHi/example`:
 
 In `QPHi/test/events.c`:
 
