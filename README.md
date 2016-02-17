@@ -8,7 +8,7 @@ Linux libraries for learning and developing .(still in programming…)
 ## Build and Install
 There are some directories in `QPHi/src`:
 
-* `QPCore`: A basic linux library;
+* `QPCore`: Basic library;
 * `QPHttpParser`: A simple http parser class based on `http_parser` and `QPCore`;
 * `QPDocker`: A simple docker implemence using C++ based on `QPCore` (In coding...);
 * `QPKafkamq`: An event driving kafka producer/consumer based on `QPCore`(In coding...);
@@ -16,7 +16,7 @@ There are some directories in `QPHi/src`:
 ----
 
 ## Usage
-There are also some examples that how to use those libraries in `QPHi/test` and `QPHi/example`:
+There are also some examples showing how to use those libraries in `QPHi/test` and `QPHi/example`:
 
 In `QPHi/test/events.c`:
 
@@ -56,7 +56,7 @@ In `QPHi/test/events.c`:
         goto end;
     }
     
-    /* add the listen socket to event moduel */
+    /* add the listening socket to event moduel */
     if (QP_ERROR == qp_event_addevent(&emodule, skt.socket.fd, true, false)) {
         fprintf(stderr, "\n Add event fail.");
         goto end;
