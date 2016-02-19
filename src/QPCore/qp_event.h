@@ -127,6 +127,7 @@ struct qp_event_fd_s {
     size_t                 read_done;     
     /* size that already writen, it will be set when write done */
     size_t                 write_done; 
+    struct timeval         timeout;
     qp_list_t              ready_next;
     qp_event_data_t        field;
 };
