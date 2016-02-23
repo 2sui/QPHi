@@ -231,31 +231,45 @@ qp_queue_merge(qp_queue_t* queue, qp_queue_t* newq);
  */
 
 /**
- * Init rbtree.
+ * Init [rbtree].
  */
 inline void
 qp_rbtree_init(qp_rbtree_t* rbtree);
 
-/* insert node into rbtree */
+/* insert [node] into [rbtree] */
 void 
 qp_rbtree_insert(qp_rbtree_t* rbtree, qp_rbtree_node_t* node);
 
-/* delete node from rbtree */
+/* delete [node] from [rbtree] */
 void
 qp_rbtree_delete(qp_rbtree_t* rbtree, qp_rbtree_node_t* node);
 
-/* find node with key in rbtree */
+/* find node with [key] in [rbtree] */
 qp_rbtree_node_t*
 qp_rbtree_find(qp_rbtree_t* rbtree, qp_uint32_t key);
 
-/* min node (from [node]) */
+/* min node in [rbtree] (from [node]) */
 inline qp_rbtree_node_t*
 qp_rbtree_min(qp_rbtree_t* rbtree, qp_rbtree_node_t* node);
 
-/* max node (from [node]) */
+/* max node in [rbtree] (from [node]) */
 inline qp_rbtree_node_t*
 qp_rbtree_max(qp_rbtree_t* rbtree, qp_rbtree_node_t* node);
 
+inline bool
+qp_rbtree_is_red(qp_rbtree_node_t* node);
+
+inline bool
+qp_rbtree_is_black(qp_rbtree_node_t* node);
+
+inline bool
+qp_rbtree_is_left(qp_rbtree_node_t* node);
+
+inline bool
+qp_rbtree_is_right(qp_rbtree_node_t* node);
+
+inline bool
+qp_rbtree_is_empty(qp_rbtree_t* rbtree);
 
 #ifdef __cplusplus
 }

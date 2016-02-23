@@ -225,8 +225,9 @@ qp_rbtree_is_right(qp_rbtree_node_t* node)
 inline qp_rbtree_node_t*
 qp_rbtree_uncle(qp_rbtree_node_t* node)
 { 
-    return qp_rbtree_is_left(node) ? \
-        qp_rbtree_parent(node)->right : qp_rbtree_parent(node)->left;
+    return qp_rbtree_is_left(qp_rbtree_parent(node)) ? \
+        qp_rbtree_grandpa(node)->right : \
+        qp_rbtree_grandpa(node)->left;
 }
 
 inline qp_rbtree_node_t*

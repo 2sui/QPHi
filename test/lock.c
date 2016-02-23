@@ -5,7 +5,7 @@
  */
 
 
-#include <qphi.h>
+#include <qp_core.h>
 
 static qp_shm_t       *shm = NULL;
 static qp_process_t   *child = NULL;
