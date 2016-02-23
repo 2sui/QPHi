@@ -242,11 +242,11 @@ qp_rbtree_is_empty(qp_rbtree_t* rbtree)
 inline void
 qp_rbtree_init(qp_rbtree_t* rbtree)
 {
-    rbtree->sentinel.left = qp_rbtree_nil(rbtree);
-    rbtree->sentinel.right = qp_rbtree_nil(rbtree);
-    rbtree->sentinel.parent = qp_rbtree_nil(rbtree);
-    rbtree->sentinel.data = NULL;
-    rbtree->sentinel.key = 0xffffffff;
+//    rbtree->sentinel.left = qp_rbtree_nil(rbtree);
+//    rbtree->sentinel.right = qp_rbtree_nil(rbtree);
+//    rbtree->sentinel.parent = qp_rbtree_nil(rbtree);
+//    rbtree->sentinel.data = NULL;
+//    rbtree->sentinel.key = 0xffffffff;
     qp_rbtree_set_black(qp_rbtree_nil(rbtree));
     rbtree->root = qp_rbtree_nil(rbtree);
 }
@@ -516,25 +516,24 @@ qp_rbtree_delete(qp_rbtree_t* rbtree, qp_rbtree_node_t* node)
         return;
     }
     
-    /* if node dose not has both child */
-    if (qp_rbtree_nil(rbtree) == node->left 
-        || qp_rbtree_nil(rbtree) == node->right) {
+    /* if node dose not have both child */
+    if (qp_rbtree_nil(rbtree) == node->left) {
         subst = node;
-            
-    } else {
-        /* has both child */
-        subst = qp_rbtree_min(rbtree, node->right);
-    }
-    
-    if (qp_rbtree_nil(rbtree) != subst->left) {
-        tmp = subst->left;
-                
-    } else {
         tmp = subst->right;
-    }
     
-    if (qp_rbtree_nil(rbtree) != tmp) {
-        tmp->parent = qp_rbtree_parent(subst);
+    } else {
+       
+        if (qp_rbtree_nil(rbtree) == node->right) {
+            subst = node;
+            tmp = subst->left;
+            
+        } else {
+            /* has both child */
+            subst = qp_rbtree_min(rbtree, node->right);
+            tmp = qp_rbtree_nil(rbtree) != subst->left ?
+                subst->left : subst->right;
+        }
+            
     }
     
     /* if node is root,remove it */
@@ -556,7 +555,15 @@ qp_rbtree_delete(qp_rbtree_t* rbtree, qp_rbtree_node_t* node)
         qp_rbtree_parent(subst)->right = tmp;
     }
     
+    tmp->parent = qp_rbtree_parent(subst);
+    
+    /*  make tmp`parent point to node */
     if (node != subst) {
+        
+        if (subst->parent == node) {
+            tmp->parent = node;
+        }
+        
         node->data = subst->data;
         node->key = subst->key;
         
