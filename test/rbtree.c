@@ -21,6 +21,12 @@ looping(qp_rbtree_t* rbtree, qp_rbtree_node_t* root)
         fprintf(stderr, "\n%d`s parent is %d`s %s child , with %s.", root->key, 
         root->parent->key, qp_rbtree_is_left(root) ? "left" : "right",
         qp_rbtree_is_red(root) ? "red" : "black");
+        
+        if (root->left == &rbtree->sentinel
+            && root->right == &rbtree->sentinel) 
+        {
+            fprintf(stderr, "It is leaf.");
+        }
     } 
     
     looping(rbtree, root->left);
