@@ -557,11 +557,21 @@ qp_rbtree_delete(qp_rbtree_t* rbtree, qp_rbtree_node_t* node)
     
     tmp->parent = qp_rbtree_parent(subst);
     
+    /*
+     *           o -> node
+     *          / \
+     *         o   o
+     *        /   /
+     *       o   o -> subst
+     *            \
+     *             o -> tmp
+     */
+    
     /*  make tmp`parent point to node */
     if (node != subst) {
         
-        if (subst->parent == node) {
-            tmp->parent = node;
+        if (tmp == qp_rbtree_nil(rbtree)) {
+            tmp->parent = subst;
         }
         
         node->data = subst->data;
