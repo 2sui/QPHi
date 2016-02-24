@@ -464,7 +464,7 @@ qp_rbtree_insert(qp_rbtree_t* rbtree, qp_rbtree_node_t* node)
         qp_rbtree_set_black(node);
         node->left = rbtree->root;
         node->right = rbtree->root;
-        node->parent = NULL;
+        node->parent = rbtree->root;
         rbtree->root = node;
         return;
     }
@@ -516,28 +516,28 @@ qp_rbtree_delete(qp_rbtree_t* rbtree, qp_rbtree_node_t* node)
         return;
     }
     
-    /* if node dose not have both child */
-    if (qp_rbtree_nil(rbtree) == node->left) {
+    /* if node dose not have both childs */
+    if ((qp_rbtree_nil(rbtree) == node->left)
+       || (qp_rbtree_nil(rbtree) == node->right))
+    {
         subst = node;
-        tmp = subst->right;
     
     } else {
-       
-        if (qp_rbtree_nil(rbtree) == node->right) {
-            subst = node;
-            tmp = subst->left;
-            
-        } else {
-            /* has both child */
-            subst = qp_rbtree_min(rbtree, node->right);
-            tmp = qp_rbtree_nil(rbtree) != subst->left ?
-                subst->left : subst->right;
-        }
-            
+        /* has both childs */
+        subst = qp_rbtree_min(rbtree, node->right); 
     }
     
+    if (subst->left != qp_rbtree_nil(rbtree)) {
+        tmp = subst->left;
+        
+    } else {
+        tmp = subst->right;
+    }
+    
+    tmp->parent = qp_rbtree_parent(subst);
+    
     /* if node is root,remove it */
-    if (rbtree->root == subst) {
+    if (qp_rbtree_parent(subst) == qp_rbtree_nil(rbtree)) {
         rbtree->root = tmp;
         qp_rbtree_set_black(tmp);
         
@@ -545,7 +545,8 @@ qp_rbtree_delete(qp_rbtree_t* rbtree, qp_rbtree_node_t* node)
         subst->left = NULL;
         subst->right = NULL;
         return;
-    }
+        
+    } 
     
     /* change child of subst`s parent to tmp */
     if (qp_rbtree_is_left(subst)) {
@@ -554,8 +555,6 @@ qp_rbtree_delete(qp_rbtree_t* rbtree, qp_rbtree_node_t* node)
     } else {
         qp_rbtree_parent(subst)->right = tmp;
     }
-    
-    tmp->parent = qp_rbtree_parent(subst);
     
     /*
      *           o -> node
@@ -569,11 +568,6 @@ qp_rbtree_delete(qp_rbtree_t* rbtree, qp_rbtree_node_t* node)
     
     /*  make tmp`parent point to node */
     if (node != subst) {
-        
-        if (tmp == qp_rbtree_nil(rbtree)) {
-            tmp->parent = subst;
-        }
-        
         node->data = subst->data;
         node->key = subst->key;
         
