@@ -519,7 +519,8 @@ qp_rbtree_delete(qp_rbtree_t* rbtree, qp_rbtree_node_t* node)
     
     /* if node dose not has both child */
     if (qp_rbtree_nil(rbtree) == node->left 
-        || qp_rbtree_nil(rbtree) == node->right) {
+        || qp_rbtree_nil(rbtree) == node->right) 
+    {
         subst = node;
             
     } else {
@@ -537,13 +538,8 @@ qp_rbtree_delete(qp_rbtree_t* rbtree, qp_rbtree_node_t* node)
     tmp->parent = qp_rbtree_parent(subst);
     
     /* if node is root,remove it */
-    if (rbtree->root == subst) {
+    if (qp_rbtree_nil(rbtree) == qp_rbtree_parent(subst)) {
         rbtree->root = tmp;
-//        qp_rbtree_set_black(tmp);
-//        
-//        subst->parent = NULL;
-//        subst->left = NULL;
-//        subst->right = NULL;
         
     } else {
         
@@ -559,15 +555,16 @@ qp_rbtree_delete(qp_rbtree_t* rbtree, qp_rbtree_node_t* node)
     if (node != subst) {
         node->data = subst->data;
         node->key = subst->key;
-        
-//        subst->parent = NULL;
-//        subst->left = NULL;
-//        subst->right = NULL;
     }
     
     if (qp_rbtree_is_black(subst)) {
         qp_rbtree_delete_fix(rbtree, tmp);
     }
+    
+    if (tmp == qp_rbtree_nil(rbtree)) {
+        tmp->parent = qp_rbtree_nil(rbtree);
+    }
+    
 }
 
 /* find node with key in rbtree */
