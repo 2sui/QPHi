@@ -457,14 +457,14 @@ qp_rbtree_delete_fix(qp_rbtree_t* rbtree, qp_rbtree_node_t* node)
 }
 
 /* insert node into rbtree */
-void 
+qp_rbtree_node_t* 
 qp_rbtree_insert(qp_rbtree_t* rbtree, qp_rbtree_node_t* node)
 {
     qp_rbtree_node_t* cur = NULL;
     qp_rbtree_node_t* next = NULL;
     
     if (!node) {
-        return;
+        return NULL;
     }
     
     /* if the tree is empty, just insert it */
@@ -474,7 +474,7 @@ qp_rbtree_insert(qp_rbtree_t* rbtree, qp_rbtree_node_t* node)
         node->right = rbtree->root;
         node->parent = rbtree->root;
         rbtree->root = node;
-        return;
+        return node;
     }
     
     cur = rbtree->root;
@@ -482,7 +482,7 @@ qp_rbtree_insert(qp_rbtree_t* rbtree, qp_rbtree_node_t* node)
     while (1) {
         /* save the no sentinel node */
         if (node->key == cur->key) {
-            return;
+            return NULL;
         }
         
         next = node->key < cur->key ? cur->left : cur->right;
@@ -513,17 +513,19 @@ qp_rbtree_insert(qp_rbtree_t* rbtree, qp_rbtree_node_t* node)
     if (qp_rbtree_is_red(qp_rbtree_parent(node))) {
         qp_rbtree_insert_fix(rbtree, node);
     }
+    
+    return node;
 }
 
 /* delete node from rbtree */
-void
+qp_rbtree_node_t*
 qp_rbtree_delete(qp_rbtree_t* rbtree, qp_rbtree_node_t* node)
 {
     qp_rbtree_node_t* subst = NULL;
     qp_rbtree_node_t* tmp = NULL;
     
     if (!node || !rbtree) {
-        return;
+        return NULL;
     }
     
     /* if node dose not has both child */
@@ -569,7 +571,8 @@ qp_rbtree_delete(qp_rbtree_t* rbtree, qp_rbtree_node_t* node)
     if (qp_rbtree_is_black(subst)) {
         qp_rbtree_delete_fix(rbtree, tmp);
     }
-    
+ 
+    return subst;
 }
 
 /* find node with key in rbtree */

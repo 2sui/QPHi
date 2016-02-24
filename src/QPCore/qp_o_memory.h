@@ -240,12 +240,12 @@ qp_queue_merge(qp_queue_t* queue, qp_queue_t* newq);
 inline void
 qp_rbtree_init(qp_rbtree_t* rbtree);
 
-/* insert [node] into [rbtree] */
-void 
+/* insert [node] into [rbtree], return inserted node pointer */
+qp_rbtree_node_t* 
 qp_rbtree_insert(qp_rbtree_t* rbtree, qp_rbtree_node_t* node);
 
-/* delete [node] from [rbtree] */
-void
+/* delete [node] from [rbtree], return deleted node pointer */
+qp_rbtree_node_t*
 qp_rbtree_delete(qp_rbtree_t* rbtree, qp_rbtree_node_t* node);
 
 /* find node with [key] in [rbtree] */
