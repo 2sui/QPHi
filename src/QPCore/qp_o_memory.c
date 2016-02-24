@@ -192,19 +192,19 @@ qp_queue_merge(qp_queue_t* queue, qp_queue_t* newq)
  */
 inline void
 qp_rbtree_set_red(qp_rbtree_node_t* node)
-{ node->color = 1;}
+{ node->color = QP_RBTREE_RED;}
 
 inline void
 qp_rbtree_set_black(qp_rbtree_node_t* node)
-{ node->color = 0;}
+{ node->color = QP_RBTREE_BLACK;}
 
 inline bool
 qp_rbtree_is_red(qp_rbtree_node_t* node)
-{ return node->color;}
+{ return node->color == QP_RBTREE_RED;}
 
 inline bool
 qp_rbtree_is_black(qp_rbtree_node_t* node)
-{ return !qp_rbtree_is_red(node);}
+{ return node->color == QP_RBTREE_BLACK;}
 
 inline qp_rbtree_node_t*
 qp_rbtree_parent(qp_rbtree_node_t* node)
@@ -212,7 +212,7 @@ qp_rbtree_parent(qp_rbtree_node_t* node)
 
 inline qp_rbtree_node_t*
 qp_rbtree_grandpa(qp_rbtree_node_t* node)
-{ return qp_rbtree_parent(node)->parent;}
+{ return qp_rbtree_parent(qp_rbtree_parent(node));}
 
 inline bool
 qp_rbtree_is_left(qp_rbtree_node_t* node)
@@ -228,6 +228,14 @@ qp_rbtree_uncle(qp_rbtree_node_t* node)
     return qp_rbtree_is_left(qp_rbtree_parent(node)) ? \
         qp_rbtree_grandpa(node)->right : \
         qp_rbtree_grandpa(node)->left;
+}
+
+inline qp_rbtree_node_t*
+qp_rbtree_brother(qp_rbtree_node_t* node)
+{
+    return qp_rbtree_is_left(node) ? \
+        qp_rbtree_parent(node)->right : \
+        qp_rbtree_parent(node)->left;
 }
 
 inline qp_rbtree_node_t*
@@ -370,75 +378,76 @@ void
 qp_rbtree_delete_fix(qp_rbtree_t* rbtree, qp_rbtree_node_t* node)
 {
     while (node != rbtree->root && qp_rbtree_is_black(node)) {
-        
+            
         /* if node is left subtree */
         if (qp_rbtree_is_left(node)) {
+            
             /* if brother node is red, change brother to black and change 
              * parent to red */
-            if (qp_rbtree_is_red(qp_rbtree_uncle(node))) {
-                qp_rbtree_set_black(qp_rbtree_uncle(node));
+            if (qp_rbtree_is_red(qp_rbtree_brother(node))) {
+                qp_rbtree_set_black(qp_rbtree_brother(node));
                 qp_rbtree_set_red(qp_rbtree_parent(node));
                 qp_rbtree_left_rotate(rbtree, qp_rbtree_parent(node));
             }
             
             /* if brother`s both child is black,change brother to red and 
              * change node to parent */
-            if (qp_rbtree_is_black(qp_rbtree_uncle(node)->left) 
-                && qp_rbtree_is_black(qp_rbtree_uncle(node)->right))
+            if (qp_rbtree_is_black(qp_rbtree_brother(node)->left) 
+                && qp_rbtree_is_black(qp_rbtree_brother(node)->right))
             {
-                qp_rbtree_set_red(qp_rbtree_uncle(node));
+                qp_rbtree_set_red(qp_rbtree_brother(node));
                 node = qp_rbtree_parent(node);
                 
             } else {
                 
                 /* if right child of brother */
-                if (qp_rbtree_is_black(qp_rbtree_uncle(node)->right)) {
-                    qp_rbtree_set_black(qp_rbtree_uncle(node)->left);
-                    qp_rbtree_set_red(qp_rbtree_uncle(node));
-                    qp_rbtree_right_rotate(rbtree, qp_rbtree_uncle(node));
+                if (qp_rbtree_is_black(qp_rbtree_brother(node)->right)) {
+                    qp_rbtree_set_black(qp_rbtree_brother(node)->left);
+                    qp_rbtree_set_red(qp_rbtree_brother(node));
+                    qp_rbtree_right_rotate(rbtree, qp_rbtree_brother(node));
                 }
                 
                 qp_rbtree_is_black(qp_rbtree_parent(node)) ? \
-                    qp_rbtree_set_black(qp_rbtree_uncle(node)) : \
-                    qp_rbtree_set_red(qp_rbtree_uncle(node));
+                    qp_rbtree_set_black(qp_rbtree_brother(node)) : \
+                    qp_rbtree_set_red(qp_rbtree_brother(node));
                 
                 qp_rbtree_set_black(qp_rbtree_parent(node));
-                qp_rbtree_set_black(qp_rbtree_uncle(node)->right);
+                qp_rbtree_set_black(qp_rbtree_brother(node)->right);
                 qp_rbtree_left_rotate(rbtree, qp_rbtree_parent(node));
                 node = rbtree->root;
             }
             
         } else {
             
-            if (qp_rbtree_is_red(qp_rbtree_uncle(node))) {
-                qp_rbtree_set_black(qp_rbtree_uncle(node));
+            if (qp_rbtree_is_red(qp_rbtree_brother(node))) {
+                qp_rbtree_set_black(qp_rbtree_brother(node));
                 qp_rbtree_set_red(qp_rbtree_parent(node));
                 qp_rbtree_right_rotate(rbtree, qp_rbtree_parent(node));
             }
             
             /* if brother`s both child is black,change brother to red and 
              * change node to parent */
-            if (qp_rbtree_is_black(qp_rbtree_uncle(node)->left) 
-                && qp_rbtree_is_black(qp_rbtree_uncle(node)->right))
+            if (qp_rbtree_is_black(qp_rbtree_brother(node)->right) 
+                && qp_rbtree_is_black(qp_rbtree_brother(node)->left))
             {
-                qp_rbtree_set_red(qp_rbtree_uncle(node));
+                qp_rbtree_set_red(qp_rbtree_brother(node));
                 node = qp_rbtree_parent(node);
                 
             } else {
                 
-                if (qp_rbtree_is_black(qp_rbtree_uncle(node)->left)) {
-                    qp_rbtree_set_black(qp_rbtree_uncle(node)->right);
-                    qp_rbtree_set_red(qp_rbtree_uncle(node));
-                    qp_rbtree_right_rotate(rbtree, qp_rbtree_uncle(node));
+                if (qp_rbtree_is_black(qp_rbtree_brother(node)->left)) {
+                    qp_rbtree_set_black(qp_rbtree_brother(node)->right);
+                    qp_rbtree_set_red(qp_rbtree_brother(node));
+                    qp_rbtree_left_rotate(rbtree, qp_rbtree_brother(node));
                 }
                 
                 qp_rbtree_is_black(qp_rbtree_parent(node)) ? \
-                    qp_rbtree_set_black(qp_rbtree_uncle(node)) : \
-                    qp_rbtree_set_red(qp_rbtree_uncle(node));
+                    qp_rbtree_set_black(qp_rbtree_brother(node)) : \
+                    qp_rbtree_set_red(qp_rbtree_brother(node));
                 
                 qp_rbtree_set_black(qp_rbtree_parent(node));
-                qp_rbtree_set_black(qp_rbtree_uncle(node)->left);
-                qp_rbtree_left_rotate(rbtree, qp_rbtree_parent(node));
+                qp_rbtree_set_black(qp_rbtree_brother(node)->left);
+                qp_rbtree_right_rotate(rbtree, qp_rbtree_parent(node));
                 node = rbtree->root;
             }
         }
@@ -553,16 +562,12 @@ qp_rbtree_delete(qp_rbtree_t* rbtree, qp_rbtree_node_t* node)
     }
     
     if (node != subst) {
-        node->data = subst->data;
         node->key = subst->key;
+        node->data = subst->data;
     }
     
     if (qp_rbtree_is_black(subst)) {
         qp_rbtree_delete_fix(rbtree, tmp);
-    }
-    
-    if (tmp == qp_rbtree_nil(rbtree)) {
-        tmp->parent = qp_rbtree_nil(rbtree);
     }
     
 }

@@ -233,6 +233,10 @@ qp_queue_merge(qp_queue_t* queue, qp_queue_t* newq);
 /**
  * Init [rbtree].
  */
+
+#define  QP_RBTREE_RED    1
+#define  QP_RBTREE_BLACK  0
+
 inline void
 qp_rbtree_init(qp_rbtree_t* rbtree);
 

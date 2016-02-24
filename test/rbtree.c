@@ -38,7 +38,7 @@ int
 main(int argc, char** argv) 
 {
     qp_rbtree_t   rbtree;
-    int           data[20] = {12, 1, 9, 2, 0, 11, 7, 19, 4, 15, 18, 5, 14, 13,
+    qp_uint32_t   data[20] = {12, 1, 9, 2, 0, 11, 7, 19, 4, 15, 18, 5, 14, 13,
                              10, 16, 6, 3, 8, 17};
     qp_rbtree_node_t  node[20];
     
@@ -62,10 +62,12 @@ main(int argc, char** argv)
     
     fprintf(stderr, "\nDeleting...");
     for (i = 0; i < 20; i++) {
-        fprintf(stderr, "\ndelete %d", node[i].key);
-        qp_rbtree_delete(&rbtree, &node[i]);
-        looping(&rbtree, rbtree.root);
+        
         getchar();
+        qp_rbtree_node_t* nod = qp_rbtree_find(&rbtree, data[i]);
+        fprintf(stderr, "\ndelete %d", nod->key);
+        qp_rbtree_delete(&rbtree, nod);
+        looping(&rbtree, rbtree.root);
     }
     
     
