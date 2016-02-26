@@ -18,14 +18,14 @@ looping(qp_rbtree_t* rbtree, qp_rbtree_node_t* root)
         qp_rbtree_is_red(root) ? "red" : "black");
         
     } else {
-        fprintf(stderr, "\n%d`s parent is %d`s %s child , with %s.", root->key, 
+        fprintf(stderr, "\n%d is %d`s %s child , with %s.", root->key, 
         root->parent->key, qp_rbtree_is_left(root) ? "left" : "right",
         qp_rbtree_is_red(root) ? "red" : "black");
         
         if (root->left == &rbtree->sentinel
             && root->right == &rbtree->sentinel) 
         {
-            fprintf(stderr, "It is leaf.");
+            fprintf(stderr, "It is leaf node.");
         }
     } 
     
@@ -49,7 +49,7 @@ main(int argc, char** argv)
     
     qp_rbtree_init(&rbtree);
     
-    fprintf(stderr, "\nInserting...");
+    fprintf(stderr, "\n#### Inserting ####");
     for (i = 0; i < 20; i++) {
         qp_rbtree_insert(&rbtree, &node[i]);
         fprintf(stderr, "\ninsert %d", node[i].key);
@@ -60,14 +60,13 @@ main(int argc, char** argv)
     looping(&rbtree, rbtree.root);
     
     
-    fprintf(stderr, "\nDeleting...");
+    fprintf(stderr, "\n#### Deleting ####");
     for (i = 0; i < 20; i++) {
-        
-        getchar();
         qp_rbtree_node_t* nod = qp_rbtree_find(&rbtree, data[i]);
-        fprintf(stderr, "\ndelete %d", nod->key);
+        fprintf(stderr, "\n-------》 delete %d", nod->key);
         qp_rbtree_delete(&rbtree, nod);
         looping(&rbtree, rbtree.root);
+        fprintf(stderr, "\n");
     }
     
     
