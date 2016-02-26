@@ -292,6 +292,13 @@ void rd_kafka_toppar_op (rd_kafka_toppar_t *rktp, rd_kafka_op_type_t type,
                          int64_t offset, rd_kafka_cgrp_t *rkcg,
                          rd_kafka_q_t *replyq);
 
+void rd_kafka_toppar_fetch_start (rd_kafka_toppar_t *rktp,
+				  int64_t offset, rd_kafka_op_t *rko_orig);
+void rd_kafka_toppar_fetch_stop (rd_kafka_toppar_t *rktp,
+				 rd_kafka_op_t *rko_orig);
+void rd_kafka_toppar_seek (rd_kafka_toppar_t *rktp,
+			   int64_t offset, rd_kafka_op_t *rko_orig);
+
 rd_kafka_resp_err_t rd_kafka_toppar_op_fetch_start (rd_kafka_toppar_t *rktp,
                                                     int64_t offset,
                                                     rd_kafka_q_t *fwdq,
@@ -365,10 +372,6 @@ int rd_kafka_topic_partition_match (rd_kafka_t *rk,
 				    const rd_kafka_topic_partition_t *rktpar,
 				    const char *topic, int *matched_by_regex);
 
-rd_kafka_topic_partition_t *
-rd_kafka_topic_partition_list_find (rd_kafka_topic_partition_list_t *rktarplist,
-                                    const char *topic, int32_t partition,
-                                    int *start_idx);
 
 void rd_kafka_topic_partition_list_sort_by_topic (
         rd_kafka_topic_partition_list_t *rktparlist);
