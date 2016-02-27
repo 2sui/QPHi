@@ -1,21 +1,21 @@
 
-/*
-  * Copyright (C) ShuaiXX
-  */
+/**
+ * Copyright (C) 2sui.
+ */
 
 
-#include <qp_cdocker_core.h>
+#include <qp_docker.h>
 
 
-#define   FILE_NAME_SIZE                                     256
-#define  QP_CDOCKER_DEFAULT_STACKSIZE       (512*1024)  // default 512kB stack
-#define  QP_CDOCKER_DEFAULT_HOSTNAME     "QPcdocker"
-#define  QP_CDOCKER_DEFAULT_ROOTDIR         "/default"
-#define  QP_CDOCKER_DEFAULT_WORKDIR        QP_CDOCKER_DEFAULT_ROOTDIR
+#define  FILE_NAME_SIZE                  256
+#define  QP_CDOCKER_DEFAULT_STACKSIZE    (512*1024)  // default 512kB stack
+#define  QP_CDOCKER_DEFAULT_HOSTNAME     "QPDocker"
+#define  QP_CDOCKER_DEFAULT_ROOTDIR      "/rootfs"
+#define  QP_CDOCKER_DEFAULT_WORKDIR      QP_CDOCKER_DEFAULT_ROOTDIR
 
 
 /* child process run stack  */
-static qp_char_t qp_cdocker_default_stack[QP_CDOCKER_DEFAULT_STACKSIZE] = {
+static qp_char_t qp_docker_default_stack[QP_CDOCKER_DEFAULT_STACKSIZE] = {
     0
 };
 
