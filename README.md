@@ -10,8 +10,8 @@ There are some directories in `QPHi/src`:
 
 * `QPCore`: Basic library;
 * `QPHttpParser`: A simple http parser class based on `http_parser` and `QPCore`;
-* `QPDocker`: A simple docker implemence using C++ based on `QPCore` (In coding...);
 * `QPKafkamq`: An event driving kafka producer/consumer based on `QPCore`(In coding...);
+* `QPP2P`: P2P library based on `QPCore` (In coding...)
 
 ----
 
