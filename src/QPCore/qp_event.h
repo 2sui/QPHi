@@ -63,12 +63,12 @@ typedef qp_uint32_t             qp_event_done_t;
 #define  QP_EVENT_READ_DONE    (1 < 0)
 #define  QP_EVENT_WRITE_DONE    (1 < 1)
 
-struct qp_event_buf_s {
+union qp_event_buf_s {
     qp_uchar_t*    block;
     struct iovec*  vector;
 };
 
-typedef struct qp_event_buf_s    qp_event_buf_t;
+typedef union qp_event_buf_s    qp_event_buf_t;
 
 
 typedef  struct qp_event_data_s    qp_event_data_t;
@@ -76,6 +76,14 @@ typedef  void (*qp_event_opt_handler)(qp_event_data_t*);
 typedef  qp_int_t (*qp_event_process_handler)(qp_event_data_t* /* fd_data */, 
     qp_int_t /*fd*/, qp_event_stat_t /* stat */, bool /*read_finish*/, 
     size_t /* read_cnt */, bool /*write_finish*/, size_t /* write_cnt */);
+
+struct  qp_event_timer_s {
+    qp_uint64_t    timeout;
+    qp_uint64_t    fromtime;
+};
+
+typedef  qp_event_timer_s    qp_event_timer_t;
+
 
 struct  qp_event_data_s {
     /* read buf */
@@ -93,7 +101,7 @@ struct  qp_event_data_s {
     /* use block buf or iovec buf for next step */ 
     qp_event_opt_t            next_read_opt;    
     /* use block buf or iovec buf for next step */  
-    qp_event_opt_t            next_write_opt;  
+    qp_event_opt_t            next_write_opt; 
     /* event process handler for user */
     qp_event_process_handler  process_handler;
     /* user data */
@@ -106,6 +114,16 @@ struct qp_event_fd_s {
     qp_int_t               efd;
     qp_int_t               eflag;
     qp_uint32_t            flag;          /* need close */
+    qp_uint64_t            next_time;
+    
+    /* size that already read, it will be set when read done */  
+    size_t                 read_done;     
+    /* size that already writen, it will be set when write done */
+    size_t                 write_done; 
+    qp_list_t              ready_next;
+    qp_event_data_t        field;
+    
+    /* event fd flags */
     qp_uint32_t            noblock:1;     /* need noblock */
     qp_uint32_t            edge:1;        /* ET mod */
     
@@ -123,13 +141,6 @@ struct qp_event_fd_s {
     qp_uint32_t            read_finish:1;
     
     qp_uint32_t            :20;
-    /* size that already read, it will be set when read done */  
-    size_t                 read_done;     
-    /* size that already writen, it will be set when write done */
-    size_t                 write_done; 
-    struct timeval         timeout;
-    qp_list_t              ready_next;
-    qp_event_data_t        field;
 };
 
 typedef  struct qp_event_fd_s    qp_event_fd_t;
@@ -141,6 +152,7 @@ struct  qp_event_s {
     qp_pool_t               event_pool;   /* mem pool */       
     qp_list_t               ready;    /* event ready list */
     qp_list_t               listen_ready;
+    qp_uint64_t             start_time;
     void*                   (*event_idle_cb)(void*);  /* idle event callback when no event ready */
     void*                   event_idle_cb_arg;   /* idle event callback arg */
     qp_event_opt_handler    init;
