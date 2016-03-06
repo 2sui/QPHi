@@ -101,7 +101,7 @@ main(int argc, char** argv)
         goto end;
     }
     
-    qp_event_tiktok(&emodule);
+    qp_event_tiktok(&emodule, 0);
     qp_event_disable(&emodule);
     
     

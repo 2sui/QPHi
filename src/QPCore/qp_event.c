@@ -105,6 +105,8 @@ qp_event_create(qp_event_t* emodule)
         return NULL;
     }
     
+    qp_list_init(&emodule->ready);
+    qp_list_init(&emodule->listen_ready);
     return emodule;
 }
 
@@ -135,13 +137,11 @@ qp_event_init(qp_event_t* emodule, qp_uint32_t fd_size, bool noblock, bool edge,
         mod |= QP_EPOLL_ET /*| QP_EPOLL_ONESHOT */;  /* use for mult thread */
     }
 
-    emodule->event_size = 0;
     emodule->event_idle_cb = idle_cb;
     emodule->event_idle_cb_arg = idle_arg;
     emodule->init = init;
     emodule->destroy = destroy;
-    qp_list_init(&emodule->ready);
-    qp_list_init(&emodule->listen_ready);
+    emodule->event_size = fd_size;
 
     /* create epoll fd */
     emodule->evfd.fd = qp_epoll_create(65535);
@@ -153,20 +153,21 @@ qp_event_init(qp_event_t* emodule, qp_uint32_t fd_size, bool noblock, bool edge,
     
     /* init event pool */
     if (NULL == qp_pool_init(&emodule->event_pool, sizeof(qp_event_fd_t), \
-        fd_size))
+        emodule->event_size))
     {
         qp_event_destroy(emodule);
         return NULL;
     }
     
-    emodule->event_size = fd_size;
 
     /* init poollist */
     for (; findex < emodule->event_size; findex++) {   
         eventfd = (qp_event_fd_t*)qp_pool_to_array(&emodule->event_pool, findex);
         eventfd->index = findex;
         eventfd->efd = QP_FD_INVALID;
+        eventfd->eflag = 0;
         eventfd->flag = mod;
+        eventfd->next_time = QP_EVENT_NO_TIMEOUT;
         eventfd->noblock = noblock;
         eventfd->edge = edge && QP_EPOLL_ET;
         qp_event_clear_flag(eventfd);
@@ -182,17 +183,18 @@ qp_event_init(qp_event_t* emodule, qp_uint32_t fd_size, bool noblock, bool edge,
 }
 
 qp_int_t
-qp_event_tiktok(qp_event_t *emodule)
+qp_event_tiktok(qp_event_t *emodule, qp_int_t timeout)
 {
     qp_int_t          (*readhandler)(qp_event_fd_t*);
     qp_int_t          (*writehandler)(qp_event_fd_t*);
     qp_event_fd_t*    eevent = NULL;
     qp_epoll_event_t* event_queue = NULL;
+    struct timeval    etime = {0};
     ssize_t           ret = 0;
     qp_int_t          eevent_num = 0;
     qp_int_t          accept_fd = -1;
     qp_int_t          rflag = 0;
-    qp_int_t          timeout = (NULL == emodule->event_idle_cb) ? -1 : 0;
+//    qp_int_t          timeout = (NULL == emodule->event_idle_cb) ? -1 : 0;
     qp_int_t          itr = 0;
     
     if (!qp_fd_is_valid(&emodule->evfd)) {
@@ -208,6 +210,9 @@ qp_event_tiktok(qp_event_t *emodule)
     }
     
     emodule->is_run = true;
+    gettimeofday(&etime, NULL);
+    emodule->start_time = (etime.tv_sec << 32) + etime.tv_usec;
+    
 
     /* event loop */
     while (emodule->is_run && qp_pool_used(&emodule->event_pool)) {

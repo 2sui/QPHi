@@ -57,10 +57,11 @@ enum qp_event_stat_e {
     QP_EVENT_CLOSE   /* event is closed */
 };
 
-typedef enum qp_event_stat_e    qp_event_stat_t;
+typedef  enum qp_event_stat_e   qp_event_stat_t;
 
-typedef qp_uint32_t             qp_event_done_t;
-#define  QP_EVENT_READ_DONE    (1 < 0)
+typedef  qp_uint32_t            qp_event_done_t;
+#define  QP_EVENT_NO_TIMEOUT    0
+#define  QP_EVENT_READ_DONE     (1 < 0)
 #define  QP_EVENT_WRITE_DONE    (1 < 1)
 
 union qp_event_buf_s {
@@ -76,13 +77,6 @@ typedef  void (*qp_event_opt_handler)(qp_event_data_t*);
 typedef  qp_int_t (*qp_event_process_handler)(qp_event_data_t* /* fd_data */, 
     qp_int_t /*fd*/, qp_event_stat_t /* stat */, bool /*read_finish*/, 
     size_t /* read_cnt */, bool /*write_finish*/, size_t /* write_cnt */);
-
-struct  qp_event_timer_s {
-    qp_uint64_t    timeout;
-    qp_uint64_t    fromtime;
-};
-
-typedef  qp_event_timer_s    qp_event_timer_t;
 
 
 struct  qp_event_data_s {
@@ -148,11 +142,11 @@ typedef  struct qp_event_fd_s    qp_event_fd_t;
 
 struct  qp_event_s {
     qp_fd_t                 evfd;          /* event number in pool */ 
-    qp_uint32_t             event_size;   /* event pool size */
-    qp_pool_t               event_pool;   /* mem pool */       
-    qp_list_t               ready;    /* event ready list */
+    qp_uint32_t             event_size;    /* event pool size */
+    qp_pool_t               event_pool;    /* mem pool */       
+    qp_list_t               ready;         /* event ready list */
     qp_list_t               listen_ready;
-    qp_uint64_t             start_time;
+    qp_uint64_t             start_time;    /* timer begin */
     void*                   (*event_idle_cb)(void*);  /* idle event callback when no event ready */
     void*                   event_idle_cb_arg;   /* idle event callback arg */
     qp_event_opt_handler    init;
@@ -195,7 +189,7 @@ qp_event_init(qp_event_t* emodule, qp_uint32_t fd_size, bool noblock, bool edge,
  * If quit nomally it return QP_SUCCESS , otherwise return QP_ERROR.
  */
 qp_int_t
-qp_event_tiktok(qp_event_t* emodule);
+qp_event_tiktok(qp_event_t* emodule, qp_int_t timeout);
 
 /**
  * Destory a mq_event handler.
