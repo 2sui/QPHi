@@ -62,13 +62,13 @@ typedef struct qp_rbtree_s         qp_rbtree_t;
 
 
 struct qp_list_s {
-    qp_list_t*   next;
+    qp_list_t*    next;
 };
 
 
 struct qp_queue_s {
-    qp_queue_t*   prev;
-    qp_queue_t*   next;
+    qp_queue_t*    prev;
+    qp_queue_t*    next;
 };
 
 
@@ -81,10 +81,12 @@ struct qp_rbtree_node_s {
     qp_uint32_t          key;
 };
 
+
 struct qp_rbtree_s {
-    qp_rbtree_node_t*           root;
-    qp_rbtree_node_t            sentinel;
+    qp_rbtree_node_t*    root;
+    qp_rbtree_node_t     sentinel;
 };
+
 
 /**
  * Operation for list (or stack).

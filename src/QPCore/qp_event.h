@@ -31,13 +31,20 @@ extern "C" {
 typedef  struct epoll_event    qp_epoll_event_t;
 
 #else
+
+#define  QP_EPOLL_ET           1
+#define  QP_EPOLL_ONESHOT      2
+#define  QP_EPOLL_IN           3               
+#define  QP_EPOLL_OUT          4
+#define  QP_EPOLL_ERR          5              
+#define  QP_EPOLL_HUP          6             
+#define  QP_EPOLL_RDHUP        7 
 typedef  void    qp_epoll_event_t;
-#define          EPOLLIN        1
-#define          EPOLLOUT       2
-#define          EPOLLHUP       3
+
 #endif
 
 #define  QP_EVENT_COMMONDATA_SIZE    256
+#define  QP_EVENT_TIMER_RESOLUTION   500
 
 
 /* buf type */
@@ -59,10 +66,6 @@ enum qp_event_stat_e {
 
 typedef  enum qp_event_stat_e   qp_event_stat_t;
 
-typedef  qp_uint32_t            qp_event_done_t;
-#define  QP_EVENT_NO_TIMEOUT    0
-#define  QP_EVENT_READ_DONE     (1 < 0)
-#define  QP_EVENT_WRITE_DONE    (1 < 1)
 
 union qp_event_buf_s {
     qp_uchar_t*    block;
@@ -108,14 +111,15 @@ struct qp_event_fd_s {
     qp_int_t               efd;
     qp_int_t               eflag;
     qp_uint32_t            flag;          /* need close */
-    qp_uint64_t            next_time;
     
     /* size that already read, it will be set when read done */  
     size_t                 read_done;     
     /* size that already writen, it will be set when write done */
     size_t                 write_done; 
+    
     qp_list_t              ready_next;
     qp_event_data_t        field;
+    qp_rbtree_node_t       timer_node;
     
     /* event fd flags */
     qp_uint32_t            noblock:1;     /* need noblock */
@@ -142,11 +146,12 @@ typedef  struct qp_event_fd_s    qp_event_fd_t;
 
 struct  qp_event_s {
     qp_fd_t                 evfd;          /* event number in pool */ 
-    qp_uint32_t             event_size;    /* event pool size */
     qp_pool_t               event_pool;    /* mem pool */       
     qp_list_t               ready;         /* event ready list */
     qp_list_t               listen_ready;
-    qp_uint64_t             start_time;    /* timer begin */
+    qp_rbtree_t             timer;
+    qp_uint32_t             event_size;    /* event pool size */
+    qp_int_t                timer_resolution;
     void*                   (*event_idle_cb)(void*);  /* idle event callback when no event ready */
     void*                   event_idle_cb_arg;   /* idle event callback arg */
     qp_event_opt_handler    init;
