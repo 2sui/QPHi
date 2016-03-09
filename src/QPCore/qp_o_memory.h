@@ -77,8 +77,8 @@ struct qp_rbtree_node_s {
     qp_rbtree_node_t*    right;
     qp_rbtree_node_t*    parent;
     void*                data;
+    qp_uint64_t          key;
     qp_uint32_t          color;
-    qp_uint32_t          key;
 };
 
 

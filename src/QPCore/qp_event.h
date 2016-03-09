@@ -150,7 +150,7 @@ struct  qp_event_s {
     qp_list_t               ready;         /* event ready list */
     qp_list_t               listen_ready;
     qp_rbtree_t             timer;
-    qp_uint32_t             event_size;    /* event pool size */
+    qp_int_t                event_size;    /* event pool size */
     qp_int_t                timer_resolution;
     void*                   (*event_idle_cb)(void*);  /* idle event callback when no event ready */
     void*                   event_idle_cb_arg;   /* idle event callback arg */
@@ -183,7 +183,7 @@ qp_event_is_alloced(qp_event_t* evfd);
  * equal to it.), and return NULL if some error happen.
  */
 qp_event_t*
-qp_event_init(qp_event_t* emodule, qp_uint32_t fd_size, bool noblock, bool edge,
+qp_event_init(qp_event_t* emodule, qp_int_t fd_size, bool noblock, bool edge,
     qp_event_opt_handler init, qp_event_opt_handler destroy, 
     void* (*idle_cb)(void *), void* idle_arg);
 

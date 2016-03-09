@@ -107,19 +107,20 @@ qp_event_create(qp_event_t* emodule)
     
     qp_list_init(&emodule->ready);
     qp_list_init(&emodule->listen_ready);
+    qp_rbtree_init(&emodule->timer);
     return emodule;
 }
 
 qp_event_t*
-qp_event_init(qp_event_t* emodule, qp_uint32_t fd_size, bool noblock, bool edge,
+qp_event_init(qp_event_t* emodule, qp_int_t fd_size, bool noblock, bool edge,
     qp_event_opt_handler init, qp_event_opt_handler destroy, 
     void* (*idle_cb)(void *), void* idle_arg)
 {
     qp_int_t        mod = QP_EPOLL_IN /*| QP_EPOLL_OUT*/ | QP_EPOLL_RDHUP;
-    qp_uint32_t     findex = 0;
+    qp_int_t        findex = 0;
     qp_event_fd_t*  eventfd = NULL;
     
-    if (0 == fd_size) {
+    if (1 > fd_size) {
         return NULL;
     }
     
@@ -167,12 +168,12 @@ qp_event_init(qp_event_t* emodule, qp_uint32_t fd_size, bool noblock, bool edge,
         eventfd->efd = QP_FD_INVALID;
         eventfd->eflag = 0;
         eventfd->flag = mod;
-        eventfd->next_time = QP_EVENT_NO_TIMEOUT;
         eventfd->noblock = noblock;
         eventfd->edge = edge && QP_EPOLL_ET;
         qp_event_clear_flag(eventfd);
         qp_list_init(&eventfd->ready_next);
         memset(&eventfd->field, 0, sizeof(qp_event_data_t));
+        memset(&eventfd->timer_node, 0, sizeof(qp_rbtree_node_t));
         
         if (emodule->init) {
             emodule->init(&eventfd->field);
@@ -211,7 +212,7 @@ qp_event_tiktok(qp_event_t *emodule, qp_int_t timeout)
     
     emodule->is_run = true;
     gettimeofday(&etime, NULL);
-    emodule->start_time = (etime.tv_sec << 32) + etime.tv_usec;
+//    emodule->start_time = (etime.tv_sec << 32) + etime.tv_usec;
     
 
     /* event loop */
@@ -420,7 +421,7 @@ qp_int_t
 qp_event_destroy(qp_event_t *emodule)
 {
     if (qp_fd_is_inited(&emodule->evfd) && !emodule->is_run) { 
-        size_t i = emodule->event_size;
+        qp_int_t i = 0;
         qp_event_fd_t* eventfd = NULL;
         
         qp_fd_destroy(&emodule->evfd);
