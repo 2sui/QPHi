@@ -47,13 +47,31 @@ typedef  void    qp_epoll_event_t;
 #define  QP_EVENT_TIMER_RESOLUTION   500
 
 
+typedef enum   qp_event_opt_e     qp_event_opt_t;
+typedef enum   qp_event_stat_e    qp_event_stat_t;
+typedef union  qp_event_buf_s     qp_event_buf_t;
+typedef struct qp_event_fd_s      qp_event_fd_t;
+typedef struct qp_event_s         qp_event_t;
+
+typedef  struct qp_event_data_s    qp_event_data_t;
+/* read/write handler */
+typedef qp_int_t (*qp_read_handler)(qp_event_fd_t*);
+typedef qp_read_handler    qp_write_handler;
+/* idle process handler */
+typedef  void* (*qp_event_idle_handler)(void*);
+/* init and destroy for qp_event_data_t */
+typedef  void (*qp_event_opt_handler)(qp_event_data_t*);  
+/* process handler */
+typedef  qp_int_t (*qp_event_process_handler)(qp_event_data_t* /* fd_data */, 
+    qp_int_t /*fd*/, qp_event_stat_t /* stat */, bool /*read_finish*/, 
+    size_t /* read_cnt */, bool /*write_finish*/, size_t /* write_cnt */);
+
+
 /* buf type */
 enum qp_event_opt_e {
     QP_EVENT_BLOCK_OPT = 0,  /* do read/write with block buf */
     QP_EVENT_VECT_OPT,       /* do read/write with iovec buf */
 };
-
-typedef enum qp_event_opt_e    qp_event_opt_t;
 
 
 /* event fd stat */
@@ -64,23 +82,10 @@ enum qp_event_stat_e {
     QP_EVENT_CLOSE   /* event is closed */
 };
 
-typedef  enum qp_event_stat_e   qp_event_stat_t;
-
-
 union qp_event_buf_s {
     qp_uchar_t*    block;
     struct iovec*  vector;
 };
-
-typedef union qp_event_buf_s    qp_event_buf_t;
-
-
-typedef  struct qp_event_data_s    qp_event_data_t;
-typedef  void (*qp_event_opt_handler)(qp_event_data_t*);
-typedef  qp_int_t (*qp_event_process_handler)(qp_event_data_t* /* fd_data */, 
-    qp_int_t /*fd*/, qp_event_stat_t /* stat */, bool /*read_finish*/, 
-    size_t /* read_cnt */, bool /*write_finish*/, size_t /* write_cnt */);
-
 
 struct  qp_event_data_s {
     /* read buf */
@@ -104,7 +109,6 @@ struct  qp_event_data_s {
     /* user data */
     void*                     data;   /* user data */
 };
-
 
 struct qp_event_fd_s {
     qp_int_t               index;
@@ -141,28 +145,25 @@ struct qp_event_fd_s {
     qp_uint32_t            :20;
 };
 
-typedef  struct qp_event_fd_s    qp_event_fd_t;
-
-
 struct  qp_event_s {
-    qp_fd_t                 evfd;          /* event number in pool */ 
-    qp_pool_t               event_pool;    /* mem pool */       
+    qp_fd_t                 evfd;          /* event number in pool */
+    qp_event_opt_handler    init;
+    qp_event_opt_handler    destroy;
+    qp_event_idle_handler   idle;
+    void*                   idle_arg;   /* idle event callback arg */
     qp_list_t               ready;         /* event ready list */
     qp_list_t               listen_ready;
     qp_rbtree_t             timer;
+    qp_pool_t               event_pool;    /* mem pool */ 
+    qp_uint64_t             timer_begin;
     qp_int_t                event_size;    /* event pool size */
     qp_int_t                timer_resolution;
-    void*                   (*event_idle_cb)(void*);  /* idle event callback when no event ready */
-    void*                   event_idle_cb_arg;   /* idle event callback arg */
-    qp_event_opt_handler    init;
-    qp_event_opt_handler    destroy;
-    bool                    is_alloced; 
-    bool                    is_run;
     /* read buf if user not assign */
     qp_uchar_t              combuf[QP_EVENT_COMMONDATA_SIZE];
+    bool                    is_alloced; 
+    bool                    is_run;
 };
 
-typedef  struct  qp_event_s    qp_event_t;
 
 inline bool
 qp_event_is_alloced(qp_event_t* evfd);
@@ -183,9 +184,9 @@ qp_event_is_alloced(qp_event_t* evfd);
  * equal to it.), and return NULL if some error happen.
  */
 qp_event_t*
-qp_event_init(qp_event_t* emodule, qp_int_t fd_size, bool noblock, bool edge,
+qp_event_init(qp_event_t* emodule, qp_int_t fd_size, qp_int_t resolution,
     qp_event_opt_handler init, qp_event_opt_handler destroy, 
-    void* (*idle_cb)(void *), void* idle_arg);
+    bool noblock, bool edge, void* (*idle_cb)(void *), void* idle_arg);
 
 /**
  * Start event loop.
