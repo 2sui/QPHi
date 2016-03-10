@@ -39,7 +39,8 @@ qp_event_is_alloced(qp_event_t* evfd)
 { return evfd->is_alloced; }
 
 qp_int_t
-qp_event_update_eventtimer(qp_event_t* emodule, qp_event_fd_t* eventfd);
+qp_event_update_eventtimer(qp_event_t* emodule, qp_event_fd_t* eventfd, 
+    qp_int_t timeout);
 
 qp_int_t
 qp_event_removeevent(qp_event_t* emodule, qp_event_fd_t* eventfd);
@@ -227,7 +228,7 @@ qp_event_tiktok(qp_event_t *emodule, qp_int_t timeout)
             emodule->timer_update = false;
             emodule->timer_progress = 0;
             
-            while (tnode = qp_rbtree_min(&emodule->timer, NULL)) {
+            while (NULL != (tnode = qp_rbtree_min(&emodule->timer, NULL))) {
                 
                 if (tnode->key > emodule->timer_begin) {
                     break;
@@ -333,7 +334,7 @@ qp_event_tiktok(qp_event_t *emodule, qp_int_t timeout)
                 continue;
             }
             
-            
+            qp_event_update_eventtimer(emodule, eevent, timeout);
             
             write_handler = (QP_EVENT_BLOCK_OPT == eevent->field.next_write_opt)?\
                 qp_event_write : qp_event_writev;
@@ -528,19 +529,27 @@ qp_event_addevent(qp_event_t* emodule, qp_int_t fd, qp_int_t timeout,
 }
 
 qp_int_t
-qp_event_update_eventtimer(qp_event_t* emodule, qp_event_fd_t* eventfd)
-{}
+qp_event_update_eventtimer(qp_event_t* emodule, qp_event_fd_t* eventfd, 
+    qp_int_t timeout)
+{
+    qp_rbtree_delete(&emodule->timer, &eventfd->timer_node);
+    eventfd->timer_node.key = emodule->timer_begin + \
+        (((timeout > 0) ? timeout : 30000)  * 1000) + \
+        (++emodule->timer_progress);
+    qp_rbtree_insert(&emodule->timer, &eventfd->timer_node);
+    return QP_SUCCESS;
+}
 
 qp_int_t
 qp_event_removeevent(qp_event_t* emodule, qp_event_fd_t* eventfd)
 {
-    if (!evfd->listen) {
-        qp_rbtree_delete(&emodule->timer, &evfd->timer_node);
+    if (!eventfd->listen) {
+        qp_rbtree_delete(&emodule->timer, &eventfd->timer_node);
     }
     
-    qp_event_del(emodule, evfd);
-    qp_event_clear_flag(evfd);
-    qp_pool_free(&emodule->event_pool, evfd);
+    qp_event_del(emodule, eventfd);
+    qp_event_clear_flag(eventfd);
+    qp_pool_free(&emodule->event_pool, eventfd);
     QP_LOGOUT_LOG("[qp_event_t]Remove event,current available [%lu]", 
         emodule->event_pool.nfree);
     return QP_SUCCESS;
@@ -592,7 +601,7 @@ qp_event_add(qp_event_t *emodule, qp_event_fd_t *eventfd)
 #ifdef  QP_OS_LINUX
     setter.data.ptr = eventfd;
     setter.events = eventfd->flag;
-    return epoll_ctl(evfd->evfd.fd, EPOLL_CTL_ADD, eventfd->efd, &setter);
+    return epoll_ctl(emodule->evfd.fd, EPOLL_CTL_ADD, eventfd->efd, &setter);
 #else
     return QP_ERROR;
 #endif
@@ -605,7 +614,7 @@ qp_event_reset(qp_event_t *emodule, qp_event_fd_t *eventfd, qp_int_t flag)
 #ifdef  QP_OS_LINUX
     setter.data.ptr = eventfd;
     setter.events = eventfd->flag | flag;
-    return epoll_ctl(evfd->evfd.fd, EPOLL_CTL_MOD, eventfd->efd, &setter);
+    return epoll_ctl(emodule->evfd.fd, EPOLL_CTL_MOD, eventfd->efd, &setter);
 #else
     return QP_ERROR;
 #endif
@@ -618,7 +627,7 @@ qp_event_del(qp_event_t *emodule, qp_event_fd_t *eventfd)
 #ifdef  QP_OS_LINUX
     setter.data.ptr = eventfd;
     setter.events = 0;
-    return epoll_ctl(evfd->evfd.fd, EPOLL_CTL_DEL, eventfd->efd, &setter);
+    return epoll_ctl(emodule->evfd.fd, EPOLL_CTL_DEL, eventfd->efd, &setter);
 #else
     return QP_ERROR;
 #endif
