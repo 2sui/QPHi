@@ -230,11 +230,12 @@ qp_event_tiktok(qp_event_t *emodule, qp_int_t timeout)
                     break;
                 }
                 
+                QP_LOGOUT_LOG("[qp_event_t]Epoll hup.");
             }
 
             emodule->timer_begin += emodule->timer_resolution;
             uptime = emodule->timer_resolution;
-            QP_LOGOUT_LOG("[qp_event_t]EPOLL WAIT [%s].", strerror(errno));
+            QP_LOGOUT_LOG("[qp_event_t]Epoll wait [%s].", strerror(errno));
             /* no error beacuse no event happen */
             if (emodule->idle) {
                 emodule->idle(emodule->idle_arg);

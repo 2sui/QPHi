@@ -82,8 +82,8 @@ main(int argc, char** argv)
     
     
     if (!qp_socket_init(&skt, AF_INET, SOCK_STREAM, "0.0.0.0", 8080, true) 
-        || !qp_event_init(&emodule, 1024, true, true, 
-        init_handler, destroy_handler, NULL, NULL)) 
+        || !qp_event_init(&emodule, 1024, 500,  
+        init_handler, destroy_handler, true, true, NULL, NULL)) 
     {
         fprintf(stderr, "\n Socket or event init fail.");
         goto end;
