@@ -277,6 +277,10 @@ qp_rbtree_is_right(qp_rbtree_node_t* node);
 inline bool
 qp_rbtree_is_empty(qp_rbtree_t* rbtree);
 
+#define qp_rbtree_data(t, type, link) ({ \
+    (type *) ((qp_uchar_t *) t - offsetof(type, link)); })
+
+
 #ifdef __cplusplus
 }
 #endif

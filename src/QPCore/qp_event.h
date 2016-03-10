@@ -73,7 +73,6 @@ enum qp_event_opt_e {
     QP_EVENT_VECT_OPT,       /* do read/write with iovec buf */
 };
 
-
 /* event fd stat */
 enum qp_event_stat_e {
     QP_EVENT_IDL = 0,
@@ -151,15 +150,17 @@ struct  qp_event_s {
     qp_event_opt_handler    destroy;
     qp_event_idle_handler   idle;
     void*                   idle_arg;   /* idle event callback arg */
+    qp_pool_t               event_pool;    /* mem pool */ 
     qp_list_t               ready;         /* event ready list */
     qp_list_t               listen_ready;
     qp_rbtree_t             timer;
-    qp_pool_t               event_pool;    /* mem pool */ 
     qp_uint64_t             timer_begin;
-    qp_int_t                event_size;    /* event pool size */
     qp_int_t                timer_resolution;
+    qp_int_t                timer_progress;
+    qp_int_t                event_size;    /* event pool size */
     /* read buf if user not assign */
     qp_uchar_t              combuf[QP_EVENT_COMMONDATA_SIZE];
+    bool                    timer_update;
     bool                    is_alloced; 
     bool                    is_run;
 };
@@ -217,11 +218,11 @@ qp_event_destroy(qp_event_t* emodule);
  * Note: You need add listen fd before calling qp_event_tiktok().
  */
 qp_int_t
-qp_event_addevent(qp_event_t* emodule, qp_int_t fd, bool listen,bool auto_close);
+qp_event_addevent(qp_event_t* emodule, qp_int_t fd, qp_int_t timeout,
+    bool listen,bool auto_close);
 
 inline void
 qp_event_disable(qp_event_t* emodule);
-
 
 #ifdef __cplusplus
 }
