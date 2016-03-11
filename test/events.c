@@ -96,12 +96,12 @@ main(int argc, char** argv)
         goto end;
     }
     
-    if (QP_ERROR == qp_event_addevent(&emodule, skt.socket.fd, true, false)) {
+    if (QP_ERROR == qp_event_addevent(&emodule, skt.socket.fd, 0, true, false)) {
         fprintf(stderr, "\n Add event fail.");
         goto end;
     }
     
-    qp_event_tiktok(&emodule, 0);
+    qp_event_tiktok(&emodule, 500);
     qp_event_disable(&emodule);
     
     

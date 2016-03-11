@@ -44,7 +44,8 @@ typedef  void    qp_epoll_event_t;
 #endif
 
 #define  QP_EVENT_COMMONDATA_SIZE    256
-#define  QP_EVENT_TIMER_RESOLUTION   500
+#define  QP_EVENT_TIMER_RESOLUTION   500 // ms
+#define  QP_EVENT_TIMER_TIMEOUT      30000  // ms
 
 
 typedef enum   qp_event_opt_e     qp_event_opt_t;

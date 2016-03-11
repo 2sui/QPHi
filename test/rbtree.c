@@ -63,7 +63,7 @@ main(int argc, char** argv)
     fprintf(stderr, "\n#### Deleting ####");
     for (i = 0; i < 20; i++) {
         qp_rbtree_node_t* nod = qp_rbtree_find(&rbtree, data[i]);
-        fprintf(stderr, "\n-------》 delete %d", nod->key);
+        fprintf(stderr, "\n-------》 delete %lu", nod->key);
         qp_rbtree_delete(&rbtree, nod);
         looping(&rbtree, rbtree.root);
         fprintf(stderr, "\n");

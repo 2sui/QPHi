@@ -127,7 +127,7 @@ qp_event_init(qp_event_t* emodule, qp_int_t fd_size, qp_int_t resolution,
     qp_int_t        findex = 0;
     qp_event_fd_t*  eventfd = NULL;
     
-    if (1 > fd_size || 1 > resolution) {
+    if (1 > fd_size) {
         return NULL;
     }
     
@@ -150,7 +150,8 @@ qp_event_init(qp_event_t* emodule, qp_int_t fd_size, qp_int_t resolution,
     emodule->init = init;
     emodule->destroy = destroy;
     emodule->event_size = fd_size;
-    emodule->timer_resolution = resolution;
+    emodule->timer_resolution = \
+        (resolution > 0) ? resolution : QP_EVENT_TIMER_RESOLUTION;
 
     /* create epoll fd */
     emodule->evfd.fd = qp_epoll_create(65535);
@@ -234,6 +235,7 @@ qp_event_tiktok(qp_event_t *emodule, qp_int_t timeout)
                     break;
                 }
                 
+                QP_LOGOUT_LOG("[qp_event_t]Event %d timeout.", eevent->efd);
                 qp_event_close(eevent);
                 qp_event_removeevent(emodule, eevent);
             }
@@ -264,6 +266,7 @@ qp_event_tiktok(qp_event_t *emodule, qp_int_t timeout)
                 emodule->idle(emodule->idle_arg);
             }
 
+            QP_LOGOUT_LOG("[qp_event_t]Epoll timeout.");
             continue;
         }
         
@@ -501,6 +504,7 @@ qp_event_addevent(qp_event_t* emodule, qp_int_t fd, qp_int_t timeout,
         /* add event to pool */
         if (QP_ERROR == qp_event_add(emodule, revent)) {
             revent->efd = QP_FD_INVALID;
+//            qp_event_clear_flag(revent);
             qp_pool_free(&emodule->event_pool, revent);
             QP_LOGOUT_ERROR("[qp_event_t]Add event fail.");
             return QP_ERROR;
@@ -511,13 +515,21 @@ qp_event_addevent(qp_event_t* emodule, qp_int_t fd, qp_int_t timeout,
         
         if (revent->listen) {
             revent->stat = QP_EVENT_PROCESS;
+            revent->timer_node.key = 0xffffffffffffffff;
             
         } else {
             revent->stat = QP_EVENT_NEW;
             revent->timer_node.key = emodule->timer_begin + \
-                (((timeout > 0) ? timeout : 30000)  * 1000) + \
+                (((timeout > 0) ? timeout : QP_EVENT_TIMER_TIMEOUT)*1000) + \
                 (++emodule->timer_progress);
-            qp_rbtree_insert(&emodule->timer, &revent->timer_node);
+        }
+        
+        if (!qp_rbtree_insert(&emodule->timer, &revent->timer_node)) {
+            qp_event_del(emodule, revent);
+            qp_event_clear_flag(revent);
+            qp_pool_free(&emodule->event_pool, revent);
+            QP_LOGOUT_ERROR("[qp_event_t]Add timer for event fail.");
+            return QP_ERROR;
         }
         
         QP_LOGOUT_LOG("[qp_event_t]Add event,using connection [%d],current "
@@ -543,10 +555,7 @@ qp_event_update_eventtimer(qp_event_t* emodule, qp_event_fd_t* eventfd,
 qp_int_t
 qp_event_removeevent(qp_event_t* emodule, qp_event_fd_t* eventfd)
 {
-    if (!eventfd->listen) {
-        qp_rbtree_delete(&emodule->timer, &eventfd->timer_node);
-    }
-    
+    qp_rbtree_delete(&emodule->timer, &eventfd->timer_node);
     qp_event_del(emodule, eventfd);
     qp_event_clear_flag(eventfd);
     qp_pool_free(&emodule->event_pool, eventfd);

@@ -598,6 +598,10 @@ qp_rbtree_find(qp_rbtree_t* rbtree, qp_uint32_t key)
 inline qp_rbtree_node_t*
 qp_rbtree_min(qp_rbtree_t* rbtree, qp_rbtree_node_t* node)
 {
+    if (qp_rbtree_is_empty(rbtree)) {
+        return NULL;
+    }
+    
     node = node ? node : rbtree->root;
     
     while (node->left != qp_rbtree_nil(rbtree)) {
@@ -611,6 +615,10 @@ qp_rbtree_min(qp_rbtree_t* rbtree, qp_rbtree_node_t* node)
 inline qp_rbtree_node_t*
 qp_rbtree_max(qp_rbtree_t* rbtree, qp_rbtree_node_t* node) 
 {
+    if (qp_rbtree_is_empty(rbtree)) {
+        return NULL;
+    }
+    
     node = node ? node : rbtree->root;
     
     while (node->right != qp_rbtree_nil(rbtree)) {
