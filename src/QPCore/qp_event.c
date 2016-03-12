@@ -49,7 +49,7 @@ qp_int_t
 qp_event_update_timer(qp_event_t* emodule);
 
 qp_int_t
-qp_epoll_create(qp_int_t size);
+qp_epoll_create(qp_event_t* emodule, qp_int_t size);
 
 qp_int_t
 qp_epoll_wait(qp_event_t* emodule, qp_epoll_event_t *events, qp_int_t maxevents, 
@@ -154,9 +154,7 @@ qp_event_init(qp_event_t* emodule, qp_int_t fd_size, qp_int_t resolution,
         (resolution > 0) ? resolution : QP_EVENT_TIMER_RESOLUTION;
 
     /* create epoll fd */
-    emodule->evfd.fd = qp_epoll_create(65535);
-    
-    if (!qp_fd_is_valid(&emodule->evfd)) {
+   if (QP_FD_INVALID == qp_epoll_create(emodule, 65535)) {
         qp_event_destroy(emodule);
         return NULL;
     }
@@ -270,7 +268,7 @@ qp_event_tiktok(qp_event_t *emodule, qp_int_t timeout)
             continue;
         }
         
-        if ((emodule->timer_resolution * 10) == emodule->timer_progress) {
+        if ((emodule->timer_resolution * 100) <= emodule->timer_progress) {
             emodule->timer_update = true;
         }
         
@@ -579,13 +577,16 @@ qp_event_update_timer(qp_event_t* emodule)
 }
 
 qp_int_t
-qp_epoll_create(qp_int_t size)
+qp_epoll_create(qp_event_t* emodule, qp_int_t size)
 {
 #ifdef QP_OS_LINUX
-    return epoll_create(size);
+    emodule->evfd.retsno = epoll_create(size);
 #else 
-    return QP_ERROR;
+    emodule->evfd.retsno = QP_ERROR;
 #endif
+    emodule->evfd.errono = errno;
+    emodule->evfd.fd = emodule->evfd.retsno;
+    return emodule->evfd.retsno;
 }
 
 qp_int_t
@@ -593,10 +594,13 @@ qp_epoll_wait(qp_event_t* emodule, qp_epoll_event_t *events, qp_int_t maxevents,
     qp_int_t timeout)
 {
 #ifdef QP_OS_LINUX
-    return epoll_wait(emodule->evfd.fd, events, maxevents, timeout);
+    emodule->evfd.retsno = epoll_wait(emodule->evfd.fd, events, maxevents, 
+        timeout);
 #else 
-    return QP_ERROR;
+    emodule->evfd.retsno = QP_ERROR;
 #endif
+    emodule->evfd.errono = errno;
+    return emodule->evfd.retsno;
 }
 
 qp_int_t
@@ -610,10 +614,13 @@ qp_event_add(qp_event_t *emodule, qp_event_fd_t *eventfd)
 #ifdef  QP_OS_LINUX
     setter.data.ptr = eventfd;
     setter.events = eventfd->flag;
-    return epoll_ctl(emodule->evfd.fd, EPOLL_CTL_ADD, eventfd->efd, &setter);
+    emodule->evfd.retsno = epoll_ctl(emodule->evfd.fd, EPOLL_CTL_ADD, 
+        eventfd->efd, &setter);
 #else
-    return QP_ERROR;
+    return emodule->evfd.retsno = QP_ERROR;
 #endif
+    emodule->evfd.errono = errno;
+    return emodule->evfd.retsno;
 }
 
 qp_int_t
