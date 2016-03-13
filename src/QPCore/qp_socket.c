@@ -26,11 +26,11 @@ qp_socket_unset_listen(qp_socket_t* socket)
 
 inline bool
 qp_socket_is_alloced(qp_socket_t* skt) 
-{ return /*(NULL == skt) ? false : */skt->is_alloced; }
+{ return skt ? skt->is_alloced : false; }
 
 inline bool
 qp_socket_is_listen(qp_socket_t* skt) 
-{ return /*(NULL == skt) ? false : */skt->is_listen; }
+{ return skt ? skt->is_listen : false; }
 
 
 qp_socket_t*
@@ -130,14 +130,13 @@ qp_socket_init(qp_socket_t* skt, qp_int_t domain, qp_int_t type,
     if (as_server) {
         qp_socket_set_listen(skt);
         skt->backlog = QP_SOCKET_DEFAULT_LISTENBACKLOG;
-
     }
 
     /* get socket */
     skt->socket.fd = socket(skt->domain, skt->type, 0);
     skt->socket.errono = errno;
 
-    if (!qp_fd_is_valid(&(skt->socket))) {
+    if (!qp_fd_is_valid(&skt->socket)) {
         QP_LOGOUT_ERROR("[qp_socket_t] Socket setup fail.");
         qp_socket_destroy(skt);
         return NULL;
@@ -160,7 +159,7 @@ qp_socket_init(qp_socket_t* skt, qp_int_t domain, qp_int_t type,
                     &skt->socket_addr.inet_addr.sin_addr);
                 skt->socket.errono = errno;
                 
-                if (1 > skt->socket.retsno) {
+                if (1 != skt->socket.retsno) {
                     qp_socket_destroy(skt);
                     QP_LOGOUT_ERROR("[qp_socket_t] Ip switch fail.");
                     return NULL;
@@ -176,7 +175,7 @@ qp_socket_init(qp_socket_t* skt, qp_int_t domain, qp_int_t type,
                 name,&skt->socket_addr.inet_addr.sin_addr);
             skt->socket.errono = errno;
             
-            if (1 >  skt->socket.retsno) {
+            if (1 != skt->socket.retsno) {
                 qp_socket_destroy(skt);
                 QP_LOGOUT_ERROR("[qp_socket_t] Ip switch fail.");
                 return NULL;
@@ -290,7 +289,7 @@ qp_socket_listen(qp_socket_t* skt, qp_int_t mod)
         (struct sockaddr*)&skt->socket_addr, skt->socket_len);
     skt->socket.errono = errno;
     
-    if (QP_ERROR == skt->socket.retsno) {
+    if (QP_SUCCESS != skt->socket.retsno) {
         QP_LOGOUT_ERROR("[qp_socket_t] Socket bind fail.");
         return QP_ERROR;
     }
@@ -298,7 +297,7 @@ qp_socket_listen(qp_socket_t* skt, qp_int_t mod)
     skt->socket.retsno = listen(skt->socket.fd, skt->backlog);
     skt->socket.errono = errno;
     
-    if (QP_ERROR == skt->socket.retsno) {
+    if (QP_SUCCESS != skt->socket.retsno) {
         QP_LOGOUT_ERROR("[qp_socket_t] Socket listen fail.");
         return QP_ERROR;
     }
@@ -336,7 +335,7 @@ qp_socket_close(qp_socket_t* skt, qp_socket_shut_t shut)
             shutdown(skt->socket.fd, shut);
         }
 
-        return qp_fd_close(&(skt->socket));
+        return qp_fd_close(&skt->socket);
     }
     
     return QP_ERROR;

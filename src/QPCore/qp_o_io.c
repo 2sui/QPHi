@@ -45,15 +45,15 @@ qp_fd_unset_noblock(qp_fd_t* fd)
 
 inline bool
 qp_fd_is_inited(qp_fd_t* fd) 
-{ return fd->is_inited; }
+{ return fd ? fd->is_inited : false; }
 
 inline bool
 qp_fd_is_alloced(qp_fd_t* fd) 
-{ return fd->is_alloced; }
+{ return fd ? fd->is_alloced : false; }
 
 inline bool
 qp_fd_is_noblock(qp_fd_t* fd) 
-{ return fd->is_noblock; }
+{ return fd ? fd->is_noblock : false; }
 
 //inline bool
 //qp_fd_is_async(qp_fd_t* fd) 
@@ -61,7 +61,7 @@ qp_fd_is_noblock(qp_fd_t* fd)
 
 inline bool
 qp_fd_is_valid(qp_fd_t* fd) 
-{ return QP_FD_INVALID != fd->fd;}
+{ return fd ? (QP_FD_INVALID != fd->fd) : false;}
 
 
 qp_fd_t*
@@ -161,6 +161,7 @@ qp_fd_setNoBlock(qp_fd_t* fd)
     }
 
      fd->retsno = fcntl(fd->fd, F_SETFL, O_NONBLOCK | fcntl(fd->fd, F_GETFL));
+     fd->errono = errno;
      
      if (QP_SUCCESS  == fd->retsno) {
          qp_fd_set_noblock(fd);
@@ -184,8 +185,8 @@ qp_fd_setBlock(qp_fd_t *fd)
         return QP_SUCCESS;
     }
 
-    fd->retsno = fcntl(fd->fd, F_SETFL, \
-        (~O_NONBLOCK) & fcntl(fd->fd,F_GETFL));
+    fd->retsno = fcntl(fd->fd, F_SETFL, (~O_NONBLOCK) & fcntl(fd->fd,F_GETFL));
+    fd->errono = errno;
     
     if (QP_SUCCESS == fd->retsno) {
         qp_fd_unset_noblock(fd);
