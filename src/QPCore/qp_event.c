@@ -611,6 +611,7 @@ qp_event_add(qp_event_t *emodule, qp_event_fd_t *eventfd)
     if (eventfd->noblock) {
         fcntl(eventfd->efd, F_SETFL, fcntl(eventfd->efd, F_GETFL) | O_NONBLOCK);
     }
+    
 #ifdef  QP_OS_LINUX
     setter.data.ptr = eventfd;
     setter.events = eventfd->flag;
@@ -630,7 +631,10 @@ qp_event_reset(qp_event_t *emodule, qp_event_fd_t *eventfd, qp_int_t flag)
 #ifdef  QP_OS_LINUX
     setter.data.ptr = eventfd;
     setter.events = eventfd->flag | flag;
-    return epoll_ctl(emodule->evfd.fd, EPOLL_CTL_MOD, eventfd->efd, &setter);
+    emodule->evfd.retsno = epoll_ctl(emodule->evfd.fd, EPOLL_CTL_MOD, 
+        eventfd->efd, &setter);
+    emodule->evfd.errono = errno;
+    return emodule->evfd.retsno;
 #else
     return QP_ERROR;
 #endif
@@ -643,7 +647,10 @@ qp_event_del(qp_event_t *emodule, qp_event_fd_t *eventfd)
 #ifdef  QP_OS_LINUX
     setter.data.ptr = eventfd;
     setter.events = 0;
-    return epoll_ctl(emodule->evfd.fd, EPOLL_CTL_DEL, eventfd->efd, &setter);
+    emodule->evfd.retsno = epoll_ctl(emodule->evfd.fd, EPOLL_CTL_DEL, 
+        eventfd->efd, &setter);
+    emodule->evfd.errono = errno;
+    return emodule->evfd.retsno;
 #else
     return QP_ERROR;
 #endif
