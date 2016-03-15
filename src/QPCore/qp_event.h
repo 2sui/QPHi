@@ -44,48 +44,36 @@ typedef  void    qp_epoll_event_t;
 #endif
 
 #define  QP_EVENT_COMMONDATA_SIZE    256
-#define  QP_EVENT_TIMER_RESOLUTION   500 // ms
+#define  QP_EVENT_TIMER_RESOLUTION   500    // ms
 #define  QP_EVENT_TIMER_TIMEOUT      30000  // ms
 
 
-typedef enum   qp_event_opt_e     qp_event_opt_t;
-typedef enum   qp_event_stat_e    qp_event_stat_t;
-typedef union  qp_event_buf_s     qp_event_buf_t;
-typedef struct qp_event_fd_s      qp_event_fd_t;
-typedef struct qp_event_s         qp_event_t;
-
-typedef  struct qp_event_data_s    qp_event_data_t;
-/* read/write handler */
-typedef qp_int_t (*qp_read_handler)(qp_event_fd_t*);
-typedef qp_read_handler    qp_write_handler;
-/* idle process handler */
-typedef  void* (*qp_event_idle_handler)(void*);
-/* init and destroy for qp_event_data_t */
-typedef  void (*qp_event_opt_handler)(qp_event_data_t*);  
-/* process handler */
-typedef  qp_int_t (*qp_event_process_handler)(qp_event_data_t* /* fd_data */, 
-    qp_int_t /*fd*/, qp_event_stat_t /* stat */, bool /*read_finish*/, 
-    size_t /* read_cnt */, bool /*write_finish*/, size_t /* write_cnt */);
-
-
 /* buf type */
-enum qp_event_opt_e {
+typedef enum  {
     QP_EVENT_BLOCK_OPT = 0,  /* do read/write with block buf */
     QP_EVENT_VECT_OPT,       /* do read/write with iovec buf */
-};
+} qp_event_opt_t;
 
 /* event fd stat */
-enum qp_event_stat_e {
+typedef enum {
     QP_EVENT_IDL = 0,
     QP_EVENT_NEW, /* event is new */
     QP_EVENT_PROCESS, /* event is running */
     QP_EVENT_CLOSE   /* event is closed */
-};
+} qp_event_stat_t;
 
-union qp_event_buf_s {
+typedef union {
     qp_uchar_t*    block;
     struct iovec*  vector;
-};
+} qp_event_buf_t;
+
+typedef  struct qp_event_data_s    qp_event_data_t;
+/* init and destroy for qp_event_data_t */
+typedef  void (*qp_event_opt_handler)(qp_event_data_t*);
+/* process handler */
+typedef  qp_int_t (*qp_event_process_handler)(qp_event_data_t* /* fd_data */, 
+    qp_int_t /*fd*/, qp_event_stat_t /* stat */, bool /*read_finish*/, 
+    size_t /* read_cnt */, bool /*write_finish*/, size_t /* write_cnt */);
 
 struct  qp_event_data_s {
     /* read buf */
@@ -104,11 +92,13 @@ struct  qp_event_data_s {
     qp_event_opt_t            next_read_opt;    
     /* use block buf or iovec buf for next step */  
     qp_event_opt_t            next_write_opt; 
-    /* event process handler for user */
+    /* event process handler for user */ 
     qp_event_process_handler  process_handler;
     /* user data */
     void*                     data;   /* user data */
 };
+
+typedef struct qp_event_fd_s      qp_event_fd_t;
 
 struct qp_event_fd_s {
     qp_int_t               index;
@@ -144,6 +134,14 @@ struct qp_event_fd_s {
     
     qp_uint32_t            :20;
 };
+
+/* read/write handler */
+typedef qp_int_t (*qp_read_handler)(qp_event_fd_t*);
+typedef qp_read_handler    qp_write_handler;
+/* idle process handler */
+typedef  void* (*qp_event_idle_handler)(void*); 
+
+typedef struct qp_event_s         qp_event_t;
 
 struct  qp_event_s {
     qp_fd_t                 evfd;          /* event number in pool */

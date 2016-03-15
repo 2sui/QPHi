@@ -222,6 +222,7 @@ qp_event_tiktok(qp_event_t *emodule, qp_int_t timeout)
     while (emodule->is_run && qp_pool_used(&emodule->event_pool)) {
         
         /* clean timeout node */
+        
         if (emodule->timer_update) {
             qp_event_update_timer(emodule);
             emodule->timer_update = false;
@@ -233,11 +234,12 @@ qp_event_tiktok(qp_event_t *emodule, qp_int_t timeout)
                     break;
                 }
                 
-                QP_LOGOUT_LOG("[qp_event_t]Event %d timeout.", eevent->efd);
+                QP_LOGOUT_LOG("[qp_event_t]Event [%d] timeout.", eevent->efd);
                 qp_event_close(eevent);
                 qp_event_removeevent(emodule, eevent);
             }
         }
+         
         
         eevent_num = qp_epoll_wait(emodule, event_queue, emodule->event_size,\
             emodule->timer_resolution);
@@ -268,9 +270,11 @@ qp_event_tiktok(qp_event_t *emodule, qp_int_t timeout)
             continue;
         }
         
+        
         if ((emodule->timer_resolution * 100) <= emodule->timer_progress) {
             emodule->timer_update = true;
         }
+         
         
         for (itr = 0; itr < eevent_num; itr++) { 
             eevent = (qp_event_fd_t*)(event_queue[itr].data.ptr);
@@ -520,14 +524,16 @@ qp_event_addevent(qp_event_t* emodule, qp_int_t fd, qp_int_t timeout,
             revent->timer_node.key = emodule->timer_begin + \
                 (((timeout > 0) ? timeout : QP_EVENT_TIMER_TIMEOUT)*1000) + \
                 (++emodule->timer_progress);
-        }
-        
-        if (!qp_rbtree_insert(&emodule->timer, &revent->timer_node)) {
-            qp_event_del(emodule, revent);
-            qp_event_clear_flag(revent);
-            qp_pool_free(&emodule->event_pool, revent);
-            QP_LOGOUT_ERROR("[qp_event_t]Add timer for event fail.");
-            return QP_ERROR;
+            
+            
+            if (!qp_rbtree_insert(&emodule->timer, &revent->timer_node)) {
+                qp_event_del(emodule, revent);
+                qp_event_clear_flag(revent);
+                qp_pool_free(&emodule->event_pool, revent);
+                QP_LOGOUT_ERROR("[qp_event_t]Add timer for event fail.");
+                return QP_ERROR;
+            }
+             
         }
         
         QP_LOGOUT_LOG("[qp_event_t]Add event,using connection [%d],current "
@@ -542,18 +548,25 @@ qp_int_t
 qp_event_update_eventtimer(qp_event_t* emodule, qp_event_fd_t* eventfd, 
     qp_int_t timeout)
 {
+    
     qp_rbtree_delete(&emodule->timer, &eventfd->timer_node);
     eventfd->timer_node.key = emodule->timer_begin + \
         (((timeout > 0) ? timeout : 30000)  * 1000) + \
         (++emodule->timer_progress);
     qp_rbtree_insert(&emodule->timer, &eventfd->timer_node);
+     
     return QP_SUCCESS;
 }
 
 qp_int_t
 qp_event_removeevent(qp_event_t* emodule, qp_event_fd_t* eventfd)
 {
-    qp_rbtree_delete(&emodule->timer, &eventfd->timer_node);
+    
+    if (eventfd->listen) {
+        qp_rbtree_delete(&emodule->timer, &eventfd->timer_node);
+    }
+     
+    
     qp_event_del(emodule, eventfd);
     qp_event_clear_flag(eventfd);
     qp_pool_free(&emodule->event_pool, eventfd);

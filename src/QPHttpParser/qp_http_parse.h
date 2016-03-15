@@ -21,7 +21,7 @@
 
 
 #include <qp_core.h>
-#include <http_parser.h>
+#include "http_parser.h"
 
 
 #define  HTTP_TO_PARSE              HTTP_REQUEST
