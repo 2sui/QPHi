@@ -39,7 +39,7 @@ qp_event_is_alloced(qp_event_t* evfd)
 { return evfd->is_alloced; }
 
 qp_int_t
-qp_event_update_eventtimer(qp_event_t* emodule, qp_event_fd_t* eventfd, 
+qp_event_timerevent(qp_event_t* emodule, qp_event_fd_t* eventfd, 
     qp_int_t timeout);
 
 qp_int_t
@@ -272,7 +272,7 @@ qp_event_tiktok(qp_event_t *emodule, qp_int_t timeout)
         }
         
         
-        if ((emodule->timer_resolution * 100) <= emodule->timer_progress) {
+        if ((emodule->timer_resolution * 8) <= emodule->timer_progress) {
             emodule->timer_update = true;
         }
          
@@ -340,7 +340,7 @@ qp_event_tiktok(qp_event_t *emodule, qp_int_t timeout)
                 continue;
             }
             
-            qp_event_update_eventtimer(emodule, eevent, timeout);
+            qp_event_timerevent(emodule, eevent, timeout);
             
             write_handler = (QP_EVENT_BLOCK_OPT == eevent->field.next_write_opt)?\
                 qp_event_write : qp_event_writev;
@@ -523,8 +523,8 @@ qp_event_addevent(qp_event_t* emodule, qp_int_t fd, qp_int_t timeout,
         } else {
             revent->stat = QP_EVENT_NEW;
             revent->timer_node.key = emodule->timer_begin + \
-                (((timeout > 0) ? timeout : QP_EVENT_TIMER_TIMEOUT)*1000) + \
-                (++emodule->timer_progress);
+                ((timeout > 0) ? timeout : QP_EVENT_TIMER_TIMEOUT) + \
+                (++emodule->timer_progress) / 8;
             
             
             if (!qp_rbtree_insert(&emodule->timer, &revent->timer_node)) {
@@ -546,14 +546,14 @@ qp_event_addevent(qp_event_t* emodule, qp_int_t fd, qp_int_t timeout,
 }
 
 qp_int_t
-qp_event_update_eventtimer(qp_event_t* emodule, qp_event_fd_t* eventfd, 
+qp_event_timerevent(qp_event_t* emodule, qp_event_fd_t* eventfd, 
     qp_int_t timeout)
 {
     
     qp_rbtree_delete(&emodule->timer, &eventfd->timer_node);
     eventfd->timer_node.key = emodule->timer_begin + \
-        (((timeout > 0) ? timeout : 30000)  * 1000) + \
-        (++emodule->timer_progress);
+        ((timeout > 0) ? timeout : QP_EVENT_TIMER_TIMEOUT) + \
+        (++emodule->timer_progress) / 8;
     qp_rbtree_insert(&emodule->timer, &eventfd->timer_node);
      
     return QP_SUCCESS;
@@ -585,7 +585,7 @@ qp_event_update_timer(qp_event_t* emodule)
 {
     struct timeval etime;
     gettimeofday(&etime, NULL);
-    emodule->timer_begin = etime.tv_sec * 1000000 + etime.tv_usec;
+    emodule->timer_begin = etime.tv_sec * 1000 + etime.tv_usec / 1000;
     return QP_SUCCESS;
 }
 
