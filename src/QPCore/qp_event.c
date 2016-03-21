@@ -235,6 +235,7 @@ qp_event_tiktok(qp_event_t *emodule, qp_int_t timeout)
                 }
                 
                 QP_LOGOUT_LOG("[qp_event_t]Event [%d] timeout.", eevent->efd);
+                eevent = qp_rbtree_data(tnode, qp_event_fd_t, timer_node);
                 qp_event_close(eevent);
                 qp_event_removeevent(emodule, eevent);
             }
@@ -562,11 +563,10 @@ qp_int_t
 qp_event_removeevent(qp_event_t* emodule, qp_event_fd_t* eventfd)
 {
     
-    if (eventfd->listen) {
+    if (!eventfd->listen) {
         qp_rbtree_delete(&emodule->timer, &eventfd->timer_node);
     }
      
-    
     qp_event_del(emodule, eventfd);
     qp_event_clear_flag(eventfd);
     qp_pool_free(&emodule->event_pool, eventfd);
