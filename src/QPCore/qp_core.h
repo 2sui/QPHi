@@ -8,7 +8,6 @@
 #define QP_CORE_H
 
 
-#include "qp_pool.h"
 #include "qp_socket.h"
 #include "qp_file.h"
 #include "qp_event.h"
