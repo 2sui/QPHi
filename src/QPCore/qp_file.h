@@ -3,7 +3,7 @@
 /**
   * Copyright (C) 2sui.
   *
-  * File I/O operations : basic I/O, direct I/O, AIO.
+  * File I/O operations : basic I/O, direct I/O (main use), AIO.
   * 
   * The buffer read function is disabled for now. 
   */

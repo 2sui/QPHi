@@ -1,7 +1,7 @@
 
 /*
-  * Copyright (C) 2sui.
-  */
+ * Copyright (C) 2sui.
+ */
 
 
 #ifndef QP_CORE_H
