@@ -13,15 +13,15 @@
 */
 inline void
 qp_fd_set_inited(qp_fd_t* fd)
-{ fd->is_inited = true;}
+{ fd ? fd->is_inited = true: 1;}
 
 inline void
 qp_fd_set_alloced(qp_fd_t* fd)
-{ fd->is_alloced = true;}
+{ fd ? fd->is_alloced = true : 1;}
 
 inline void
 qp_fd_set_noblock(qp_fd_t* fd)
-{ fd->is_noblock = true;}
+{ fd ? fd->is_noblock = true : 1;}
 
 //inline void
 //qp_fd_set_async(qp_fd_t* fd)
@@ -29,15 +29,15 @@ qp_fd_set_noblock(qp_fd_t* fd)
 
 inline void
 qp_fd_unset_inited(qp_fd_t* fd)
-{ fd->is_inited = false;}
+{ fd ? fd->is_inited = false : 1;}
 
 inline void
 qp_fd_unset_alloced(qp_fd_t* fd)
-{ fd->is_alloced = false;}
+{ fd ? fd->is_alloced = false : 1;}
 
 inline void
 qp_fd_unset_noblock(qp_fd_t* fd)
-{ fd->is_noblock = false;}
+{ fd ? fd->is_noblock = false : 1;}
 
 //inline void
 //qp_fd_unset_async(qp_fd_t* fd)
