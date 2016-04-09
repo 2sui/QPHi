@@ -6,12 +6,21 @@ Linux libraries for learning and developing .(still in programming…)
 ----
 
 ## Build and Install
-There are some directories in `QPHi/src`:
+Change current dirctrory to _src/QPCore_ in **QPHi**:
 
-* `QPCore`: Basic library;
-* `QPHttpParser`: A simple http parser class based on `http_parser` and `QPCore`;
-* `QPKafkamq`: An event driving kafka producer/consumer based on `QPCore`(In coding...);
-* `QPP2P`: P2P library based on `QPCore` (In coding...)
+```
+$ QPHi$ cd src/QPCore
+```
+Then run `cmake` in _src/QPCore_ to pre-build library:
+
+```
+QPHi/src/QPCore$ cmake
+```
+And run `make && sudo make install` to build and install library (You may need to type your sudo password):
+
+```
+QPHi/src/QPCore$ make && sudo make install
+```
 
 ----
 
