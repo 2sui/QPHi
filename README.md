@@ -16,7 +16,7 @@ Then run `cmake` in _src/QPCore_ to pre-build library:
 ```
 QPHi/src/QPCore$ cmake
 ```
-And run `make && sudo make install` to build and install library (You may need to type your sudo password):
+And run `make && sudo make install` to build and install library (You may need to type in your sudo password):
 
 ```
 QPHi/src/QPCore$ make && sudo make install
