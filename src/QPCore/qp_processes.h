@@ -101,12 +101,6 @@ qp_process_is_running(qp_process_t* process);
 
 
 /*
- * Create an empty thread struct.If thread is NULL, it will allocate one.
-*/
-qp_thread_t*
-qp_thread_create(qp_thread_t* thread);
-
-/*
  * Init a thread struct.If detach is true, then the thread is detached.
 */
 qp_thread_t*

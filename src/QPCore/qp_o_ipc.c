@@ -33,7 +33,7 @@ qp_lock_is_alloced(qp_lock_t* lock)
 
 inline bool
 qp_rwlock_is_alloced(qp_rwlock_t* rwlock)
-{ return rw_lock ? rwlock->is_alloced : false; }
+{ return rwlock ? rwlock->is_alloced : false; }
 
 inline bool
 qp_cond_is_alloced(qp_cond_t* cond)

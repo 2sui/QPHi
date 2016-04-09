@@ -9,27 +9,27 @@
 
 inline void
 qp_rwlock_set_inited(qp_rwlock_t* rwlock)
-{ rwlock->is_inited = true;}
+{ rwlock ? rwlock->is_inited = true : 1;}
 
 inline void
 qp_rwlock_set_alloced(qp_rwlock_t* rwlock)
-{ rwlock->is_alloced = true;}
+{ rwlock ? rwlock->is_alloced = true : 1;}
 
 inline void
 qp_rwlock_set_shared(qp_rwlock_t* rwlock)
-{ rwlock->is_shared = true;}
+{ rwlock ? rwlock->is_shared = true : 1;}
 
 inline void
 qp_rwlock_unset_inited(qp_rwlock_t* rwlock)
-{ rwlock->is_inited = false;}
+{ rwlock ? rwlock->is_inited = false : 1;}
 
 inline void
 qp_rwlock_unset_alloced(qp_rwlock_t* rwlock)
-{ rwlock->is_alloced = false;}
+{ rwlock ? rwlock->is_alloced = false : 1;}
 
 inline void
 qp_rwlock_unset_shared(qp_rwlock_t* rwlock)
-{ rwlock->is_shared = false;}
+{ rwlock ? rwlock->is_shared = false : 1;}
 
 
 qp_rwlock_t*
@@ -130,31 +130,31 @@ qp_rwlock_destroy(qp_rwlock_t* rwlock)
 qp_int_t
 qp_rwlock_rdlock(qp_rwlock_t* rwlock)
 {
-    return pthread_rwlock_rdlock(&(rwlock->rwlock));
+    return rwlock ? pthread_rwlock_rdlock(&rwlock->rwlock) : QP_ERROR;
 }
 
 qp_int_t
 qp_rwlock_tryrdlock(qp_rwlock_t* rwlock)
 {
-    return pthread_rwlock_tryrdlock(&(rwlock->rwlock));
+    return rwlock ? pthread_rwlock_tryrdlock(&rwlock->rwlock) : QP_ERROR;
 }
 
 qp_int_t
 qp_rwlock_wrlock(qp_rwlock_t* rwlock)
 {
-    return pthread_rwlock_wrlock(&(rwlock->rwlock));
+    return rwlock ? pthread_rwlock_wrlock(&rwlock->rwlock) : QP_ERROR;
 }
 
 qp_int_t
 qp_rwlock_trywrlock(qp_rwlock_t* rwlock)
 {
-    return pthread_rwlock_trywrlock(&(rwlock->rwlock));
+    return rwlock ? pthread_rwlock_trywrlock(&rwlock->rwlock) : QP_ERROR;
 }
 
 qp_int_t
 qp_rwlock_unlock(qp_rwlock_t* rwlock)
 {
-    return pthread_rwlock_unlock(&(rwlock->rwlock));
+    return rwlock ? pthread_rwlock_unlock(&rwlock->rwlock) : QP_ERROR;
 }
 
 

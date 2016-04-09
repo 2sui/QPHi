@@ -9,51 +9,51 @@
 
 inline void
 qp_pool_set_inited(qp_pool_t* pool)
-{ pool->is_inited = true;}
+{ pool ? pool->is_inited = true : 1;}
 
 inline void
 qp_pool_set_alloced(qp_pool_t* pool)
-{ pool->is_alloced = true;}
+{ pool ? pool->is_alloced = true : 1;}
 
 inline void
 qp_pool_manager_set_inited(qp_pool_manager_t* manager)
-{ manager->is_inited = true;}
+{ manager ? manager->is_inited = true : 1;}
 
 inline void
 qp_pool_manager_set_alloced(qp_pool_manager_t* manager)
-{ manager->is_alloced = true;}
+{ manager ? manager->is_alloced = true : 1;}
 
 inline void
 qp_pool_unset_inited(qp_pool_t* pool)
-{ pool->is_inited = false;}
+{ pool ? pool->is_inited = false : 1;}
 
 inline void
 qp_pool_unset_alloced(qp_pool_t* pool)
-{ pool->is_alloced = false;}
+{ pool ? pool->is_alloced = false : 1;}
 
 inline void
 qp_pool_manager_unset_inited(qp_pool_manager_t* manager)
-{ manager->is_inited = false;}
+{ manager ? manager->is_inited = false : 1;}
 
 inline void
 qp_pool_manager_unset_alloced(qp_pool_manager_t* manager)
-{ manager->is_alloced = false;}
+{ manager ? manager->is_alloced = false : 1;}
 
 inline bool
 qp_pool_is_inited(qp_pool_t* pool) 
-{ return pool->is_inited;}
+{ return pool ? pool->is_inited : false;}
 
 inline bool
 qp_pool_is_alloced(qp_pool_t* pool)
-{ return pool->is_alloced;}
+{ return pool ? pool->is_alloced : false;}
 
 inline bool
 qp_pool_manager_is_inited(qp_pool_manager_t* manager)
-{ return manager->is_inited;}
+{ return manager ? manager->is_inited : false;}
 
 inline bool
 qp_pool_manager_is_alloced(qp_pool_manager_t* manager)
-{ return manager->is_alloced;}
+{ return manager ? manager->is_alloced : false;}
 
 
 qp_pool_t*

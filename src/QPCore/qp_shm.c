@@ -9,19 +9,19 @@
 
 inline void
 qp_shm_set_inited(qp_shm_t* shm)
-{ shm->is_inited = true;}
+{ shm ? shm->is_inited = true : 1;}
 
 inline void
 qp_shm_set_alloced(qp_shm_t* shm)
-{ shm->is_alloced = true;}
+{ shm ? shm->is_alloced = true : 1;}
 
 inline void
 qp_shm_unset_inited(qp_shm_t* shm)
-{ shm->is_inited = false;}
+{ shm ? shm->is_inited = false : 1;}
 
 inline void
 qp_shm_unset_alloced(qp_shm_t* shm)
-{ shm->is_alloced = false;}
+{ shm ? shm->is_alloced = false : 1;}
 
 
 qp_shm_t*

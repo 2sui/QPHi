@@ -23,7 +23,7 @@ extern "C" {
 #define QP_STACK_LEVEL_TRANSMIT    3
     
     
-#define QP_STACK_PROTO_UNKNOWN            0X0000
+#define QP_STACK_PROTO_UNKNOWN            0x0000
     
 /* datalink proto : 0x01 ~ 0x30 */
 #define QP_STACK_PROTO_ETHERNET_II        0x0001
@@ -65,7 +65,7 @@ extern "C" {
 #define QP_STACK_PROTO_EGP                0x0107
 #define QP_STACK_PROTO_IGP                0x0108
 #define QP_STACK_PROTO_PUP                0x0109
-    
+
     
 typedef struct qp_stack_mac_addr_s {
     qp_uint8_t    sit1;

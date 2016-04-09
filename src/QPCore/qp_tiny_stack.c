@@ -14,6 +14,10 @@ qp_uint16_t
 qp_stack_datalink_parse(qp_uchar_t* frame, qp_uint32_t len, qp_int_t link,\
     qp_stack_frame_result_t* result)
 {   
+    if (!frame || !result) {
+        return QP_STACK_PROTO_UNKNOWN;
+    }
+    
     switch (link)
     {
     /* BSD loop */
@@ -107,6 +111,10 @@ qp_uint16_t
 qp_stack_network_parse(qp_uchar_t* frame, qp_uint32_t len, \
     qp_stack_frame_result_t* result)
 {
+    if (!frame || !result) {
+        return QP_STACK_PROTO_UNKNOWN;
+    }
+    
     switch (result->l3_type) {
         
     case QP_STACK_PROTO_IP: {
@@ -147,6 +155,10 @@ qp_uint16_t
 qp_stack_transmit_parse(qp_uchar_t* frame, qp_uint32_t len, \
     qp_stack_frame_result_t* result)
 {
+    if (!frame || !result) {
+        return QP_STACK_PROTO_UNKNOWN;
+    }
+    
     switch (result->l4_type) {
         
     case QP_STACK_PROTO_ICMP: break;
@@ -177,6 +189,10 @@ qp_int_t
 qp_stack_parse(qp_uchar_t* frame, qp_uint32_t len, qp_int_t link,\
     qp_stack_frame_result_t* result, qp_uint16_t level)
 {
+    if (!frame || !result) {
+        return QP_ERROR;
+    }
+    
     if (level > QP_STACK_LEVEL_TRANSMIT) {
         level = QP_STACK_LEVEL_TRANSMIT;
     }
@@ -188,6 +204,7 @@ qp_stack_parse(qp_uchar_t* frame, qp_uint32_t len, qp_int_t link,\
     memset(result, 0, sizeof(qp_stack_frame_result_t));
     
     qp_uint16_t i = 0;
+    
     for (; i < level; i++) {
         
         switch (i) {

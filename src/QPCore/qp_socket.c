@@ -32,6 +32,20 @@ inline bool
 qp_socket_is_listen(qp_socket_t* skt) 
 { return skt ? skt->is_listen : false; }
 
+// MARK: private functions.
+
+qp_socket_t*
+qp_socket_assign_inet(qp_socket_t* skt, const qp_char_t* name, qp_ushort_t port);
+
+qp_socket_t*
+qp_socket_assign_inet6(qp_socket_t* skt, const qp_char_t* name, qp_ushort_t port);
+
+qp_socket_t*
+qp_socket_assign_unix(qp_socket_t* skt, const qp_char_t* name);
+
+qp_socket_t* 
+qp_socket_assign_packet(qp_socket_t* skt);
+
 
 qp_socket_t*
 qp_socket_create(qp_socket_t* skt) {
@@ -259,7 +273,7 @@ qp_socket_assign_inet6(qp_socket_t* skt, const qp_char_t* name, qp_ushort_t port
     return NULL;
 }
 
-qp_socket_t
+qp_socket_t*
 qp_socket_assign_unix(qp_socket_t* skt, const qp_char_t* name) 
 {
     if (!skt || !name) {
@@ -324,10 +338,26 @@ qp_socket_t*
 qp_socket_assign_packet(qp_socket_t* skt) 
 {
     if (!skt) {
-        return NULL
+        return NULL;
     }
     
     return NULL;
+}
+
+qp_int_t
+qp_socket_close(qp_socket_t* skt, qp_socket_shut_t shut)
+{
+    if (qp_fd_is_valid(&skt->socket)) {
+        
+        /* close socket at once */
+        if (shut != QP_SOCKET_SHUT_CLOSE) {
+            shutdown(skt->socket.fd, shut);
+        }
+
+        return qp_fd_close(&skt->socket);
+    }
+    
+    return QP_ERROR;
 }
 
 qp_int_t
@@ -360,37 +390,6 @@ qp_socket_listen(qp_socket_t* skt, qp_int_t mod)
     }
 
     return QP_SUCCESS;
-}
-
-qp_int_t
-qp_socket_setsockopt(qp_socket_t* skt, qp_int_t level, qp_int_t optname, \
-    const void* optval, socklen_t optlen)
-{
-    if (!qp_fd_is_valid(&skt->socket)) {
-        return QP_ERROR;
-    }
-    
-    skt->socket.retsno = setsockopt(skt->socket.fd, level, optname, optval, 
-        optlen);
-    skt->socket.errono = errno;
-    return skt->socket.retsno;
-}
-
-
-qp_int_t
-qp_socket_close(qp_socket_t* skt, qp_socket_shut_t shut)
-{
-    if (qp_fd_is_valid(&skt->socket)) {
-        
-        /* close socket at once */
-        if (shut != QP_SOCKET_SHUT_CLOSE) {
-            shutdown(skt->socket.fd, shut);
-        }
-
-        return qp_fd_close(&skt->socket);
-    }
-    
-    return QP_ERROR;
 }
 
 qp_socket_t*
@@ -449,32 +448,42 @@ qp_socket_connect(qp_socket_t* skt)
     return skt->socket.retsno;
 }
 
+qp_int_t
+qp_socket_setsockopt(qp_socket_t* skt, qp_int_t level, qp_int_t optname, \
+    const void* optval, socklen_t optlen)
+{
+    if (!qp_fd_is_valid(&skt->socket)) {
+        return QP_ERROR;
+    }
+    
+    skt->socket.retsno = setsockopt(skt->socket.fd, level, optname, optval, 
+        optlen);
+    skt->socket.errono = errno;
+    return skt->socket.retsno;
+}
+
 size_t
 qp_socket_sendn(qp_socket_t* skt, const void* vptr, size_t nbytes)
 {
-    skt ? { return qp_fd_writen(&skt->socket, vptr, nbytes);} : \
-        {return 0;};
+    return skt ? qp_fd_writen(&skt->socket, vptr, nbytes) : 0;
 }
 
 size_t
 qp_socket_recvn(qp_socket_t* skt, void* vptr, size_t nbytes)
 {
-    skt ? { return qp_fd_readn(&(skt->socket), vptr, nbytes)} :
-        {return 0};
+    return skt ? qp_fd_readn(&(skt->socket), vptr, nbytes) : 0;
 }
 
 ssize_t
 qp_socket_sendv(qp_socket_t* skt, const struct iovec* iov, qp_int_t iovcnt)
 {
-    skt ? { return qp_fd_writev(&(skt->socket), iov, iovcnt);} :
-        {return QP_ERROR;};
+    return skt ? qp_fd_writev(&(skt->socket), iov, iovcnt) : QP_ERROR;
 }
 
 ssize_t
 qp_socket_recvv(qp_socket_t* skt, const struct iovec* iov, qp_int_t iovcnt)
 {
-    skt ? { return qp_fd_readv(&(skt->socket), iov, iovcnt);} :
-        {return QP_ERROR;};
+    return skt ? qp_fd_readv(&(skt->socket), iov, iovcnt) : QP_ERROR;
 }
 
 ssize_t
@@ -544,4 +553,3 @@ qp_socket_set_quickack(qp_socket_t* skt, qp_int_t enable)
     return qp_socket_setsockopt(skt, IPPROTO_TCP, TCP_QUICKACK, \
         (const void *)&enable, sizeof(enable));
 }
-

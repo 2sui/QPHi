@@ -35,8 +35,10 @@ epoll_wait(int __epfd, epoll_event *__events, int __maxevents, int __timeout)
 
 
 inline bool
-qp_event_is_alloced(qp_event_t* evfd) 
-{ return evfd->is_alloced; }
+qp_event_is_alloced(qp_event_t* emodule) 
+{ return emodule ? emodule->is_alloced : false; }
+
+// MARK: private functions
 
 qp_int_t
 qp_event_timerevent(qp_event_t* emodule, qp_event_fd_t* eventfd, 
@@ -203,7 +205,7 @@ qp_event_tiktok(qp_event_t *emodule, qp_int_t timeout)
     qp_int_t          rflag = 0;
     qp_int_t          itr = 0;
     
-    if (!qp_fd_is_valid(&emodule->evfd)) {
+    if (!emodule || !qp_fd_is_valid(&emodule->evfd)) {
         QP_LOGOUT_ERROR("[qp_event_t]Event Not vaild.");
         return QP_ERROR;
     }
@@ -462,7 +464,7 @@ qp_event_tiktok(qp_event_t *emodule, qp_int_t timeout)
 qp_int_t
 qp_event_destroy(qp_event_t *emodule)
 {
-    if (qp_fd_is_inited(&emodule->evfd) && !emodule->is_run) { 
+    if (emodule && qp_fd_is_inited(&emodule->evfd) && !emodule->is_run) { 
         qp_int_t i = 0;
         qp_event_fd_t* eventfd = NULL;
         
@@ -497,6 +499,10 @@ qp_event_addevent(qp_event_t* emodule, qp_int_t fd, qp_int_t timeout,
     bool listen, bool auto_close)
 { 
     qp_event_fd_t* revent = NULL;
+    
+    if (!emodule) {
+        return QP_ERROR;
+    }
     
     if (qp_pool_available(&emodule->event_pool) && (fd > QP_FD_INVALID)) {
         /* get the first idle element */
@@ -549,6 +555,9 @@ qp_int_t
 qp_event_timerevent(qp_event_t* emodule, qp_event_fd_t* eventfd, 
     qp_int_t timeout)
 {
+    if (!emodule || !eventfd) {
+        return QP_ERROR;
+    }
     
     qp_rbtree_delete(&emodule->timer, &eventfd->timer_node);
     eventfd->timer_node.key = emodule->timer_begin + \
@@ -562,6 +571,9 @@ qp_event_timerevent(qp_event_t* emodule, qp_event_fd_t* eventfd,
 qp_int_t
 qp_event_removeevent(qp_event_t* emodule, qp_event_fd_t* eventfd)
 {
+    if (!emodule || !eventfd) {
+        return QP_ERROR;
+    }
     
     if (!eventfd->listen) {
         qp_rbtree_delete(&emodule->timer, &eventfd->timer_node);
@@ -577,12 +589,16 @@ qp_event_removeevent(qp_event_t* emodule, qp_event_fd_t* eventfd)
 
 inline void
 qp_event_disable(qp_event_t* emodule)
-{ emodule->is_run = false; }
+{ emodule ? emodule->is_run = false : 1; }
 
 
 qp_int_t
 qp_event_update_timer(qp_event_t* emodule)
 {
+    if (!emodule) {
+        return QP_ERROR;
+    }
+    
     struct timeval etime;
     gettimeofday(&etime, NULL);
     emodule->timer_begin = etime.tv_sec * 1000 + etime.tv_usec / 1000;
@@ -592,6 +608,10 @@ qp_event_update_timer(qp_event_t* emodule)
 qp_int_t
 qp_epoll_create(qp_event_t* emodule, qp_int_t size)
 {
+    if (!emodule) {
+        return QP_ERROR;
+    }
+    
 #ifdef QP_OS_LINUX
     emodule->evfd.retsno = epoll_create(size);
 #else 
@@ -606,6 +626,10 @@ qp_int_t
 qp_epoll_wait(qp_event_t* emodule, qp_epoll_event_t *events, qp_int_t maxevents, 
     qp_int_t timeout)
 {
+    if (!emodule || !events) {
+        return QP_ERROR;
+    }
+    
 #ifdef QP_OS_LINUX
     emodule->evfd.retsno = epoll_wait(emodule->evfd.fd, events, maxevents, 
         timeout);
@@ -619,6 +643,10 @@ qp_epoll_wait(qp_event_t* emodule, qp_epoll_event_t *events, qp_int_t maxevents,
 qp_int_t
 qp_event_add(qp_event_t *emodule, qp_event_fd_t *eventfd)
 {
+    if (!emodule || !eventfd) {
+        return QP_ERROR;
+    }
+    
     qp_epoll_event_t setter;
     
     if (eventfd->noblock) {
@@ -640,6 +668,10 @@ qp_event_add(qp_event_t *emodule, qp_event_fd_t *eventfd)
 qp_int_t
 qp_event_reset(qp_event_t *emodule, qp_event_fd_t *eventfd, qp_int_t flag)
 {
+    if (!emodule || !eventfd) {
+        return QP_ERROR;
+    }
+    
     qp_epoll_event_t setter;
 #ifdef  QP_OS_LINUX
     setter.data.ptr = eventfd;
@@ -656,6 +688,10 @@ qp_event_reset(qp_event_t *emodule, qp_event_fd_t *eventfd, qp_int_t flag)
 qp_int_t
 qp_event_del(qp_event_t *emodule, qp_event_fd_t *eventfd)
 {
+    if (!emodule || !eventfd) {
+        return QP_ERROR;
+    }
+    
     qp_epoll_event_t setter;
 #ifdef  QP_OS_LINUX
     setter.data.ptr = eventfd;
@@ -672,12 +708,16 @@ qp_event_del(qp_event_t *emodule, qp_event_fd_t *eventfd)
 qp_int_t
 qp_event_accept(qp_event_fd_t* eventfd)
 {
-    return accept(eventfd->efd, NULL, NULL);
+    return eventfd ? accept(eventfd->efd, NULL, NULL) : QP_ERROR;
 }
 
 qp_int_t
 qp_event_close(qp_event_fd_t* eventfd)
 {
+    if (!eventfd) {
+        return QP_ERROR;
+    }
+    
     if (eventfd->closed && (QP_FD_INVALID != eventfd->efd)) {
         close(eventfd->efd);
     }
@@ -690,6 +730,10 @@ qp_event_close(qp_event_fd_t* eventfd)
 qp_int_t
 qp_event_check_close(qp_event_fd_t* eventfd)
 {
+    if (!eventfd) {
+        return QP_ERROR;
+    }
+    
     if (eventfd->nativeclose) {
         qp_event_close(eventfd);
         return QP_ERROR;
@@ -701,6 +745,10 @@ qp_event_check_close(qp_event_fd_t* eventfd)
 qp_int_t
 qp_event_write(qp_event_fd_t* eventfd)
 {
+    if (!eventfd) {
+        return QP_ERROR;
+    }
+    
     size_t rest;
     ssize_t ret;
     
@@ -743,6 +791,10 @@ qp_event_write(qp_event_fd_t* eventfd)
 qp_int_t
 qp_event_writev(qp_event_fd_t* eventfd)
 {
+    if (!eventfd) {
+        return QP_ERROR;
+    }
+    
     ssize_t ret;
 
     if (eventfd->write && eventfd->field.writebuf_max 
@@ -770,6 +822,10 @@ qp_event_writev(qp_event_fd_t* eventfd)
 qp_int_t
 qp_event_read(qp_event_fd_t* eventfd)
 {
+    if (!eventfd) {
+        return QP_ERROR;
+    }
+    
     size_t rest;
     ssize_t ret;
     
@@ -824,6 +880,10 @@ qp_event_read(qp_event_fd_t* eventfd)
 qp_int_t
 qp_event_readv(qp_event_fd_t* eventfd)
 {
+    if (!eventfd) {
+        return QP_ERROR;
+    }
+    
     ssize_t ret;
 
     if (eventfd->read && eventfd->field.readbuf_max 
@@ -852,6 +912,10 @@ qp_event_readv(qp_event_fd_t* eventfd)
 void
 qp_event_clear_flag(qp_event_fd_t* eventfd)
 {
+    if (!eventfd) {
+        return;
+    }
+    
     eventfd->listen = 0;
     eventfd->closed = 0;
     eventfd->stat = QP_EVENT_IDL;

@@ -7,10 +7,6 @@
 #include "qp_o_io.h"
 
 
-/*
- * Every fd struct has 4 stat: 1 bit for init stat, 1 bit for noblock stat,
- * 1 bit for async stat, 1 bit for alloced stat.
-*/
 inline void
 qp_fd_set_inited(qp_fd_t* fd)
 { fd ? fd->is_inited = true: 1;}
@@ -138,11 +134,7 @@ qp_fd_destroy(qp_fd_t *fd)
 qp_fd_type_t
 qp_fd_type(qp_fd_t *fd)
 {
-    if (qp_fd_is_inited(fd)) {
-        return fd->type;
-    }
-
-    return QP_FD_TYPE_UNKNOW;
+    return qp_fd_is_inited(fd) ? fd->type : QP_FD_TYPE_UNKNOW;
 }
 
 qp_int_t
@@ -413,4 +405,3 @@ qp_fd_aio_read(qp_fd_t* fd, void* vptr, size_t nbytes, size_t offset)
     fd->errono = errno;
     return fd->retsno;
 }
-

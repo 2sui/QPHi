@@ -16,28 +16,28 @@
 
 inline void
 qp_file_set_alloced(qp_file_t* file)
-{ file->is_alloced = true;}
+{ file ? file->is_alloced = true : 1;}
 
 inline void
 qp_file_set_directIO(qp_file_t* file)
-{ file->is_directIO = true;}
+{ file ? file->is_directIO = true : 1;}
 
 inline void
 qp_file_unset_alloced(qp_file_t* file)
-{ file->is_alloced = false;}
+{ file ? file->is_alloced = false : 1;}
 
 inline void
 qp_file_unset_directIO(qp_file_t* file)
-{ file->is_directIO = false;}
+{ file ? file->is_directIO = false : 1;}
 
 
 inline bool
 qp_file_is_alloced(qp_file_t* file) 
-{ return /*(NULL == file) ? false : */file->is_alloced; }
+{ return file ? file->is_alloced : false; }
 
 inline bool
 qp_file_is_directio(qp_file_t* file) 
-{ return /*(NULL == file) ? false : */file->is_directIO; }
+{ return file ? file->is_directIO : false; }
 
 
 qp_file_t*
@@ -104,10 +104,8 @@ qp_file_init(qp_file_t* file, qp_int_t mod, size_t bufsize)
             qp_file_set_directIO(file);
 
         } else {
-            file->wrbuf = \
-                (qp_uchar_t*) qp_alloc(file->wrbufsize);
-            file->rdbuf = \
-                (qp_uchar_t*) qp_alloc(file->rdbufsize);
+            file->wrbuf = (qp_uchar_t*) qp_alloc(file->wrbufsize);
+            file->rdbuf = (qp_uchar_t*) qp_alloc(file->rdbufsize);
         }
 
         if (!file->rdbuf || !file->wrbuf) {
@@ -225,7 +223,7 @@ qp_file_close(qp_file_t *file)
             while (qp_file_flush(file) > 0);
         }
 
-        return qp_fd_close(&(file->file));
+        return qp_fd_close(&file->file);
     }
 
     return QP_ERROR;
@@ -234,7 +232,7 @@ qp_file_close(qp_file_t *file)
 ssize_t
 qp_file_flush(qp_file_t* file)
 {   
-    if (!file->wrbuf) {
+    if (!file || !file->wrbuf) {
         return QP_ERROR;
     }
     
@@ -270,7 +268,7 @@ qp_file_flush(qp_file_t* file)
 ssize_t 
 qp_file_track(qp_file_t* file) 
 {
-    if (!file->rdbuf) {
+    if (!file || !file->rdbuf) {
         return QP_ERROR;
     }
     
@@ -295,8 +293,8 @@ qp_file_track(qp_file_t* file)
 ssize_t
 qp_file_write(qp_file_t* file, const void* buf, size_t bufsize)
 {
-    if (!file->wrbuf) {
-        return qp_fd_write(&(file->file), buf, bufsize);
+    if (!file || !file->wrbuf) {
+        return qp_fd_write(&file->file, buf, bufsize);
         
     } else {
         size_t done = bufsize;
@@ -339,7 +337,7 @@ ssize_t
 qp_file_read(qp_file_t* file, void* buf, size_t bufsize)
 {
     /* buffer read is disabled for now */
-    if (!file->rdbuf) {
+    if (!file || !file->rdbuf) {
         return qp_fd_read(&(file->file), buf, bufsize);
         
     } else {
@@ -378,6 +376,9 @@ qp_int_t
 qp_file_reglock(qp_file_t *file, qp_int_t type, 
     off_t offset, qp_int_t whence, off_t len)
 {
+    if (!file) {
+        return QP_ERROR;
+    }
 #ifdef QP_OS_POSIX
 
 #ifdef __USE_LARGEFILE64
@@ -405,6 +406,9 @@ qp_int_t
 qp_file_locktest(qp_file_t *file, qp_int_t type, 
     off_t offset, qp_int_t whence, off_t len)
 {
+    if (!file) {
+        return QP_ERROR;
+    }
 #ifdef QP_OS_POSIX
 
 #ifdef __USE_LARGEFILE64

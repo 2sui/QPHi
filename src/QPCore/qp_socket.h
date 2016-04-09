@@ -99,6 +99,12 @@ qp_int_t
 qp_socket_destroy(qp_socket_t* skt);
 
 /*
+ * Clsoe an opened socket.
+*/
+qp_int_t
+qp_socket_close(qp_socket_t* skt, qp_socket_shut_t shut);
+
+/*
  * Listen from created socket.
  * [mod] is only work for unix socket for set the privilege of 
  * listening socket.
@@ -106,19 +112,6 @@ qp_socket_destroy(qp_socket_t* skt);
 */
 qp_int_t
 qp_socket_listen(qp_socket_t* skt, qp_int_t mod);
-
-/**
- * Set socket opt just like setsockopt.
- */
-qp_int_t
-qp_socket_setsockopt(qp_socket_t* skt, qp_int_t level, qp_int_t optname, \
-    const void* optval, socklen_t optlen);
-
-/*
- * Clsoe an opened socket.
-*/
-qp_int_t
-qp_socket_close(qp_socket_t* skt, qp_socket_shut_t shut);
 
 /*
  * Accept client sockets. If sktClient is NULL it will allocate one
@@ -133,6 +126,13 @@ qp_socket_accept(qp_socket_t* skt, qp_socket_t* sktClient);
 */
 qp_int_t
 qp_socket_connect(qp_socket_t* skt);
+
+/**
+ * Set socket opt just like setsockopt.
+ */
+qp_int_t
+qp_socket_setsockopt(qp_socket_t* skt, qp_int_t level, qp_int_t optname, \
+    const void* optval, socklen_t optlen);
 
 /*
  * Send n bytes to socket.It will not break by signal.If success return value 

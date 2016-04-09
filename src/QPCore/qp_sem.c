@@ -9,27 +9,27 @@
 
 inline void
 qp_sem_set_inited(qp_sem_t* sem)
-{ sem->is_inited = true;}
+{ sem ? sem->is_inited = true : 1;}
 
 inline void
 qp_sem_set_alloced(qp_sem_t* sem)
-{ sem->is_alloced = true;}
+{ sem ? sem->is_alloced = true : 1;}
 
 inline void
 qp_sem_set_shared(qp_sem_t* sem)
-{ sem->is_shared = true;}
+{ sem ? sem->is_shared = true : 1;}
 
 inline void
 qp_sem_unset_inited(qp_sem_t* sem)
-{ sem->is_inited = false;}
+{ sem ? sem->is_inited = false : 1;}
 
 inline void
 qp_sem_unset_alloced(qp_sem_t* sem)
-{ sem->is_alloced = false;}
+{ sem ? sem->is_alloced = false : 1;}
 
 inline void
 qp_sem_unset_shared(qp_sem_t* sem)
-{ sem->is_shared = false;}
+{ sem ? sem->is_shared = false : 1;}
 
 
 qp_sem_t*
@@ -52,7 +52,7 @@ qp_sem_create(qp_sem_t* sem, bool shared)
     
     shared ? qp_sem_set_shared(sem) : 1;
     
-    if (QP_SUCCESS != sem_init(&(sem->sem), (qp_int_t)(sem->is_shared), 0)) {
+    if (QP_SUCCESS != sem_init(&sem->sem, (qp_int_t)(sem->is_shared), 0)) {
         qp_sem_is_alloced(sem) ? qp_free(sem) : 1;
         QP_LOGOUT_ERROR("[qp_sem_t] Sem init fail.");
         return NULL;
@@ -75,7 +75,7 @@ qp_sem_destroy(qp_sem_t* sem)
         /* incase it still wait for signal */
         qp_sem_post(sem);
         
-        if (QP_SUCCESS != sem_destroy(&(sem->sem))) {
+        if (QP_SUCCESS != sem_destroy(&sem->sem)) {
             QP_LOGOUT_ERROR("[qp_sem_t] Sem destroy error.");
             return QP_ERROR;
         }
@@ -96,19 +96,17 @@ qp_sem_destroy(qp_sem_t* sem)
 qp_int_t
 qp_sem_post(qp_sem_t* sem)
 {
-    return sem_post(&(sem->sem));
+    return sem ? sem_post(&sem->sem) : QP_ERROR;
 }
 
 qp_int_t
 qp_sem_trywait(qp_sem_t* sem)
 {
-    return sem_trywait(&(sem->sem));
+    return sem ? sem_trywait(&sem->sem) : QP_ERROR;
 }
 
 qp_int_t
 qp_sem_wait(qp_sem_t* sem)
 {
-    return sem_wait(&(sem->sem));
+    return sem ? sem_wait(&sem->sem) : QP_ERROR;
 }
-
-
