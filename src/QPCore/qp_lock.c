@@ -77,35 +77,35 @@
 
 inline void
 qp_lock_set_inited(qp_lock_t* lock)
-{ lock->is_inited = true;}
+{ lock ? lock->is_inited = true : 1;}
 
 inline void
 qp_lock_set_alloced(qp_lock_t* lock)
-{ lock->is_alloced = true;}
+{ lock ? lock->is_alloced = true : 1;}
 
 inline void
 qp_lock_set_shared(qp_lock_t* lock)
-{ lock->is_shared = true;}
+{ lock ? lock->is_shared = true : 1;}
 
 inline void
 qp_lock_unset_inited(qp_lock_t* lock)
-{ lock->is_inited = false;}
+{ lock ? lock->is_inited = false : 1;}
 
 inline void
 qp_lock_unset_alloced(qp_lock_t* lock)
-{ lock->is_alloced = false;}
+{ lock ? lock->is_alloced = false : 1;}
 
 inline void
 qp_lock_unset_shared(qp_lock_t* lock)
-{ lock->is_shared = false;}
+{ lock ? lock->is_shared = false : 1;}
 
 inline void
 qp_lock_set_spin(qp_lock_t* lock)
-{ lock->is_spin = true;}
+{ lock ? lock->is_spin = true : 1;}
 
 inline void
 qp_lock_unset_spin(qp_lock_t* lock)
-{ lock->is_spin = false;}
+{ lock ? lock->is_spin = false : 1;}
 
 
 /**
@@ -220,6 +220,10 @@ qp_lock_destroy(qp_lock_t *lock)
 qp_int_t
 qp_lock_lock(qp_lock_t *lock)
 {
+    if (!lock) {
+        return QP_ERROR;
+    }
+    
     qp_uint_t  n = 1024, i, j;
     
     if (qp_lock_is_spin(lock)) {
@@ -250,12 +254,16 @@ qp_lock_lock(qp_lock_t *lock)
         }
     }
     
-    return pthread_mutex_lock(&(lock->lock.mutex));
+    return pthread_mutex_lock(&lock->lock.mutex);
 }
 
 qp_int_t
 qp_lock_trylock(qp_lock_t *lock)
 {
+    if (!lock) {
+        return QP_ERROR;
+    }
+    
     if (qp_lock_is_spin(lock)) {
         
         if (lock->lock.spin == 0 && qp_atom_cmp_set(&lock->lock.spin, 0, 1)) {
@@ -266,17 +274,21 @@ qp_lock_trylock(qp_lock_t *lock)
         }
     }
     
-    return pthread_mutex_trylock(&(lock->lock.mutex));
+    return pthread_mutex_trylock(&lock->lock.mutex);
 }
 
 
 qp_int_t
 qp_lock_unlock(qp_lock_t *lock)
 {
+    if (!lock) {
+        return QP_ERROR;
+    }
+    
     if (qp_lock_is_spin(lock)) {
         return (lock->lock.spin == 1 && qp_atom_cmp_set(&lock->lock.spin, 1, 0));
     }
     
-    return pthread_mutex_unlock(&(lock->lock.mutex));
+    return pthread_mutex_unlock(&lock->lock.mutex);
 }
 

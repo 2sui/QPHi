@@ -9,27 +9,27 @@
 
 inline void
 qp_cond_set_inited(qp_cond_t* cond)
-{ cond->is_inited = true;}
+{ cond ? cond->is_inited = true : 1;}
 
 inline void
 qp_cond_set_alloced(qp_cond_t* cond)
-{ cond->is_alloced = true;}
+{ cond ? cond->is_alloced = true : 1;}
 
 inline void
 qp_cond_set_shared(qp_cond_t* cond)
-{ cond->is_shared = true;}
+{ cond ? cond->is_shared = true : 1;}
 
 inline void
 qp_cond_unset_inited(qp_cond_t* cond)
-{ cond->is_inited = false;}
+{ cond ? cond->is_inited = false : 1;}
 
 inline void
 qp_cond_unset_alloced(qp_cond_t* cond)
-{ cond->is_alloced = false;}
+{ cond ? cond->is_alloced = false : 1;}
 
 inline void
 qp_cond_unset_shared(qp_cond_t* cond)
-{ cond->is_shared = false;}
+{ cond ? cond->is_shared = false : 1;}
 
 
 qp_cond_t*
@@ -105,12 +105,12 @@ qp_cond_destroy(qp_cond_t* cond)
 {
     if (qp_cond_is_inited(cond)) {
         
-        if (EBUSY == pthread_cond_destroy(&(cond->cond))) {
+        if (EBUSY == pthread_cond_destroy(&cond->cond)) {
             QP_LOGOUT_ERROR("[qp_cond_t] Cond destroy fail.");
             return QP_ERROR;
         }
         
-        qp_lock_destroy(&(cond->cond_lock));
+        qp_lock_destroy(&cond->cond_lock);
         qp_cond_unset_shared(cond);
         qp_cond_unset_inited(cond);
         
@@ -127,8 +127,12 @@ qp_cond_destroy(qp_cond_t* cond)
 qp_int_t
 qp_cond_signal(qp_cond_t* cond, void (*signal_to)(void*), void* arg)
 {
+    if (!cond) {
+        return QP_ERROR;
+    }
+    
     bool stat = false;
-    qp_lock_lock(&(cond->cond_lock));
+    qp_lock_lock(&cond->cond_lock);
     stat = (0 == cond->nready);
     cond->nready++;
     
@@ -136,10 +140,10 @@ qp_cond_signal(qp_cond_t* cond, void (*signal_to)(void*), void* arg)
         signal_to(arg);
     }
     
-    qp_lock_unlock(&(cond->cond_lock));
+    qp_lock_unlock(&cond->cond_lock);
     
     if (stat) { 
-        return pthread_cond_signal(&(cond->cond));
+        return pthread_cond_signal(&cond->cond);
     }
     
     return QP_SUCCESS;
@@ -148,14 +152,18 @@ qp_cond_signal(qp_cond_t* cond, void (*signal_to)(void*), void* arg)
 qp_int_t
 qp_cond_wait(qp_cond_t* cond, void (*wait_for)(void*), void* arg)
 {
+    if (!cond) {
+        return QP_ERROR;
+    }
+    
     qp_lock_lock(&(cond->cond_lock));
     
     while (0 == cond->nready) {
         
-        if (QP_SUCCESS != pthread_cond_wait(&(cond->cond), \
-            &(cond->cond_lock.lock.mutex))) 
+        if (QP_SUCCESS != pthread_cond_wait(&cond->cond, \
+            &cond->cond_lock.lock.mutex)) 
         {
-            qp_lock_unlock(&(cond->cond_lock));
+            qp_lock_unlock(&cond->cond_lock);
             return QP_ERROR;
         }
     }
@@ -166,5 +174,5 @@ qp_cond_wait(qp_cond_t* cond, void (*wait_for)(void*), void* arg)
         wait_for(arg);
     }
     
-    return qp_lock_unlock(&(cond->cond_lock));
+    return qp_lock_unlock(&cond->cond_lock);
 }
