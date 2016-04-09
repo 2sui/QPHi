@@ -8,20 +8,20 @@
 
 
 inline void
-qp_socket_set_alloced(qp_socket_t* socket)
-{ socket->is_alloced = true;}
+qp_socket_set_alloced(qp_socket_t* skt)
+{ skt ? skt->is_alloced = true : 1;}
 
 inline void
-qp_socket_set_listen(qp_socket_t* socket)
-{ socket->is_listen = true;}
+qp_socket_set_listen(qp_socket_t* skt)
+{ skt ? skt->is_listen = true : 1;}
 
 inline void
-qp_socket_unset_alloced(qp_socket_t* socket)
-{ socket->is_alloced = false;}
+qp_socket_unset_alloced(qp_socket_t* skt)
+{ skt ? skt->is_alloced = false : 1;}
 
 inline void
-qp_socket_unset_listen(qp_socket_t* socket)
-{ socket->is_listen = false;}
+qp_socket_unset_listen(qp_socket_t* skt)
+{ skt ? skt->is_listen = false : 1;}
 
 
 inline bool
@@ -73,6 +73,36 @@ qp_socket_init(qp_socket_t* skt, qp_int_t domain, qp_int_t type,
     const qp_char_t* name, qp_ushort_t port, bool as_server)
 {
     /* check args */
+    switch(domain) {
+
+    case QP_SOCKET_DOMAIN_INET:
+    case QP_SOCKET_DOMAIN_INET6: {
+
+        if ((NULL == name) || (0 == port)) {
+            return NULL;
+        }
+        
+    }break;
+
+    case QP_SOCKET_DOMAIN_UNIX: {
+
+        if ((NULL == name) 
+            || (strlen(name) >= sizeof(skt->socket_addr.unet_addr.sun_path))) 
+        {
+            return NULL;
+        }
+        
+    }break;
+
+    case QP_SOCKET_DOMAIN_PACKET: {
+    }break;
+
+    default: {
+        QP_LOGOUT_ERROR("[qp_socket_t] Unknow domain.");
+        return NULL;
+    }
+    }
+    
     switch (type) {
 
     case QP_SOCKET_TYPE_STREAM:
@@ -85,36 +115,6 @@ qp_socket_init(qp_socket_t* skt, qp_int_t domain, qp_int_t type,
         return NULL;
     }
         break;
-    }
-
-
-    switch(domain) {
-
-    case QP_SOCKET_DOMAIN_INET:
-    case QP_SOCKET_DOMAIN_INET6: {
-
-        if ((NULL == name) || (0 == port)) {
-            return NULL;
-        }
-    }break;
-
-    case QP_SOCKET_DOMAIN_UNIX: {
-
-        if ((NULL == name) 
-            || (strlen(name) >= sizeof(skt->socket_addr.unet_addr.sun_path))) 
-        {
-            return NULL;
-        }
-    }break;
-
-    case QP_SOCKET_DOMAIN_PACKET: {
-
-    }break;
-
-    default: {
-        QP_LOGOUT_ERROR("[qp_socket_t] Unknow domain.");
-        return NULL;
-    }
     }
 
     /* create socket */
@@ -142,10 +142,65 @@ qp_socket_init(qp_socket_t* skt, qp_int_t domain, qp_int_t type,
         return NULL;
     }
 
+    qp_socket_t* assign = NULL;
+    
     switch (skt->domain) {
 
     case QP_SOCKET_DOMAIN_INET: {
-        memset(&skt->socket_addr, 0, sizeof(struct sockaddr_in));
+        assign = qp_socket_assign_inet(skt, name, port);
+        
+    }break;
+
+    case QP_SOCKET_DOMAIN_INET6: {
+        assign = qp_socket_assign_inet6(skt, name, port);
+        
+    }break;
+
+    case QP_SOCKET_DOMAIN_UNIX: {
+        assign = qp_socket_assign_unix(skt, name);
+        
+    }break;
+
+    case QP_SOCKET_DOMAIN_PACKET:{
+        assign = qp_socket_assign_packet(skt);
+    }break;
+
+    default: {
+        QP_LOGOUT_ERROR("[qp_socket_t] Socket not support.");
+    }break;
+    }
+    
+    if (assign) {
+        return assign;
+    }
+    
+    qp_socket_destroy(skt);
+    return NULL;
+}
+
+qp_int_t
+qp_socket_destroy(qp_socket_t* skt)
+{
+    if (qp_fd_is_inited(&skt->socket)) {
+        qp_socket_close(skt, QP_SOCKET_SHUT_CLOSE);
+        qp_fd_destroy(&skt->socket);
+        skt->domain = QP_SOCKET_DOMAIN_UNSUPPORT;
+        skt->type = QP_SOCKET_TYPE_UNSUPPORT;
+
+        if (qp_socket_is_alloced(skt)) {
+            qp_free(skt);
+        }
+        
+        return QP_SUCCESS;
+    }
+    
+    return QP_ERROR;
+}
+
+qp_socket_t*
+qp_socket_assign_inet(qp_socket_t* skt, const qp_char_t* name, qp_ushort_t port) 
+{
+    memset(&skt->socket_addr, 0, sizeof(struct sockaddr_in));
         skt->socket_addr.inet_addr.sin_family = skt->domain;
 
         /* listen */
@@ -160,7 +215,7 @@ qp_socket_init(qp_socket_t* skt, qp_int_t domain, qp_int_t type,
                 skt->socket.errono = errno;
                 
                 if (1 != skt->socket.retsno) {
-                    qp_socket_destroy(skt);
+//                    qp_socket_destroy(skt);
                     QP_LOGOUT_ERROR("[qp_socket_t] Ip switch fail.");
                     return NULL;
                 }
@@ -176,7 +231,7 @@ qp_socket_init(qp_socket_t* skt, qp_int_t domain, qp_int_t type,
             skt->socket.errono = errno;
             
             if (1 != skt->socket.retsno) {
-                qp_socket_destroy(skt);
+//                qp_socket_destroy(skt);
                 QP_LOGOUT_ERROR("[qp_socket_t] Ip switch fail.");
                 return NULL;
             }
@@ -186,12 +241,19 @@ qp_socket_init(qp_socket_t* skt, qp_int_t domain, qp_int_t type,
         }
 
         return skt;
-    }break;
+}
 
-    case QP_SOCKET_DOMAIN_INET6: {
-    }break;
+qp_socket_t*
+qp_socket_assign_inet6(qp_socket_t* skt, const qp_char_t* name, qp_ushort_t port) 
+{
+    skt = NULL;
+    name = NULL;
+    return NULL;
+}
 
-    case QP_SOCKET_DOMAIN_UNIX: {
+qp_socket_t
+qp_socket_assign_unix(qp_socket_t* skt, const qp_char_t* name) {
+    
         memset(&skt->socket_addr.unet_addr, 0, sizeof(struct sockaddr_un));
         skt->socket_addr.unet_addr.sun_family = skt->domain;
 
@@ -225,7 +287,7 @@ qp_socket_init(qp_socket_t* skt, qp_int_t domain, qp_int_t type,
             skt->socket.errono = errno;
             
             if (QP_SUCCESS != skt->socket.retsno) {
-                qp_socket_destroy(skt);
+//                qp_socket_destroy(skt);
                 QP_LOGOUT_ERROR("[qp_socket_t] Unix socket bind error.");
                 return NULL;
             }
@@ -233,7 +295,7 @@ qp_socket_init(qp_socket_t* skt, qp_int_t domain, qp_int_t type,
             /* owner only */
             if (QP_SUCCESS != chmod(saddr.sun_path, S_IRWXU)) {
                 unlink(saddr.sun_path);
-                qp_socket_destroy(skt);
+//                qp_socket_destroy(skt);
                 QP_LOGOUT_ERROR("[qp_socket_t] Unix socket priv set fail.");
                 return NULL;
             }
@@ -245,37 +307,12 @@ qp_socket_init(qp_socket_t* skt, qp_int_t domain, qp_int_t type,
         }
 
         return skt;
-    }break;
-
-    case QP_SOCKET_DOMAIN_PACKET:{
-    }break;
-
-    default: {
-        QP_LOGOUT_ERROR("[qp_socket_t] Socket not support.");
-    }break;
-    }
-    
-    qp_socket_destroy(skt);
-    return NULL;
 }
 
-qp_int_t
-qp_socket_destroy(qp_socket_t* skt)
+qp_socket_t* 
+qp_socket_assign_packet(qp_socket_t* skt) 
 {
-    if (qp_fd_is_inited(&skt->socket)) {
-        qp_socket_close(skt, QP_SOCKET_SHUT_CLOSE);
-        qp_fd_destroy(&skt->socket);
-        skt->domain = QP_SOCKET_DOMAIN_UNSUPPORT;
-        skt->type = QP_SOCKET_TYPE_UNSUPPORT;
-
-        if (qp_socket_is_alloced(skt)) {
-            qp_free(skt);
-        }
-        
-        return QP_SUCCESS;
-    }
-    
-    return QP_ERROR;
+    return NULL;
 }
 
 qp_int_t
