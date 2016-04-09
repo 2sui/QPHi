@@ -200,118 +200,133 @@ qp_socket_destroy(qp_socket_t* skt)
 qp_socket_t*
 qp_socket_assign_inet(qp_socket_t* skt, const qp_char_t* name, qp_ushort_t port) 
 {
+    if (!skt || !name || (0 == port)) {
+        return NULL;
+    }
+    
     memset(&skt->socket_addr, 0, sizeof(struct sockaddr_in));
         skt->socket_addr.inet_addr.sin_family = skt->domain;
 
-        /* listen */
-        if (qp_socket_is_listen(skt)) {
+    /* listen */
+    if (qp_socket_is_listen(skt)) {
 
-            if (0 == strcmp(name, "0.0.0.0")) {
-                skt->socket_addr.inet_addr.sin_addr.s_addr = INADDR_ANY;
-
-            } else {
-                skt->socket.retsno = inet_pton(skt->domain, name, 
-                    &skt->socket_addr.inet_addr.sin_addr);
-                skt->socket.errono = errno;
-                
-                if (1 != skt->socket.retsno) {
-//                    qp_socket_destroy(skt);
-                    QP_LOGOUT_ERROR("[qp_socket_t] Ip switch fail.");
-                    return NULL;
-                }
-            }
-
-            skt->socket_len = sizeof(struct sockaddr_in);
-            skt->socket_addr.inet_addr.sin_port = ntohs(port);
-
-            /* no listen */
-        } else {
-            skt->socket.retsno = inet_pton(skt->domain, \
-                name,&skt->socket_addr.inet_addr.sin_addr);
-            skt->socket.errono = errno;
+        if (0 == strcmp(name, "0.0.0.0")) {
+            skt->socket_addr.inet_addr.sin_addr.s_addr = INADDR_ANY;
             
+        } else {
+            skt->socket.retsno = inet_pton(skt->domain, name, 
+                &skt->socket_addr.inet_addr.sin_addr);
+            skt->socket.errono = errno;
+                
             if (1 != skt->socket.retsno) {
 //                qp_socket_destroy(skt);
                 QP_LOGOUT_ERROR("[qp_socket_t] Ip switch fail.");
                 return NULL;
             }
-
-            skt->socket_len = sizeof(struct sockaddr_in);
-            skt->socket_addr.inet_addr.sin_port = htons(port);
         }
 
-        return skt;
+        skt->socket_len = sizeof(struct sockaddr_in);
+        skt->socket_addr.inet_addr.sin_port = ntohs(port);
+
+        /* no listen */
+    } else {
+        skt->socket.retsno = inet_pton(skt->domain, \
+                name,&skt->socket_addr.inet_addr.sin_addr);
+        skt->socket.errono = errno;
+            
+        if (1 != skt->socket.retsno) {
+//            qp_socket_destroy(skt);
+            QP_LOGOUT_ERROR("[qp_socket_t] Ip switch fail.");
+            return NULL;
+        }
+
+        skt->socket_len = sizeof(struct sockaddr_in);
+        skt->socket_addr.inet_addr.sin_port = htons(port);
+    }
+
+    return skt;
 }
 
 qp_socket_t*
 qp_socket_assign_inet6(qp_socket_t* skt, const qp_char_t* name, qp_ushort_t port) 
 {
+    if (!skt || !name || (0 == port)) {
+        return NULL;
+    }
+    
     skt = NULL;
     name = NULL;
     return NULL;
 }
 
 qp_socket_t
-qp_socket_assign_unix(qp_socket_t* skt, const qp_char_t* name) {
+qp_socket_assign_unix(qp_socket_t* skt, const qp_char_t* name) 
+{
+    if (!skt || !name) {
+        return NULL;
+    }
+    memset(&skt->socket_addr.unet_addr, 0, sizeof(struct sockaddr_un));
+    skt->socket_addr.unet_addr.sun_family = skt->domain;
     
-        memset(&skt->socket_addr.unet_addr, 0, sizeof(struct sockaddr_un));
-        skt->socket_addr.unet_addr.sun_family = skt->domain;
+    if (qp_socket_is_listen(skt)) {
+        strcpy(skt->socket_addr.unet_addr.sun_path, name);
+        skt->socket_len = offsetof(struct sockaddr_un, sun_path) \
+            +strlen(skt->socket_addr.unet_addr.sun_path);
 
-        if (qp_socket_is_listen(skt)) {
-            strcpy(skt->socket_addr.unet_addr.sun_path, name);
-            skt->socket_len = offsetof(struct sockaddr_un, sun_path) \
-                +strlen(skt->socket_addr.unet_addr.sun_path);
+        /* delete exit file */
+        unlink(skt->socket_addr.unet_addr.sun_path);
 
-            /* delete exit file */
-            unlink(skt->socket_addr.unet_addr.sun_path);
+    } else {
+        socklen_t len;
+        struct sockaddr_un saddr;
 
-        } else {
-            socklen_t len;
-            struct sockaddr_un saddr;
+        memset(&saddr, 0, sizeof(struct sockaddr_un));
+        saddr.sun_family = skt->domain;
 
-            memset(&saddr, 0, sizeof(struct sockaddr_un));
-            saddr.sun_family = skt->domain;
+        /* client descriptor */
+        sprintf(saddr.sun_path, "%s%05ld", QP_SOCKET_DEFAULT_UNET_PATH,\
+            (long)pthread_self());
+        len = offsetof(struct sockaddr_un, sun_path) \
+            + strlen(saddr.sun_path);
 
-            /* client descriptor */
-            sprintf(saddr.sun_path, "%s%05ld", QP_SOCKET_DEFAULT_UNET_PATH,\
-                (long)pthread_self());
-            len = offsetof(struct sockaddr_un, sun_path) \
-                + strlen(saddr.sun_path);
+        /* delete exit file */
+        unlink(saddr.sun_path);
 
-            /* delete exit file */
-            unlink(saddr.sun_path);
-
-            /* bind scoket */
-            skt->socket.retsno = bind(skt->socket.fd, \
-                (struct sockaddr *)&saddr, len);
-            skt->socket.errono = errno;
+        /* bind scoket */
+        skt->socket.retsno = bind(skt->socket.fd, \
+            (struct sockaddr *)&saddr, len);
+        skt->socket.errono = errno;
             
-            if (QP_SUCCESS != skt->socket.retsno) {
-//                qp_socket_destroy(skt);
-                QP_LOGOUT_ERROR("[qp_socket_t] Unix socket bind error.");
-                return NULL;
-            }
-
-            /* owner only */
-            if (QP_SUCCESS != chmod(saddr.sun_path, S_IRWXU)) {
-                unlink(saddr.sun_path);
-//                qp_socket_destroy(skt);
-                QP_LOGOUT_ERROR("[qp_socket_t] Unix socket priv set fail.");
-                return NULL;
-            }
-
-            /* set server descriptor */
-            strcpy(skt->socket_addr.unet_addr.sun_path, name);
-            skt->socket_len = offsetof(struct sockaddr_un, sun_path) \
-                + strlen(name);
+        if (QP_SUCCESS != skt->socket.retsno) {
+//            qp_socket_destroy(skt);
+            QP_LOGOUT_ERROR("[qp_socket_t] Unix socket bind error.");
+            return NULL;
         }
 
-        return skt;
+        /* owner only */
+        if (QP_SUCCESS != chmod(saddr.sun_path, S_IRWXU)) {
+            unlink(saddr.sun_path);
+//            qp_socket_destroy(skt);
+            QP_LOGOUT_ERROR("[qp_socket_t] Unix socket priv set fail.");
+            return NULL;
+        }
+
+        /* set server descriptor */
+        strcpy(skt->socket_addr.unet_addr.sun_path, name);
+        skt->socket_len = offsetof(struct sockaddr_un, sun_path) \
+            + strlen(name);
+    }
+
+    return skt;
 }
 
 qp_socket_t* 
 qp_socket_assign_packet(qp_socket_t* skt) 
 {
+    if (!skt) {
+        return NULL
+    }
+    
     return NULL;
 }
 
@@ -437,30 +452,38 @@ qp_socket_connect(qp_socket_t* skt)
 size_t
 qp_socket_sendn(qp_socket_t* skt, const void* vptr, size_t nbytes)
 {
-    return qp_fd_writen(&skt->socket, vptr, nbytes);
+    skt ? { return qp_fd_writen(&skt->socket, vptr, nbytes);} : \
+        {return 0;};
 }
 
 size_t
 qp_socket_recvn(qp_socket_t* skt, void* vptr, size_t nbytes)
 {
-    return qp_fd_readn(&(skt->socket), vptr, nbytes);
+    skt ? { return qp_fd_readn(&(skt->socket), vptr, nbytes)} :
+        {return 0};
 }
 
 ssize_t
 qp_socket_sendv(qp_socket_t* skt, const struct iovec* iov, qp_int_t iovcnt)
 {
-    return qp_fd_writev(&(skt->socket), iov, iovcnt);
+    skt ? { return qp_fd_writev(&(skt->socket), iov, iovcnt);} :
+        {return QP_ERROR;};
 }
 
 ssize_t
 qp_socket_recvv(qp_socket_t* skt, const struct iovec* iov, qp_int_t iovcnt)
 {
-    return qp_fd_readv(&(skt->socket), iov, iovcnt);
+    skt ? { return qp_fd_readv(&(skt->socket), iov, iovcnt);} :
+        {return QP_ERROR;};
 }
 
 ssize_t
 qp_socket_send(qp_socket_t* skt, const void* vptr, size_t nbytes, qp_int_t flag)
 {
+    if (!skt) {
+        return QP_ERROR;
+    }
+    
     skt->socket.retsno = send(skt->socket.fd, vptr, nbytes, flag);
     skt->socket.errono = errno;
     return skt->socket.retsno;
@@ -469,6 +492,10 @@ qp_socket_send(qp_socket_t* skt, const void* vptr, size_t nbytes, qp_int_t flag)
 ssize_t
 qp_socket_recv(qp_socket_t* skt, void* vptr, size_t nbytes, qp_int_t flag)
 {
+    if (!skt) {
+        return QP_ERROR;
+    }
+    
     skt->socket.retsno = recv(skt->socket.fd, vptr, nbytes, flag);
     skt->socket.errono = errno;
     return skt->socket.retsno;
@@ -480,11 +507,9 @@ qp_int_t
 qp_socket_set_reuse(qp_socket_t* skt, qp_int_t reuse, qp_int_t enable)
 {
     if (reuse == QP_SOCKET_SO_REUSE_ADDR) {
-        
         return qp_socket_setsockopt(skt, SOL_SOCKET, SO_REUSEADDR, \
             (const void *)&enable, sizeof(enable));
     }
-    
     
     if (reuse == QP_SOCKET_SO_REUSE_PORT) {
         return qp_socket_setsockopt(skt, SOL_SOCKET, SO_REUSEPORT, \
