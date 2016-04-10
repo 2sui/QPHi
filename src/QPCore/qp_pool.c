@@ -95,15 +95,16 @@ qp_pool_init(qp_pool_t* pool, size_t elmsize, size_t count)
     pool->nsize = count;
     pool->nfree = pool->nsize;
     
-    if (NULL == (pool->room = (qp_uchar_t*)qp_alloc(\
-        (pool->esize + sizeof(qp_pool_elm_t)) * pool->nsize))) 
-    {   
+    pool->room = (qp_uchar_t*)qp_alloc((pool->esize + sizeof(qp_pool_elm_t)) \
+        * pool->nsize);
+    
+    if (NULL == pool->room) {   
         qp_pool_destroy(pool, true);
         QP_LOGOUT_ERROR("[qp_pool_t]Pool element room create fail.");
         return NULL;
     }
     
-    for (; i < pool->nsize; i++, offset += pool->esize + sizeof(qp_pool_elm_t)){
+    for (;i < pool->nsize; i++, offset += pool->esize + sizeof(qp_pool_elm_t)) {
         elements = (qp_pool_elm_t*)(pool->room + offset);
         qp_list_push(&pool->idle, &elements->next);
         elements->root = pool;

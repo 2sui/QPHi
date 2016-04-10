@@ -80,9 +80,10 @@ inline bool
 qp_file_is_directio(qp_file_t* file);
 
 /*
- * Create a file and init it (if file is NULL, otherwise just init it).If 
- * bufsize is not 0, it will use writecache(which size is bufsize), and
- * if directIO is TRUE, bufsize must be set( It will use direct IO).
+ * Create a file (if file is NULL), and init it.If bufsize is not 0, it will 
+ * use writecache(which size is bufsize), and if directIO is TRUE, bufsize must
+ * be set( It will use direct IO).
+ * 
  * Return qp_file_t pointer if success, otherwise return NULL.
 */
 qp_file_t*
