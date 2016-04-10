@@ -51,6 +51,10 @@ inline bool
 qp_fd_is_noblock(qp_fd_t* fd) 
 { return fd ? fd->is_noblock : false; }
 
+inline bool
+qp_fd_is_aio(qp_fd_t* fd)
+{ return fd ? (NULL != fd->aio) : false; }
+
 //inline bool
 //qp_fd_is_async(qp_fd_t* fd) 
 //{ return fd->is_async; }

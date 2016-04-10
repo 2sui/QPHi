@@ -80,9 +80,9 @@ inline bool
 qp_file_is_directio(qp_file_t* file);
 
 /*
- * Create a file (if file is NULL), and init it.If bufsize is not 0, it will 
- * use writecache(which size is bufsize), and if directIO is TRUE, bufsize must
- * be set( It will use direct IO).
+ * Create a file (if file is NULL), and init it.If mod is 0 it works just like 
+ * as usual; if mod is QP_FILE_DIRECTIO or QP_FILE_AIO(not support for now), 
+ * bufsize must be set to spicific cache size.
  * 
  * Return qp_file_t pointer if success, otherwise return NULL.
 */
@@ -121,6 +121,21 @@ qp_file_flush(qp_file_t* file);
  */
 ssize_t
 qp_file_track(qp_file_t* file);
+
+/**
+ * If direct IO enabled, qp_file_write_directbuf will get write_direct buffer 
+ * pointor to buf and return buf size. You should use it as your data buffer.
+ */
+size_t
+qp_file_write_directbuf(qp_file_t* file, qp_uchar_t** buf);
+
+/**
+ * If direct IO enabled, qp_file_read_directbuf will get write_direct buffer 
+ * pointor to buf and return buf size.
+ */
+size_t
+qp_file_read_directbuf(qp_file_t* file, qp_uchar_t** buf);
+
 
 /*
  * Write  to file.If directIO or aio is enabled , you should use 

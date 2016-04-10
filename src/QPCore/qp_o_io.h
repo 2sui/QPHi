@@ -57,6 +57,9 @@ qp_fd_is_alloced(qp_fd_t* fd) ;
 inline bool
 qp_fd_is_noblock(qp_fd_t* fd);
 
+inline bool
+qp_fd_is_aio(qp_fd_t* fd);
+
 //inline bool
 //qp_fd_is_async(qp_fd_t* fd);
 
