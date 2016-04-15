@@ -274,7 +274,7 @@
 #  endif
 
 #else
-#  error "QP has not been ported to this OS!"
+#  error "QPHi has not been ported to this OS!"
 #endif
 
 #if defined(QP_OS_MAC9) || defined(QP_OS_MSDOS) \
@@ -298,7 +298,7 @@
 #if defined(QP_OS_UNIX)
 #  define QP_OS_POSIX
 #else
-#  error "QP does not support this OS (1)!"
+#  error "QPHi does not support this OS (1)!"
 #endif
 /* in auto conf */
 #ifdef QP_OS_POSIX

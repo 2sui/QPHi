@@ -59,7 +59,7 @@ qp_file_create(qp_file_t *file, qp_int_t mod)
     }
 
     /* init qp_fd_t */
-    if (NULL == qp_fd_init(&file->file, QP_FD_TYPE_FILE, mod & 0/*QP_FILE_AIO*/)) {
+    if (NULL == qp_fd_init(&file->file, QP_FD_TYPE_FILE, mod & 0/*QP_FILE_AIO*/)){
 
         if (qp_file_is_alloced(file)) {
             qp_free(file);

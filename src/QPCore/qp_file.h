@@ -30,8 +30,9 @@ extern "C" {
  * in standard I/O) and direct I/O.
 */
     
-#define QP_FILE_DIRECTIO       (1<<0)
-#define QP_FILE_AIO            (1<<1)
+#define QP_FILE_DIRECTIO       (1<<0) 
+#define QP_FILE_CACHE          (1<<1)
+#define QP_FILE_AIO            (1<<2) // not avaliable for now
 
 #define QP_FILE_IS_UNLOCKED    0
 #define QP_FILE_IS_LOCKED      1

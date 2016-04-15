@@ -149,8 +149,8 @@ qp_fd_setNoBlock(qp_fd_t* fd)
     }
     
     /*
-     * check validity.qp_fd_is_noblock while return false if fd is NULL.So if 
-     * return TRUE, fd is not NULL, otherwise we need to check it.
+     * check validity.qp_fd_is_noblock while return false if the fd is NULL.So if 
+     * returns TRUE, fd is not NULL, otherwise we need to check it.
      */
     if (qp_fd_is_noblock(fd)) {
         return QP_SUCCESS;
