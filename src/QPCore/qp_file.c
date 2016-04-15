@@ -76,38 +76,35 @@ qp_file_create(qp_file_t *file, qp_int_t mod)
 qp_file_t*
 qp_file_init(qp_file_t* file, qp_int_t mod, size_t bufsize)
 {
-    if (mod && (1 > bufsize)) {
-        QP_LOGOUT_ERROR("[qp_file_t] Need set buf size.");
-        return NULL;
-    }
-     
     file = qp_file_create(file, mod);
     
     if (NULL == file) {
         return NULL;
     }
-
-    /* alloc memory for buf rd/wr  */
-    if (mod) {
-        file->wrbufsize = file->rdbufsize = bufsize;
+    
+    /*
+     * DOES NOT SUPPORT AIO!
+     */
+    mod &= ^QP_FILE_AIO;
+    
+    if ((QP_FILE_DIRECTIO & mod) && (1 > bufsize)) {
+        file->wrbufsize = file->rdbufsize = QP_FILE_DIRECTIO_CACHE;
+    }
+    
+    switch (mod) {
         
-        if (mod & QP_FILE_DIRECTIO) {
+    case QP_FILE_DIRECTIO: {
+        file->wrbuf = (qp_uchar_t*) qp_alloc_align(QP_PAGE_SIZE, file->wrbufsize);
+        file->rdbuf = (qp_uchar_t*) qp_alloc_align(QP_PAGE_SIZE, file->rdbufsize);
+        qp_file_set_directIO(file);
             
-            if (bufsize < QP_FILE_DIRECTIO_CACHE) {
-                bufsize = QP_FILE_DIRECTIO_CACHE;
-            }
-            
-            file->wrbuf = \
-                (qp_uchar_t*) qp_alloc_align(QP_PAGE_SIZE, file->wrbufsize);
-            file->rdbuf = \
-                (qp_uchar_t*) qp_alloc_align(QP_PAGE_SIZE, file->rdbufsize);
-            qp_file_set_directIO(file);
-
-        } else {
-            file->wrbuf = (qp_uchar_t*) qp_alloc(file->wrbufsize);
-            file->rdbuf = (qp_uchar_t*) qp_alloc(file->rdbufsize);
-        }
-
+    } break;
+    
+    default: break;
+    } // switch
+    
+    if (QP_FILE_DIRECTIO & mod) {
+        
         if (!file->rdbuf || !file->wrbuf) {
             qp_file_destroy(file);
             QP_LOGOUT_ERROR("[qp_file_t] File buf creatr fail.");
@@ -191,7 +188,6 @@ qp_file_open(qp_file_t* file, qp_char_t* path, qp_int_t oflag, qp_int_t mod)
             lseek(file->file.fd, 0L, SEEK_END))) 
         {
             file->offset = 0;
-            
         }
         
     } else {
@@ -237,12 +233,7 @@ qp_file_flush(qp_file_t* file)
     
     if (qp_file_is_directio(file)) {
         qp_fd_write(&file->file, file->wrbuf, file->wrbufoffset);
-                
-    } else {
-        /* coding */
-        qp_fd_aio_write(&file->file, file->wrbuf, \
-            file->wrbufoffset, file->write_offset);
-    }
+    } 
     
     if (0 < file->file.retsno) {
         file->wrbufoffset = file->wrbufoffset - file->file.retsno;
@@ -254,6 +245,7 @@ qp_file_flush(qp_file_t* file)
         
         file->write_offset += file->file.retsno;
         
+        // change file offset
         if (file->write_offset > file->offset) {
             file->offset = file->write_offset;
         }
@@ -273,11 +265,7 @@ qp_file_track(qp_file_t* file)
     
     if (qp_file_is_directio(file)) {
         qp_fd_read(&file->file, file->rdbuf, file->rdbufsize);
-        
-    } else {
-        qp_fd_aio_read(&file->file, file->rdbuf, file->rdbufsize, \
-            file->read_offset);
-    }
+    } 
     
     if (0 < file->file.retsno) {
         file->rdbufoffset = file->file.retsno;
@@ -290,7 +278,7 @@ qp_file_track(qp_file_t* file)
 }
 
 size_t
-qp_file_write_directbuf(qp_file_t* file, qp_uchar_t** buf) 
+qp_file_direct_writebuf(qp_file_t* file, qp_uchar_t** buf) 
 {
     if (!qp_file_is_direct(file) || !qp_fd_is_inited(&file->file)) {
         return 0;
@@ -301,7 +289,7 @@ qp_file_write_directbuf(qp_file_t* file, qp_uchar_t** buf)
 }
 
 size_t
-qp_file_read_directbuf(qp_file_t* file, qp_uchar_t** buf) 
+qp_file_direct_readbuf(qp_file_t* file, qp_uchar_t** buf) 
 {
     if (!qp_file_is_direct(file) || !qp_fd_is_inited(&file->file)) {
         return 0;
@@ -309,6 +297,26 @@ qp_file_read_directbuf(qp_file_t* file, qp_uchar_t** buf)
     
     *buf = file->rdbuf;
     return  file->rdbufsize;
+}
+
+ssize_t
+qp_file_direct_write_now(qp_file_t* file, size_t bufsize)
+{
+    if (!file || !qp_file_is_direct(file) || bufsize > file->wrbufsize) {
+        return QP_ERROR;
+    }
+    
+    return qp_fd_write(&file->file, file->wrbuf, bufsize);
+}
+
+ssize_t
+qp_file_direct_read_now(qp_file_t* file, size_t bufsize)
+{
+    if (!file || !qp_file_is_direct(file) || bufsize > file->rdbufsize) {
+        return QP_ERROR;
+    }
+    
+    return qp_fd_read(&file->file, file->rdbuf, bufsize);
 }
 
 ssize_t

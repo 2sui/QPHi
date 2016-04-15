@@ -22,17 +22,17 @@ extern "C" {
     
     
 #define  QP_FILE_PATH_LEN_MAX    1024 /* need rewrite */
-#define  QP_FILE_DIRECTIO_CACHE  (1024*16) /* 16K */
+#define  QP_FILE_DIRECTIO_CACHE  (1024*4) /* 4K */
 
 /*
  * qp_file_t can work just like unix file I/O (beacuse it is unix file I/O), 
  * but provide more prowerful usage, such as cache io (just like FILE struct 
  * in standard I/O) and direct I/O.
 */
-    
+
+#define QP_FILE_NORMAL         0    
 #define QP_FILE_DIRECTIO       (1<<0) 
-#define QP_FILE_CACHE          (1<<1)
-#define QP_FILE_AIO            (1<<2) // not avaliable for now
+#define QP_FILE_AIO            (1<<1) // not avaliable for now
 
 #define QP_FILE_IS_UNLOCKED    0
 #define QP_FILE_IS_LOCKED      1
@@ -45,7 +45,7 @@ extern "C" {
 #define  QP_FILE_LK_RD         LOCK_SH|LOCK_NB
 #define  QP_FILE_LK_WR         LOCK_EX|LOCK_NB
 #define  QP_FILE_UNLK          LOCK_UN
-#endif
+#endif 
 
 
 struct qp_file_s {
@@ -128,15 +128,20 @@ qp_file_track(qp_file_t* file);
  * pointor to buf and return buf size. You should use it as your data buffer.
  */
 size_t
-qp_file_write_directbuf(qp_file_t* file, qp_uchar_t** buf);
+qp_file_direct_writebuf(qp_file_t* file, qp_uchar_t** buf);
 
 /**
  * If direct IO enabled, qp_file_read_directbuf will get write_direct buffer 
  * pointor to buf and return buf size.
  */
 size_t
-qp_file_read_directbuf(qp_file_t* file, qp_uchar_t** buf);
+qp_file_direct_readbuf(qp_file_t* file, qp_uchar_t** buf);
 
+ssize_t
+qp_file_direct_write_now(qp_file_t* file, const void* vptr, size_t bufsize);
+
+ssize_t
+qp_file_direct_read_now(qp_file_t* file, const void* vptr, size_t bufsize);
 
 /*
  * Write  to file.If directIO or aio is enabled , you should use 
@@ -144,8 +149,7 @@ qp_file_read_directbuf(qp_file_t* file, qp_uchar_t** buf);
  * in those scene and you can pass vptr as NULL.
 */
 ssize_t
-qp_file_write(qp_file_t* file, const void* vptr, \
-    size_t bufsize);
+qp_file_write(qp_file_t* file, const void* vptr, size_t bufsize);
 
 /*
  * Read from file.If directIO or aio is enabled , you should use 
