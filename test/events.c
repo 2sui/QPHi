@@ -1,7 +1,7 @@
 /**
  * events.c
  * 
- * Test for qpCore module.
+ * Test for QPHi module.
  */
 
 

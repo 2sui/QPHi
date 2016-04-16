@@ -24,6 +24,10 @@ SET(events_src events.c)
 SET(rbtree test_rbtree)
 SET(rbtree_src rbtree.c)
 
+# direct file
+SET(directFile test_directFile)
+SET(directFile_src directfile.c)
+
 # libs output path
 SET(BUILD_LIBS  ${PROJECT_SOURCE_DIR}/../build/libs)
 # exec output path
@@ -85,3 +89,10 @@ ADD_EXECUTABLE(${rbtree}
     ${DEP_QPHi} 
     ${DEP_QPHi_QP_TINY_STACK})
 TARGET_LINK_LIBRARIES(${rbtree}  pthread dl rt)
+
+# directfile
+ADD_EXECUTABLE(${directFile}  
+    ${directFile_src} 
+    ${DEP_QPHi} 
+    ${DEP_QPHi_QP_TINY_STACK})
+TARGET_LINK_LIBRARIES(${directFile}  pthread dl rt)

@@ -1,7 +1,7 @@
 /**
  * lock.c
  * 
- * Test for qpCore module.
+ * Test for QPHi module.
  */
 
 #include <qp_core.h>

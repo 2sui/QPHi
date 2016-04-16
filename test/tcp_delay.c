@@ -2,7 +2,7 @@
 /*
  * tcp_delay_server.c 
  *
- * Test for qpCore module.
+ * Test for QPHi module.
  */
 
 
