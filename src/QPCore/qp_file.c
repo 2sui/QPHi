@@ -224,7 +224,7 @@ qp_file_flush(qp_file_t* file)
     }
     
     if (qp_file_is_directio(file)) {
-        qp_fd_write(&file->file, file->wrbuf, file->wrbuf_offset);
+        qp_fd_write(&file->file, file->wrbuf, file->wrbuf_size);
     } 
     
     if (0 < file->file.retsno) {
@@ -237,7 +237,7 @@ qp_file_flush(qp_file_t* file)
         
         qp_file_stat(file);
         
-        return file->wrbufoffset;
+        return file->wrbuf_size - file->wrbuf_offset;
     }
     
     return file->file.retsno;
@@ -315,7 +315,6 @@ qp_file_write(qp_file_t* file, const void* data, size_t len, size_t file_offset)
                     file->wrbuf_offset);
                 data += file->wrbuf_offset;
                 len -= file->wrbuf_offset;
-                file->wrbuf_offset = file->wrbuf_size;
                 
                 /* write error */
                 if (1 > qp_file_flush(file)) {
