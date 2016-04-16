@@ -47,7 +47,6 @@ extern "C" {
 #define  QP_FILE_UNLK          LOCK_UN
 #endif 
 
-
 struct qp_file_s {
     qp_fd_t                  file;         /* file path */
     qp_int_t                 mod;
@@ -80,13 +79,16 @@ qp_file_is_alloced(qp_file_t* file);
 inline bool
 qp_file_is_directio(qp_file_t* file);
 
-/*
+/**
  * Create a file (if file is NULL), and init it.If mod is 0 it works just like 
  * as usual; if mod is QP_FILE_DIRECTIO or QP_FILE_AIO(not support for now), 
  * bufsize must be set to spicific cache size.
  * 
- * Return qp_file_t pointer if success, otherwise return NULL.
-*/
+ * @param file
+ * @param mod
+ * @param bufsize
+ * @return Return qp_file_t pointer if success, otherwise return NULL.
+ */
 qp_file_t*
 qp_file_init(qp_file_t* file, qp_int_t mod, size_t bufsize);
 
@@ -128,20 +130,14 @@ qp_file_track(qp_file_t* file);
  * pointor to buf and return buf size. You should use it as your data buffer.
  */
 size_t
-qp_file_direct_writebuf(qp_file_t* file, qp_uchar_t** buf);
+qp_file_get_writebuf(qp_file_t* file, qp_uchar_t** buf);
 
 /**
  * If direct IO enabled, qp_file_read_directbuf will get write_direct buffer 
  * pointor to buf and return buf size.
  */
 size_t
-qp_file_direct_readbuf(qp_file_t* file, qp_uchar_t** buf);
-
-ssize_t
-qp_file_direct_write_now(qp_file_t* file, const void* vptr, size_t bufsize);
-
-ssize_t
-qp_file_direct_read_now(qp_file_t* file, const void* vptr, size_t bufsize);
+qp_file_get_readbuf(qp_file_t* file, qp_uchar_t** buf);
 
 /*
  * Write  to file.If directIO or aio is enabled , you should use 

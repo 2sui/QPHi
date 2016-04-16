@@ -36,7 +36,7 @@ qp_file_is_alloced(qp_file_t* file)
 { return file ? file->is_alloced : false; }
 
 inline bool
-qp_file_is_directio(qp_file_t* file) 
+qp_file_is_directIO(qp_file_t* file) 
 { return file ? file->is_directIO : false; }
 
 
@@ -47,7 +47,6 @@ qp_file_create(qp_file_t *file, qp_int_t mod)
         file = (qp_file_t*)qp_alloc(sizeof(qp_file_t));
         
         if (NULL == file) {
-            QP_LOGOUT_ERROR("[qp_file_t] File create fail.");
             return NULL;
         }
 
@@ -65,7 +64,6 @@ qp_file_create(qp_file_t *file, qp_int_t mod)
             qp_free(file);
         }
 
-        QP_LOGOUT_ERROR("[qp_file_t] File fd init fail.");
         return NULL;
     }
     
@@ -85,7 +83,7 @@ qp_file_init(qp_file_t* file, qp_int_t mod, size_t bufsize)
     /*
      * DOES NOT SUPPORT AIO!
      */
-    mod &= ^QP_FILE_AIO;
+    mod &= ~QP_FILE_AIO;
     
     if ((QP_FILE_DIRECTIO & mod) && (1 > bufsize)) {
         file->wrbufsize = file->rdbufsize = QP_FILE_DIRECTIO_CACHE;
@@ -278,9 +276,9 @@ qp_file_track(qp_file_t* file)
 }
 
 size_t
-qp_file_direct_writebuf(qp_file_t* file, qp_uchar_t** buf) 
+qp_file_get_writebuf(qp_file_t* file, qp_uchar_t** buf) 
 {
-    if (!qp_file_is_direct(file) || !qp_fd_is_inited(&file->file)) {
+    if (!qp_file_is_directio(file) || !qp_fd_is_inited(&file->file)) {
         return 0;
     }
     
@@ -289,9 +287,9 @@ qp_file_direct_writebuf(qp_file_t* file, qp_uchar_t** buf)
 }
 
 size_t
-qp_file_direct_readbuf(qp_file_t* file, qp_uchar_t** buf) 
+qp_file_get_readbuf(qp_file_t* file, qp_uchar_t** buf) 
 {
-    if (!qp_file_is_direct(file) || !qp_fd_is_inited(&file->file)) {
+    if (!qp_file_is_directio(file) || !qp_fd_is_inited(&file->file)) {
         return 0;
     }
     
@@ -300,36 +298,16 @@ qp_file_direct_readbuf(qp_file_t* file, qp_uchar_t** buf)
 }
 
 ssize_t
-qp_file_direct_write_now(qp_file_t* file, size_t bufsize)
-{
-    if (!file || !qp_file_is_direct(file) || bufsize > file->wrbufsize) {
-        return QP_ERROR;
-    }
-    
-    return qp_fd_write(&file->file, file->wrbuf, bufsize);
-}
-
-ssize_t
-qp_file_direct_read_now(qp_file_t* file, size_t bufsize)
-{
-    if (!file || !qp_file_is_direct(file) || bufsize > file->rdbufsize) {
-        return QP_ERROR;
-    }
-    
-    return qp_fd_read(&file->file, file->rdbuf, bufsize);
-}
-
-ssize_t
-qp_file_write(qp_file_t* file, const void* buf, size_t bufsize)
+qp_file_write(qp_file_t* file, const void* buf, size_t bufsize, size_t offset)
 {
     if (!file) {
         return QP_ERROR;
     }
     
-    if (!qp_file_is_direct(file)) {
+    if (!qp_file_is_directio(file)) {
         return qp_fd_is_aio(&file->file) ? \
             qp_fd_write(&file->file, buf, bufsize) :\
-            qp_fd_aio_write(&file->file, buf, bufsize);
+            qp_fd_aio_write(&file->file, buf, bufsize, offset);
         
     } else {
         size_t done = bufsize;
@@ -376,10 +354,10 @@ qp_file_read(qp_file_t* file, void* buf, size_t bufsize)
     }
     
     /* buffer read is disabled for now */
-    if (!qp_file_is_direct(file)) {
+    if (!qp_file_is_directio(file)) {
         return qp_fd_is_aio(&file->file) ? \
             qp_fd_read(&file->file, buf, bufsize) :\
-            qp_fd_aio_read(&file->file, buf, bufsize);
+            qp_fd_aio_read(&file->file, buf, bufsize, );
         
     } else {
         size_t done = bufsize;
