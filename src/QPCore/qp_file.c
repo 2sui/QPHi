@@ -132,7 +132,7 @@ qp_file_init(qp_file_t* file, qp_int_t mod, size_t bufsize)
 qp_int_t
 qp_file_destroy(qp_file_t *file)
 {
-    if (qp_fd_is_inited(&file->file)) {
+    if (file && qp_fd_is_inited(&file->file)) {
         qp_file_close(file);
         qp_fd_destroy(&file->file);
 
@@ -162,7 +162,9 @@ qp_int_t
 qp_file_open(qp_file_t* file, qp_char_t* path, qp_int_t oflag, qp_int_t mod)
 {
     /* file has been opened */
-    if (qp_fd_is_valid(&file->file) || (strlen(path) > QP_FILE_PATH_LEN_MAX)) {
+    if (!file || qp_fd_is_valid(&file->file) 
+        || (strlen(path) > QP_FILE_PATH_LEN_MAX)) 
+    {
         return QP_ERROR;
     }
     
@@ -172,7 +174,7 @@ qp_file_open(qp_file_t* file, qp_char_t* path, qp_int_t oflag, qp_int_t mod)
     file->open_flag = oflag;
     file->open_mode = mod;
     
-    if (qp_file_is_directio(file)) {
+    if (qp_file_is_directIO(file)) {
         file->open_flag |= O_DIRECT;
     }
     
@@ -207,7 +209,7 @@ qp_file_close(qp_file_t *file)
 
         /* rest data in buf to file  */
         if (file->wrbuf && (0 < file->wrbuf_offset)) {
-            while (qp_file_flush(file) > 0);
+            while (qp_file_flush(file, false) > 0);
         }
 
         return qp_fd_close(&file->file);
@@ -217,14 +219,15 @@ qp_file_close(qp_file_t *file)
 }
 
 ssize_t
-qp_file_flush(qp_file_t* file)
+qp_file_flush(qp_file_t* file, bool full)
 {   
     if (!file || !file->wrbuf) {
         return QP_ERROR;
     }
     
-    if (qp_file_is_directio(file)) {
-        qp_fd_write(&file->file, file->wrbuf, file->wrbuf_size);
+    if (qp_file_is_directIO(file)) {
+        qp_fd_write(&file->file, file->wrbuf, full ? \
+            file->wrbuf_size : file->wrbuf_offset);
     } 
     
     if (0 < file->file.retsno) {
@@ -250,15 +253,14 @@ qp_file_track(qp_file_t* file)
         return QP_ERROR;
     }
     
-    if (qp_file_is_directio(file)) {
-        qp_fd_read(&file->file, file->rdbuf, file->rdbufsize);
+    if (qp_file_is_directIO(file)) {
+        qp_fd_read(&file->file, file->rdbuf, file->rdbuf_size);
     } 
     
     if (0 < file->file.retsno) {
-        file->rdbufoffset = file->file.retsno;
-        file->rdbufoffsetlast = 0;
-        file->read_offset += file->rdbufoffset; 
-        return file->rdbufoffset;   
+        file->rdbuf_offset = file->file.retsno;
+        file->rdbuf_offsetlast = 0;
+        return file->rdbuf_offset;   
     }
     
     return file->file.retsno;
@@ -267,7 +269,7 @@ qp_file_track(qp_file_t* file)
 size_t
 qp_file_get_writebuf(qp_file_t* file, qp_uchar_t** buf) 
 {
-    if (!qp_fd_is_inited(&file->file) || !qp_file_is_directio(file)) {
+    if (!file || !qp_fd_is_inited(&file->file) || !qp_file_is_directIO(file)) {
         return 0;
     }
     
@@ -278,7 +280,7 @@ qp_file_get_writebuf(qp_file_t* file, qp_uchar_t** buf)
 size_t
 qp_file_get_readbuf(qp_file_t* file, qp_uchar_t** buf) 
 {
-    if (!qp_fd_is_inited(&file->file) || !qp_file_is_directio(file)) {
+    if (!file || !qp_fd_is_inited(&file->file) || !qp_file_is_directIO(file)) {
         return 0;
     }
     
@@ -289,11 +291,11 @@ qp_file_get_readbuf(qp_file_t* file, qp_uchar_t** buf)
 ssize_t
 qp_file_write(qp_file_t* file, const void* data, size_t len, size_t file_offset)
 {
-    if (!file) {
+    if (!file || !qp_fd_is_inited(&file->file)) {
         return QP_ERROR;
     }
     
-    if (!qp_file_is_directio(file)) {
+    if (!qp_file_is_directIO(file)) {
         return qp_fd_is_aio(&file->file) ? \
             qp_fd_write(&file->file, data, len) :\
             qp_fd_aio_write(&file->file, data, len, file_offset);
@@ -317,45 +319,46 @@ qp_file_write(qp_file_t* file, const void* data, size_t len, size_t file_offset)
                 len -= file->wrbuf_offset;
                 
                 /* write error */
-                if (1 > qp_file_flush(file)) {
+                if (1 > qp_file_flush(file, true)) {
                     break;
                 }
             }
             
         } while (len); 
         
-        if (len == done) {
+        if (len) {
             return file->file.retsno;
-            
         } 
         
-        return done - len;
+        return done;
     }
 }
 
 ssize_t
 qp_file_read(qp_file_t* file, void* data, size_t len, size_t file_offset)
 {
-    if (!file) {
+    if (!file && !qp_fd_is_inited(&file->file)) {
         return QP_ERROR;
     }
     
     /* buffer read is disabled for now */
-    if (!qp_file_is_directio(file)) {
+    if (!qp_file_is_directIO(file)) {
         return qp_fd_is_aio(&file->file) ? \
             qp_fd_read(&file->file, data, len) :\
-            qp_fd_aio_read(&file->file, data, len, );
+            qp_fd_aio_read(&file->file, data, len, file_offset);
         
     } else {
         size_t done = len;
+        size_t rest = 0;
         
         do {
+            rest = file->rdbuf_offset - file->rdbuf_offsetlast;
+            
             /* if wanted data size bigger than rest data size in buffer */
-            if (len > (file->rdbuf_offset - file->rdbuf_offsetlast)) {
-                memcpy(data, file->rdbuf + file->rdbuf_offsetlast, \
-                    file->rdbuf_offset - file->rdbuf_offsetlast);
-                data += file->rdbuf_offset - file->rdbuf_offsetlast;
-                len -= file->rdbuf_offset - file->rdbuf_offsetlast;
+            if (len > rest) {
+                memcpy(data, file->rdbuf + file->rdbuf_offsetlast, rest);
+                data += rest;
+                len -= rest;
                 
                 if (1 > qp_file_track(file)) {
                     break;
@@ -369,13 +372,23 @@ qp_file_read(qp_file_t* file, void* data, size_t len, size_t file_offset)
             
         } while(len);
         
-        if (done == len) {
+        if (len) {
             return file->file.retsno;
         
         } 
         
-        return done - len;
+        return done;
     }
+}
+
+ssize_t
+qp_file_direct_write(qp_file_t* file, size_t len)
+{
+    if (!file && !qp_fd_is_inited(&file->file)) {
+        return QP_ERROR;
+    }
+    
+    return qp_fd_write(&file->file, file->wrbuf, len);
 }
 
 qp_int_t

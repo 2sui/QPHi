@@ -195,7 +195,7 @@ qp_socket_init(qp_socket_t* skt, qp_int_t domain, qp_int_t type,
 qp_int_t
 qp_socket_destroy(qp_socket_t* skt)
 {
-    if (qp_fd_is_inited(&skt->socket)) {
+    if (!skt && qp_fd_is_inited(&skt->socket)) {
         qp_socket_close(skt, QP_SOCKET_SHUT_CLOSE);
         qp_fd_destroy(&skt->socket);
         skt->domain = QP_SOCKET_DOMAIN_UNSUPPORT;

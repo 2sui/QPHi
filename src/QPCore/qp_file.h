@@ -75,7 +75,7 @@ inline bool
 qp_file_is_alloced(qp_file_t* file);
 
 inline bool
-qp_file_is_directio(qp_file_t* file);
+qp_file_is_directIO(qp_file_t* file);
 
 /**
  * Create a file (if file is NULL), and init it.If mod is 0 it works just like 
@@ -115,7 +115,7 @@ qp_file_close(qp_file_t* file);
  * Return number of rest data in buffer, and return QP_ERROR if some error happen.
  */
 ssize_t
-qp_file_flush(qp_file_t* file);
+qp_file_flush(qp_file_t* file, bool full);
 
 /**
  * Get data from disk to buffer.
@@ -153,7 +153,25 @@ qp_file_write(qp_file_t* file, const void* data, size_t len, size_t file_offset)
  *  ** for now,  buffer cache read is not enabled, so it is read directly from file **
 */
 ssize_t
-qp_file_read(qp_file_t* file, void* vptr, size_t bufsize);
+qp_file_read(qp_file_t* file, void* data, size_t len, size_t file_offset);
+
+/**
+ * 
+ * @param file
+ * @param len
+ * @return 
+ */
+ssize_t
+qp_file_direct_write(qp_file_t* file, size_t len);
+
+/**
+ * 
+ * @param file
+ * @param len
+ * @return 
+ */
+ssize_t
+qp_file_direct_read(qp_file_t* file, size_t len);
 
 /*
  * Regist file lock on file with type (read or write).Lock the part from 
