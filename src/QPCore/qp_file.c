@@ -39,6 +39,23 @@ inline bool
 qp_file_is_directIO(qp_file_t* file) 
 { return file ? file->is_directIO : false; }
 
+/**
+ * Get file stat.
+ * 
+ * @param file
+ * @return Return QP_SUCCESS if success, otherwise return QP_ERROR.
+ */
+qp_int_t
+qp_file_stat(qp_file_t *file) {
+    
+    if (!file || !qp_fd_is_valid(&file->file)) {
+        return QP_ERROR;
+    }
+    
+    file->file.retsno = fstat(file->file.fd, &file->stat);
+    file->file.errono = errno;
+    return file->file.retsno;
+}
 
 qp_file_t*
 qp_file_create(qp_file_t *file, qp_int_t mod)
@@ -86,14 +103,14 @@ qp_file_init(qp_file_t* file, qp_int_t mod, size_t bufsize)
     mod &= ~QP_FILE_AIO;
     
     if ((QP_FILE_DIRECTIO & mod) && (1 > bufsize)) {
-        file->wrbufsize = file->rdbufsize = QP_FILE_DIRECTIO_CACHE;
+        file->wrbuf_size = file->rdbuf_size = QP_FILE_DIRECTIO_CACHE;
     }
     
     switch (mod) {
         
     case QP_FILE_DIRECTIO: {
-        file->wrbuf = (qp_uchar_t*) qp_alloc_align(QP_PAGE_SIZE, file->wrbufsize);
-        file->rdbuf = (qp_uchar_t*) qp_alloc_align(QP_PAGE_SIZE, file->rdbufsize);
+        file->wrbuf = (qp_uchar_t*) qp_alloc_align(QP_PAGE_SIZE, file->wrbuf_size);
+        file->rdbuf = (qp_uchar_t*) qp_alloc_align(QP_PAGE_SIZE, file->rdbuf_size);
         qp_file_set_directIO(file);
             
     } break;
@@ -105,7 +122,6 @@ qp_file_init(qp_file_t* file, qp_int_t mod, size_t bufsize)
         
         if (!file->rdbuf || !file->wrbuf) {
             qp_file_destroy(file);
-            QP_LOGOUT_ERROR("[qp_file_t] File buf creatr fail.");
             return NULL;
         }
     }
@@ -145,20 +161,13 @@ qp_file_destroy(qp_file_t *file)
 qp_int_t
 qp_file_open(qp_file_t* file, qp_char_t* path, qp_int_t oflag, qp_int_t mod)
 {
-    if (qp_fd_is_valid(&file->file)) {
-        QP_LOGOUT_ERROR("[qp_file_t] File has already used or not inited.");
+    /* file has been opened */
+    if (qp_fd_is_valid(&file->file) || (strlen(path) > QP_FILE_PATH_LEN_MAX)) {
         return QP_ERROR;
     }
     
-    size_t len = strlen(path);
-    
-    if (len > QP_FILE_PATH_LEN_MAX) {
-        QP_LOGOUT_ERROR("[qp_file_t] File name too long.");
-        return QP_ERROR;
-    }
-    
-    memcpy(file->name, path, len);
-    file->name[len] = '\0';
+    memcpy(file->name, path, strlen(path));
+    file->name[strlen(path)] = '\0';
     
     file->open_flag = oflag;
     file->open_mode = mod;
@@ -170,37 +179,18 @@ qp_file_open(qp_file_t* file, qp_char_t* path, qp_int_t oflag, qp_int_t mod)
     file->file.fd = open(file->name, file->open_flag, file->open_mode);
     
     if (file->file.fd < 0) {
-        QP_LOGOUT_ERROR("[qp_file_t] File [%s] open fail.", file->name);
         return QP_ERROR;
     }
     
-    file->read_offset = file->write_offset = 0;
-    file->wrbufoffset = file->wrbufoffsetlast = 0;
-    file->rdbufoffset = file->rdbufoffsetlast = 0;
-    
-    /* get file stat, and set file offset */
-    if (QP_ERROR == fstat(file->file.fd, &file->file_stat)) {
-        memset(&file->file_stat, 0, sizeof(struct stat));
-        
-        if (QP_ERROR == (ssize_t)(file->offset = \
-            lseek(file->file.fd, 0L, SEEK_END))) 
-        {
-            file->offset = 0;
-        }
-        
-    } else {
-        file->offset = file->file_stat.st_size;
+    if (QP_ERROR == qp_file_stat(file)) {
+        memset(&file->stat, 0, sizeof(struct stat));
     }
     
     if (O_APPEND & file->open_flag) {
-        file->read_offset = file->write_offset = file->offset;
+        file->cur_file_offset = file->stat.st_size;
         
     } else {
-        lseek(file->file.fd, 0L, SEEK_SET);
-    }
-    
-    if (O_TRUNC & file->open_flag) {
-        file->offset = 0;
+        file->cur_file_offset = 0;
     }
     
     return QP_SUCCESS;
@@ -209,10 +199,14 @@ qp_file_open(qp_file_t* file, qp_char_t* path, qp_int_t oflag, qp_int_t mod)
 qp_int_t
 qp_file_close(qp_file_t *file)
 {
+    if (!file) {
+        return QP_ERROR;    
+    }
+    
     if (qp_fd_is_valid(&file->file)) {
 
         /* rest data in buf to file  */
-        if (file->wrbuf && (0 < file->wrbufoffset)) {
+        if (file->wrbuf && (0 < file->wrbuf_offset)) {
             while (qp_file_flush(file) > 0);
         }
 
@@ -230,23 +224,18 @@ qp_file_flush(qp_file_t* file)
     }
     
     if (qp_file_is_directio(file)) {
-        qp_fd_write(&file->file, file->wrbuf, file->wrbufoffset);
+        qp_fd_write(&file->file, file->wrbuf, file->wrbuf_offset);
     } 
     
     if (0 < file->file.retsno) {
-        file->wrbufoffset = file->wrbufoffset - file->file.retsno;
+        file->wrbuf_offset = file->wrbuf_offset - file->file.retsno;
         
-        if (file->wrbufoffset) {
+        if (file->wrbuf_offset) {
             memcpy(file->wrbuf, file->wrbuf + file->file.retsno, \
-                file->wrbufoffset);
+                file->wrbuf_offset);
         }
         
-        file->write_offset += file->file.retsno;
-        
-        // change file offset
-        if (file->write_offset > file->offset) {
-            file->offset = file->write_offset;
-        }
+        qp_file_stat(file);
         
         return file->wrbufoffset;
     }
@@ -278,27 +267,27 @@ qp_file_track(qp_file_t* file)
 size_t
 qp_file_get_writebuf(qp_file_t* file, qp_uchar_t** buf) 
 {
-    if (!qp_file_is_directio(file) || !qp_fd_is_inited(&file->file)) {
+    if (!qp_fd_is_inited(&file->file) || !qp_file_is_directio(file)) {
         return 0;
     }
     
     *buf = file->wrbuf;
-    return  file->wrbufsize;
+    return  file->wrbuf_size;
 }
 
 size_t
 qp_file_get_readbuf(qp_file_t* file, qp_uchar_t** buf) 
 {
-    if (!qp_file_is_directio(file) || !qp_fd_is_inited(&file->file)) {
+    if (!qp_fd_is_inited(&file->file) || !qp_file_is_directio(file)) {
         return 0;
     }
     
     *buf = file->rdbuf;
-    return  file->rdbufsize;
+    return  file->rdbuf_size;
 }
 
 ssize_t
-qp_file_write(qp_file_t* file, const void* buf, size_t bufsize, size_t offset)
+qp_file_write(qp_file_t* file, const void* data, size_t len, size_t file_offset)
 {
     if (!file) {
         return QP_ERROR;
@@ -306,27 +295,27 @@ qp_file_write(qp_file_t* file, const void* buf, size_t bufsize, size_t offset)
     
     if (!qp_file_is_directio(file)) {
         return qp_fd_is_aio(&file->file) ? \
-            qp_fd_write(&file->file, buf, bufsize) :\
-            qp_fd_aio_write(&file->file, buf, bufsize, offset);
+            qp_fd_write(&file->file, data, len) :\
+            qp_fd_aio_write(&file->file, data, len, file_offset);
         
     } else {
-        size_t done = bufsize;
+        size_t done = len;
         
         do {
-            file->wrbufoffsetlast = file->wrbufoffset;
+            file->wrbuf_offsetlast = file->wrbuf_offset;
         
-            if (file->wrbufsize > (file->wrbufoffset += bufsize)) {
-                memcpy(file->wrbuf + file->wrbufoffsetlast, buf, bufsize);
-                return bufsize;
+            if (file->wrbuf_size > (file->wrbuf_offset += len)) {
+                memcpy(file->wrbuf + file->wrbuf_offsetlast, data, len);
+                return len;
             
             } else {
                 /* fill write buf with writing data */
-                file->wrbufoffset = file->wrbufsize - file->wrbufoffsetlast;
-                memcpy(file->wrbuf + file->wrbufoffsetlast, buf, \
-                    file->wrbufoffset);
-                buf += file->wrbufoffset;
-                bufsize -= file->wrbufoffset;
-                file->wrbufoffset = file->wrbufsize;
+                file->wrbuf_offset = file->wrbuf_size - file->wrbuf_offsetlast;
+                memcpy(file->wrbuf + file->wrbuf_offsetlast, data, \
+                    file->wrbuf_offset);
+                data += file->wrbuf_offset;
+                len -= file->wrbuf_offset;
+                file->wrbuf_offset = file->wrbuf_size;
                 
                 /* write error */
                 if (1 > qp_file_flush(file)) {
@@ -334,20 +323,19 @@ qp_file_write(qp_file_t* file, const void* buf, size_t bufsize, size_t offset)
                 }
             }
             
-        } while (bufsize); 
+        } while (len); 
         
-        if (bufsize == done) {
+        if (len == done) {
             return file->file.retsno;
             
-        } else {
-            return done - bufsize;
-        }
+        } 
         
+        return done - len;
     }
 }
 
 ssize_t
-qp_file_read(qp_file_t* file, void* buf, size_t bufsize)
+qp_file_read(qp_file_t* file, void* data, size_t len, size_t file_offset)
 {
     if (!file) {
         return QP_ERROR;
@@ -356,38 +344,38 @@ qp_file_read(qp_file_t* file, void* buf, size_t bufsize)
     /* buffer read is disabled for now */
     if (!qp_file_is_directio(file)) {
         return qp_fd_is_aio(&file->file) ? \
-            qp_fd_read(&file->file, buf, bufsize) :\
-            qp_fd_aio_read(&file->file, buf, bufsize, );
+            qp_fd_read(&file->file, data, len) :\
+            qp_fd_aio_read(&file->file, data, len, );
         
     } else {
-        size_t done = bufsize;
+        size_t done = len;
         
         do {
             /* if wanted data size bigger than rest data size in buffer */
-            if (bufsize > (file->rdbufoffset - file->rdbufoffsetlast)) {
-                memcpy(buf, file->rdbuf + file->rdbufoffsetlast, \
-                    file->rdbufoffset - file->rdbufoffsetlast);
-                buf += file->rdbufoffset - file->rdbufoffsetlast;
-                bufsize -= file->rdbufoffset - file->rdbufoffsetlast;
+            if (len > (file->rdbuf_offset - file->rdbuf_offsetlast)) {
+                memcpy(data, file->rdbuf + file->rdbuf_offsetlast, \
+                    file->rdbuf_offset - file->rdbuf_offsetlast);
+                data += file->rdbuf_offset - file->rdbuf_offsetlast;
+                len -= file->rdbuf_offset - file->rdbuf_offsetlast;
                 
                 if (1 > qp_file_track(file)) {
                     break;
                 }
                 
             } else {
-                memcpy(buf, file->rdbuf + file->rdbufoffsetlast, bufsize);
-                file->rdbufoffsetlast += bufsize;
-                return bufsize;
+                memcpy(data, file->rdbuf + file->rdbuf_offsetlast, len);
+                file->rdbuf_offsetlast += len;
+                return len;
             }
             
-        } while(bufsize);
+        } while(len);
         
-        if (done == bufsize) {
+        if (done == len) {
             return file->file.retsno;
         
-        } else {
-            return done - bufsize;
-        }
+        } 
+        
+        return done - len;
     }
 }
 

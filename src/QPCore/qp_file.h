@@ -49,22 +49,20 @@ extern "C" {
 
 struct qp_file_s {
     qp_fd_t                  file;         /* file path */
-    qp_int_t                 mod;
+    qp_int_t                 mod;          /* normal/directIO/AIO */
     qp_int_t                 open_flag;    /* O_RDONLY O_WRONLY O_RDWR O_EXEC O_SEARCH */
     qp_int_t                 open_opt;     /* O_CREAT O_TRUC ... */
     qp_int_t                 open_mode;    /* IR_USR IW_GRP IX_OTH ... */
-    qp_uchar_t*              wrbuf;        /* file write/read buf */
-    qp_uchar_t*              rdbuf;
-    size_t                   wrbufsize;    /* file buf size */
-    size_t                   rdbufsize;
-    size_t                   wrbufoffset;  /* file buf offset */
-    size_t                   wrbufoffsetlast;  /* file buf offset */
-    size_t                   rdbufoffset;
-    size_t                   rdbufoffsetlast;
-    size_t                   offset;       /* file offset */
-    size_t                   write_offset;
-    size_t                   read_offset;
-    struct stat              file_stat;    /* file stat */
+    qp_uchar_t*              wrbuf;        /* file write buf */
+    qp_uchar_t*              rdbuf;        /* file read buf */
+    size_t                   wrbuf_size;    /* write buf size */
+    size_t                   rdbuf_size;    /* read buf size */
+    size_t                   wrbuf_offset;  /* write buf offset */
+    size_t                   wrbuf_offsetlast;  /* temp write buf offset */
+    size_t                   rdbuf_offset;  /* read buf offset */
+    size_t                   rdbuf_offsetlast;  /* temp read buf offset */
+    size_t                   cur_file_offset;
+    struct stat              stat;    /* file stat */
     qp_char_t                name[QP_FILE_PATH_LEN_MAX + 1];
     bool                     is_directIO;  /* use direct io */
     bool                     is_alloced;   /* is this struct allocated */
@@ -82,7 +80,7 @@ qp_file_is_directio(qp_file_t* file);
 /**
  * Create a file (if file is NULL), and init it.If mod is 0 it works just like 
  * as usual; if mod is QP_FILE_DIRECTIO or QP_FILE_AIO(not support for now), 
- * bufsize must be set to spicific cache size.
+ * bufsize mustf be set to spicific cache size.
  * 
  * @param file
  * @param mod
@@ -145,7 +143,7 @@ qp_file_get_readbuf(qp_file_t* file, qp_uchar_t** buf);
  * in those scene and you can pass vptr as NULL.
 */
 ssize_t
-qp_file_write(qp_file_t* file, const void* vptr, size_t bufsize);
+qp_file_write(qp_file_t* file, const void* data, size_t len, size_t file_offset);
 
 /*
  * Read from file.If directIO or aio is enabled , you should use 
