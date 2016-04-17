@@ -159,7 +159,7 @@ qp_file_destroy(qp_file_t *file)
 }
 
 qp_int_t
-qp_file_open(qp_file_t* file, qp_char_t* path, qp_int_t oflag, qp_int_t mod)
+qp_file_open(qp_file_t* file, const qp_char_t* path, qp_int_t oflag, qp_int_t mod)
 {
     /* file has been opened */
     if (!file || qp_fd_is_valid(&file->file) 
@@ -206,7 +206,7 @@ qp_file_close(qp_file_t *file)
     }
     
     if (qp_fd_is_valid(&file->file)) {
-
+        
         /* rest data in buf to file  */
         if (file->wrbuf && (0 < file->wrbuf_offset)) {
             while (qp_file_flush(file, false) > 0);

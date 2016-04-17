@@ -102,7 +102,7 @@ qp_file_destroy(qp_file_t* file);
  * The oflag and mod are just same with open().
 */
 qp_int_t
-qp_file_open(qp_file_t* file, qp_char_t* path, qp_int_t oflag, qp_int_t mod);
+qp_file_open(qp_file_t* file, const qp_char_t* path, qp_int_t oflag, qp_int_t mod);
 
 /*
  * Close a opened file.
