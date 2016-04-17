@@ -75,7 +75,7 @@ qp_file_create(qp_file_t *file, qp_int_t mod)
     }
 
     /* init qp_fd_t */
-    if (NULL == qp_fd_init(&file->file, QP_FD_TYPE_FILE, mod & 0/*QP_FILE_AIO*/)){
+    if (NULL == qp_fd_init(&file->file, QP_FD_TYPE_FILE, mod & QP_FILE_AIO)){
 
         if (qp_file_is_alloced(file)) {
             qp_free(file);
@@ -91,16 +91,16 @@ qp_file_create(qp_file_t *file, qp_int_t mod)
 qp_file_t*
 qp_file_init(qp_file_t* file, qp_int_t mod, size_t bufsize)
 {
+    /*
+     * DOES NOT SUPPORT AIO!
+     */
+    mod &= ~QP_FILE_AIO;
+    
     file = qp_file_create(file, mod);
     
     if (NULL == file) {
         return NULL;
     }
-    
-    /*
-     * DOES NOT SUPPORT AIO!
-     */
-    mod &= ~QP_FILE_AIO;
     
     if ((QP_FILE_DIRECTIO & mod) && (1 > bufsize)) {
         file->wrbuf_size = file->rdbuf_size = QP_FILE_DIRECTIO_CACHE;
@@ -297,8 +297,8 @@ qp_file_write(qp_file_t* file, const void* data, size_t len, size_t file_offset)
     
     if (!qp_file_is_directIO(file)) {
         return qp_fd_is_aio(&file->file) ? \
-            qp_fd_write(&file->file, data, len) :\
-            qp_fd_aio_write(&file->file, data, len, file_offset);
+            qp_fd_aio_write(&file->file, data, len, file_offset) : \
+            qp_fd_write(&file->file, data, len);
         
     } else {
         size_t done = len;
@@ -344,8 +344,8 @@ qp_file_read(qp_file_t* file, void* data, size_t len, size_t file_offset)
     /* buffer read is disabled for now */
     if (!qp_file_is_directIO(file)) {
         return qp_fd_is_aio(&file->file) ? \
-            qp_fd_read(&file->file, data, len) :\
-            qp_fd_aio_read(&file->file, data, len, file_offset);
+            qp_fd_aio_read(&file->file, data, len, file_offset) : \
+            qp_fd_read(&file->file, data, len);
         
     } else {
         size_t done = len;
@@ -384,7 +384,7 @@ qp_file_read(qp_file_t* file, void* data, size_t len, size_t file_offset)
 ssize_t
 qp_file_direct_write(qp_file_t* file, size_t len)
 {
-    if (!file && !qp_fd_is_inited(&file->file)) {
+    if (!file || !qp_fd_is_inited(&file->file)) {
         return QP_ERROR;
     }
     

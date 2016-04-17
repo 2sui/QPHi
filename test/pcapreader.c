@@ -236,8 +236,6 @@ main(int argc, char* argv[])
     return 0;
     pcap cap;
     
-    
-    
     if (QP_ERROR == pcap_open("test.pcap", &cap)) {
         return QP_ERROR;
     }

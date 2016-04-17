@@ -70,7 +70,7 @@ destroy_handler(qp_event_data_t* data)
 }
 
 int
-main(int argc, char** argv)
+main()
 {
     qp_event_t    emodule;
     qp_socket_t   skt;

@@ -60,7 +60,6 @@ ADD_EXECUTABLE(${pcapreader}
     ${DEP_QPHi_QP_TINY_STACK})
 TARGET_LINK_LIBRARIES(${pcapreader}  pthread dl rt)
 
-
 # tcp_delay
 ADD_EXECUTABLE(${tcp_delay}  
     ${tcp_delay_src} 
