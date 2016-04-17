@@ -75,43 +75,12 @@ main()
     
     struct timeval start, stop;
     size_t size = 0;
-    qp_int_t i = 4096;
+    qp_int_t i = 4096 * 20;
     qp_uchar_t*  write = 0;
     
-//    printf("\n Test normal++++++++");
-//    
-//    qp_file_t* file = qp_file_init(NULL, QP_FILE_NORMAL, 0);
-//    
-//    if (!file) {
-//        printf("\n init error");
-//        return 0;
-//    }
-//    
-//    if (QP_ERROR == qp_file_open(file, filename, O_RDWR|O_CREAT, S_IRUSR|S_IWUSR)) {
-//        printf("\n open error");
-//        qp_file_destroy(file);
-//        return 0;
-//    }
-//    
-//    gettimeofday(&start, NULL);
-//    
-//    while (i--) {
-//        size += qp_file_write(file, str, strlen(str), 0);
-//    }
-//    
-//    gettimeofday(&stop, NULL);
-//    
-//    printf("\n normal test: write %luMB in %fms\n", 
-//        size/1024/1024, 
-//        ((stop.tv_sec*1000000+ stop.tv_usec) - (start.tv_sec*1000000+ start.tv_usec)) / 1000.0);
-//    
-//    qp_file_destroy(file);
+    printf("\n Test normal++++++++");
     
-    printf("\n Test direct io++++++++");
-    size = 0;
-    i = 4096;
-    
-    qp_file_t* file = qp_file_init(NULL, QP_FILE_DIRECTIO, strlen(str));
+    qp_file_t* file = qp_file_init(NULL, QP_FILE_NORMAL, 0);
     
     if (!file) {
         printf("\n init error");
@@ -124,9 +93,40 @@ main()
         return 0;
     }
     
-    qp_file_get_writebuf(file, &write);
-    memcpy(write, str, strlen(str));
+    gettimeofday(&start, NULL);
     
+    while (i--) {
+        size += qp_file_write(file, str, strlen(str), 0);
+    }
+    
+    gettimeofday(&stop, NULL);
+    
+    printf("\n normal test: write %luMB in %fms\n", 
+        size/1024/1024, 
+        ((stop.tv_sec*1000000+ stop.tv_usec) - (start.tv_sec*1000000+ start.tv_usec)) / 1000.0);
+    
+    qp_file_destroy(file);
+    
+//    printf("\n Test direct io++++++++");
+//    size = 0;
+//    i = 4096 * 20;
+//    
+//    file = qp_file_init(NULL, QP_FILE_DIRECTIO, strlen(str) * 2);
+//    
+//    if (!file) {
+//        printf("\n init error");
+//        return 0;
+//    }
+//    
+//    if (QP_ERROR == qp_file_open(file, filename, O_RDWR|O_CREAT, S_IRUSR|S_IWUSR)) {
+//        printf("\n open error");
+//        qp_file_destroy(file);
+//        return 0;
+//    }
+//    
+//    qp_file_get_writebuf(file, &write);
+//    memcpy(write, str, strlen(str));
+//    
 //    gettimeofday(&start, NULL);
 //    
 //    while (i--) {
@@ -134,12 +134,42 @@ main()
 //    }
 //    
 //    gettimeofday(&stop, NULL);
+//    
+//    printf("\nnormal test: write %luMB in %fms\n",
+//        size/1024/1024, 
+//        ((stop.tv_sec*1000000+ stop.tv_usec) - (start.tv_sec*1000000+ start.tv_usec)) / 1000.0);
+//    
+//    qp_file_destroy(file);
+    
+    printf("\n Test cache direct io++++++++");
+    size = 0;
+    i = 4096 * 20;
+    
+    file = qp_file_init(NULL, QP_FILE_DIRECTIO, strlen(str) * 16);
+    
+    if (!file) {
+        printf("\n init error");
+        return 0;
+    }
+    
+    if (QP_ERROR == qp_file_open(file, filename, O_RDWR|O_CREAT, S_IRUSR|S_IWUSR)) {
+        printf("\n open error");
+        qp_file_destroy(file);
+        return 0;
+    }
+    
+    gettimeofday(&start, NULL);
+    
+    while (i--) {
+        size += qp_file_write(file, str, strlen(str), 0);
+    }
+    
+    gettimeofday(&stop, NULL);
     
     printf("\nnormal test: write %luMB in %fms\n",
         size/1024/1024, 
         ((stop.tv_sec*1000000+ stop.tv_usec) - (start.tv_sec*1000000+ start.tv_usec)) / 1000.0);
     
-    printf("\n to close file");
     qp_file_destroy(file);
     
     return 0;

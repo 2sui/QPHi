@@ -102,7 +102,7 @@ qp_file_init(qp_file_t* file, qp_int_t mod, size_t bufsize)
         return NULL;
     }
     
-    if ((QP_FILE_DIRECTIO & mod) && (1 > bufsize)) {
+    if ((QP_FILE_DIRECTIO & mod) && (0 < bufsize)) {
         file->wrbuf_size = file->rdbuf_size = QP_FILE_DIRECTIO_CACHE;
     }
     
