@@ -145,7 +145,7 @@ main()
     size = 0;
     i = 4096 * 20;
     
-    file = qp_file_init(NULL, QP_FILE_DIRECTIO, strlen(str) * 16);
+    file = qp_file_init(NULL, QP_FILE_DIRECTIO, 4094 * 1024);
     
     if (!file) {
         printf("\n init error");

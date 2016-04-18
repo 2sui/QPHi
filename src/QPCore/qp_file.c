@@ -103,7 +103,10 @@ qp_file_init(qp_file_t* file, qp_int_t mod, size_t bufsize)
     }
     
     if ((QP_FILE_DIRECTIO & mod) && (0 < bufsize)) {
-        file->wrbuf_size = file->rdbuf_size = QP_FILE_DIRECTIO_CACHE;
+        file->wrbuf_size = file->rdbuf_size = bufsize;
+        
+    } else {
+        mod &= ~QP_FILE_DIRECTIO;
     }
     
     switch (mod) {
@@ -112,6 +115,8 @@ qp_file_init(qp_file_t* file, qp_int_t mod, size_t bufsize)
         file->wrbuf = (qp_uchar_t*) qp_alloc_align(QP_PAGE_SIZE, file->wrbuf_size);
         file->rdbuf = (qp_uchar_t*) qp_alloc_align(QP_PAGE_SIZE, file->rdbuf_size);
         qp_file_set_directIO(file);
+        
+        fprintf(stderr, "\n set direct io");
             
     } break;
     
@@ -176,6 +181,7 @@ qp_file_open(qp_file_t* file, const qp_char_t* path, qp_int_t oflag, qp_int_t mo
     
     if (qp_file_is_directIO(file)) {
         file->open_flag |= O_DIRECT;
+        fprintf(stderr, "\n using direct");
     }
     
     file->file.fd = open(file->name, file->open_flag, file->open_mode);
@@ -225,13 +231,14 @@ qp_file_flush(qp_file_t* file, bool full)
         return QP_ERROR;
     }
     
+    file->wrbuf_offsetlast = full ? file->wrbuf_size : file->wrbuf_offset;
+    
     if (qp_file_is_directIO(file)) {
-        qp_fd_write(&file->file, file->wrbuf, full ? \
-            file->wrbuf_size : file->wrbuf_offset);
+        qp_fd_write(&file->file, file->wrbuf, file->wrbuf_offsetlast);
     } 
     
     if (0 < file->file.retsno) {
-        file->wrbuf_offset = file->wrbuf_offset - file->file.retsno;
+        file->wrbuf_offset = file->wrbuf_offsetlast - file->file.retsno;
         
         if (file->wrbuf_offset) {
             memcpy(file->wrbuf, file->wrbuf + file->file.retsno, \
