@@ -8,12 +8,7 @@
 #include <qp_core.h>
 #include <stdlib.h>
 
-
-int 
-main()
-{
-    const qp_char_t* filename = "dircetfile";
-    const qp_char_t* str = "12345678901234567890123456789012345678901234567890"
+const qp_char_t* str = "12345678901234567890123456789012345678901234567890"
     "1234567890123456789012345678901234567890123456789012345678901234567890"
     "1234567890123456789012345678901234567890123456789012345678901234567890"
     "1234567890123456789012345678901234567890123456789012345678901234567890"
@@ -72,15 +67,20 @@ main()
     "1234567890123456789012345678901234567890123456789012345678901234567890"
     "1234567890123456789012345678901234567890123456789012345678901234567890"
     "12345678901234567890123456789012345678901234567890123456";
-    
+
+int 
+main()
+{
+    const qp_char_t* filename = "dircetfile";
     struct timeval start, stop;
     size_t size = 0;
     qp_int_t i = 4096 * 20;
     qp_uchar_t*  write = 0;
+    qp_file_t* file = NULL;
     
-    printf("\n Test normal++++++++");
+    printf("\n Test normal IO ++++++++");
     
-    qp_file_t* file = qp_file_init(NULL, QP_FILE_NORMAL, 0);
+    file = qp_file_init(NULL, QP_FILE_NORMAL, 0);
     
     if (!file) {
         printf("\n init error");
@@ -101,51 +101,51 @@ main()
     
     gettimeofday(&stop, NULL);
     
-    printf("\n normal test: write %luMB in %fms\n", 
+    printf("\n Normal IO test: write %zdMB in %fms\n", 
         size/1024/1024, 
         ((stop.tv_sec*1000000+ stop.tv_usec) - (start.tv_sec*1000000+ start.tv_usec)) / 1000.0);
     
     qp_file_destroy(file);
     
-//    printf("\n Test direct io++++++++");
-//    size = 0;
-//    i = 4096 * 20;
-//    
-//    file = qp_file_init(NULL, QP_FILE_DIRECTIO, strlen(str) * 2);
-//    
-//    if (!file) {
-//        printf("\n init error");
-//        return 0;
-//    }
-//    
-//    if (QP_ERROR == qp_file_open(file, filename, O_RDWR|O_CREAT, S_IRUSR|S_IWUSR)) {
-//        printf("\n open error");
-//        qp_file_destroy(file);
-//        return 0;
-//    }
-//    
-//    qp_file_get_writebuf(file, &write);
-//    memcpy(write, str, strlen(str));
-//    
-//    gettimeofday(&start, NULL);
-//    
-//    while (i--) {
-//        size += qp_file_direct_write(file, strlen(str));
-//    }
-//    
-//    gettimeofday(&stop, NULL);
-//    
-//    printf("\nnormal test: write %luMB in %fms\n",
-//        size/1024/1024, 
-//        ((stop.tv_sec*1000000+ stop.tv_usec) - (start.tv_sec*1000000+ start.tv_usec)) / 1000.0);
-//    
-//    qp_file_destroy(file);
-    
-    printf("\n Test cache direct io++++++++");
+    printf("\n Test direct IO (No cache)++++++++");
     size = 0;
     i = 4096 * 20;
     
-    file = qp_file_init(NULL, QP_FILE_DIRECTIO, 4094 * 1024);
+    file = qp_file_init(NULL, QP_FILE_DIRECTIO, strlen(str) * 4);
+    
+    if (!file) {
+        printf("\n init error");
+        return 0;
+    }
+    
+    if (QP_ERROR == qp_file_open(file, filename, O_RDWR|O_CREAT, S_IRUSR|S_IWUSR)) {
+        printf("\n open error");
+        qp_file_destroy(file);
+        return 0;
+    }
+    
+    qp_file_get_writebuf(file, &write);
+    memcpy(write, str, strlen(str));
+    
+    gettimeofday(&start, NULL);
+    
+    while (i--) {
+        size += qp_file_direct_write(file, strlen(str));
+    }
+    
+    gettimeofday(&stop, NULL);
+    
+    printf("\n Direct IO test: write %zdMB in %fms\n",
+        size/1024/1024, 
+        ((stop.tv_sec*1000000+ stop.tv_usec) - (start.tv_sec*1000000+ start.tv_usec)) / 1000.0);
+    
+    qp_file_destroy(file);
+    
+    printf("\n Test cache direct IO ++++++++");
+    size = 0;
+    i = 4096 * 20;
+    
+    file = qp_file_init(NULL, QP_FILE_DIRECTIO, 4094 * 8192);
     
     if (!file) {
         printf("\n init error");
@@ -166,7 +166,7 @@ main()
     
     gettimeofday(&stop, NULL);
     
-    printf("\nnormal test: write %luMB in %fms\n",
+    printf("\n Direct cache IO test: write %zdMB in %fms\n",
         size/1024/1024, 
         ((stop.tv_sec*1000000+ stop.tv_usec) - (start.tv_sec*1000000+ start.tv_usec)) / 1000.0);
     
