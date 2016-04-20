@@ -206,7 +206,7 @@ qp_fd_close(qp_fd_t* fd)
 ssize_t
 qp_fd_write(qp_fd_t* fd, const void* vptr, size_t nbytes)
 {
-    if (!fd) {
+    if (!qp_fd_is_valid(fd)) {
         return QP_ERROR;
     }
     
@@ -218,7 +218,7 @@ qp_fd_write(qp_fd_t* fd, const void* vptr, size_t nbytes)
 ssize_t
 qp_fd_read(qp_fd_t* fd, void* vptr, size_t nbytes)
 {
-    if (!fd) {
+    if (!qp_fd_is_valid(fd)) {
         return QP_ERROR;
     }
     
@@ -230,7 +230,7 @@ qp_fd_read(qp_fd_t* fd, void* vptr, size_t nbytes)
 size_t
 qp_fd_writen(qp_fd_t *fd, const void *vptr, size_t nbytes)
 {
-    if (!fd) {
+    if (!qp_fd_is_valid(fd)) {
         return 0;
     }
     
@@ -263,7 +263,7 @@ qp_fd_writen(qp_fd_t *fd, const void *vptr, size_t nbytes)
 size_t
 qp_fd_readn(qp_fd_t *fd, void *vptr, size_t nbytes)
 {
-    if (!fd) {
+    if (!qp_fd_is_valid(fd)) {
         return 0;
     }
     
@@ -297,7 +297,7 @@ qp_fd_readn(qp_fd_t *fd, void *vptr, size_t nbytes)
 ssize_t
 qp_fd_writev(qp_fd_t *fd, const struct iovec *iov, qp_int_t iovcnt)
 {
-    if (!fd) {
+    if (!qp_fd_is_valid(fd)) {
         return QP_ERROR;
     }
     
@@ -309,7 +309,7 @@ qp_fd_writev(qp_fd_t *fd, const struct iovec *iov, qp_int_t iovcnt)
 ssize_t
 qp_fd_readv(qp_fd_t *fd, const struct iovec *iov, qp_int_t iovcnt)
 {
-    if (!fd) {
+    if (!qp_fd_is_valid(fd)) {
         return QP_ERROR;
     }
     
@@ -322,7 +322,7 @@ qp_fd_readv(qp_fd_t *fd, const struct iovec *iov, qp_int_t iovcnt)
 qp_int_t
 qp_fd_aio_sync(qp_fd_t* fd)
 {
-    if (!fd) {
+    if (!qp_fd_is_valid(fd)) {
         return QP_ERROR;
     }
     
@@ -341,7 +341,7 @@ qp_fd_aio_sync(qp_fd_t* fd)
 qp_int_t
 qp_fd_aio_stat(qp_fd_t* fd)
 {
-    if (!fd) {
+    if (!qp_fd_is_valid(fd)) {
         return QP_ERROR;
     }
     
@@ -360,7 +360,7 @@ qp_fd_aio_stat(qp_fd_t* fd)
 ssize_t
 qp_fd_aio_write(qp_fd_t* fd, const void* vptr, size_t nbytes, size_t offset)
 {
-    if (!fd) {
+    if (!qp_fd_is_valid(fd)) {
         return QP_ERROR;
     }
     
@@ -384,7 +384,7 @@ qp_fd_aio_write(qp_fd_t* fd, const void* vptr, size_t nbytes, size_t offset)
 ssize_t
 qp_fd_aio_read(qp_fd_t* fd, void* vptr, size_t nbytes, size_t offset)
 {
-    if (!fd) {
+    if (!qp_fd_is_valid(fd)) {
         return QP_ERROR;
     }
     
