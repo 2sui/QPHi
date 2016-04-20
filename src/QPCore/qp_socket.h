@@ -90,7 +90,7 @@ qp_socket_is_listen(qp_socket_t* skt);
  */
 qp_socket_t*
 qp_socket_init(qp_socket_t* skt, qp_int_t domain, qp_int_t type, 
-    const qp_char_t* name, qp_ushort_t port, bool as_server);
+    const qp_char_t* name, qp_ushort_t port, bool as_server, qp_int_t server_backlog);
 
 /*
  * Destroy a socket.

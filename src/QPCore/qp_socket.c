@@ -84,7 +84,7 @@ qp_socket_create(qp_socket_t* skt) {
 
 qp_socket_t*
 qp_socket_init(qp_socket_t* skt, qp_int_t domain, qp_int_t type, 
-    const qp_char_t* name, qp_ushort_t port, bool as_server)
+    const qp_char_t* name, qp_ushort_t port, bool as_server, qp_int_t server_backlog)
 {
     /* check args */
     switch(domain) {
@@ -100,8 +100,8 @@ qp_socket_init(qp_socket_t* skt, qp_int_t domain, qp_int_t type,
 
     case QP_SOCKET_DOMAIN_UNIX: {
 
-        if ((NULL == name) 
-            || (strlen(name) >= sizeof(skt->socket_addr.unet_addr.sun_path))) 
+        if ((NULL == name) || (strlen(name) >= \
+            sizeof(skt->socket_addr.unet_addr.sun_path))) 
         {
             return NULL;
         }
@@ -109,10 +109,10 @@ qp_socket_init(qp_socket_t* skt, qp_int_t domain, qp_int_t type,
     }break;
 
     case QP_SOCKET_DOMAIN_PACKET: {
+        return NULL; // NOT SUPPORTED
     }break;
 
     default: {
-        QP_LOGOUT_ERROR("[qp_socket_t] Unknow domain.");
         return NULL;
     }
     }
@@ -125,7 +125,6 @@ qp_socket_init(qp_socket_t* skt, qp_int_t domain, qp_int_t type,
         break;
         
     default: {
-        QP_LOGOUT_ERROR("[qp_socket_t] Unknow socket type.");
         return NULL;
     }
         break;
@@ -143,7 +142,8 @@ qp_socket_init(qp_socket_t* skt, qp_int_t domain, qp_int_t type,
 
     if (as_server) {
         qp_socket_set_listen(skt);
-        skt->backlog = QP_SOCKET_DEFAULT_LISTENBACKLOG;
+        skt->backlog = server_backlog > 0 ? server_backlog : \
+            QP_SOCKET_DEFAULT_LISTENBACKLOG;
     }
 
     /* get socket */
@@ -151,7 +151,6 @@ qp_socket_init(qp_socket_t* skt, qp_int_t domain, qp_int_t type,
     skt->socket.errono = errno;
 
     if (!qp_fd_is_valid(&skt->socket)) {
-        QP_LOGOUT_ERROR("[qp_socket_t] Socket setup fail.");
         qp_socket_destroy(skt);
         return NULL;
     }
@@ -180,7 +179,6 @@ qp_socket_init(qp_socket_t* skt, qp_int_t domain, qp_int_t type,
     }break;
 
     default: {
-        QP_LOGOUT_ERROR("[qp_socket_t] Socket not support.");
     }break;
     }
     
@@ -195,7 +193,7 @@ qp_socket_init(qp_socket_t* skt, qp_int_t domain, qp_int_t type,
 qp_int_t
 qp_socket_destroy(qp_socket_t* skt)
 {
-    if (!skt && qp_fd_is_inited(&skt->socket)) {
+    if (skt && qp_fd_is_inited(&skt->socket)) {
         qp_socket_close(skt, QP_SOCKET_SHUT_CLOSE);
         qp_fd_destroy(&skt->socket);
         skt->domain = QP_SOCKET_DOMAIN_UNSUPPORT;
@@ -233,8 +231,6 @@ qp_socket_assign_inet(qp_socket_t* skt, const qp_char_t* name, qp_ushort_t port)
             skt->socket.errono = errno;
                 
             if (1 != skt->socket.retsno) {
-//                qp_socket_destroy(skt);
-                QP_LOGOUT_ERROR("[qp_socket_t] Ip switch fail.");
                 return NULL;
             }
         }
@@ -245,12 +241,10 @@ qp_socket_assign_inet(qp_socket_t* skt, const qp_char_t* name, qp_ushort_t port)
         /* no listen */
     } else {
         skt->socket.retsno = inet_pton(skt->domain, \
-                name,&skt->socket_addr.inet_addr.sin_addr);
+            name,&skt->socket_addr.inet_addr.sin_addr);
         skt->socket.errono = errno;
             
         if (1 != skt->socket.retsno) {
-//            qp_socket_destroy(skt);
-            QP_LOGOUT_ERROR("[qp_socket_t] Ip switch fail.");
             return NULL;
         }
 
@@ -300,35 +294,28 @@ qp_socket_assign_unix(qp_socket_t* skt, const qp_char_t* name)
         /* client descriptor */
         sprintf(saddr.sun_path, "%s%05ld", QP_SOCKET_DEFAULT_UNET_PATH,\
             (long)pthread_self());
-        len = offsetof(struct sockaddr_un, sun_path) \
-            + strlen(saddr.sun_path);
+        len = offsetof(struct sockaddr_un, sun_path) + strlen(saddr.sun_path);
 
         /* delete exit file */
         unlink(saddr.sun_path);
 
         /* bind scoket */
-        skt->socket.retsno = bind(skt->socket.fd, \
-            (struct sockaddr *)&saddr, len);
+        skt->socket.retsno = bind(skt->socket.fd, (struct sockaddr*)&saddr, len);
         skt->socket.errono = errno;
             
         if (QP_SUCCESS != skt->socket.retsno) {
-//            qp_socket_destroy(skt);
-            QP_LOGOUT_ERROR("[qp_socket_t] Unix socket bind error.");
             return NULL;
         }
 
         /* owner only */
         if (QP_SUCCESS != chmod(saddr.sun_path, S_IRWXU)) {
             unlink(saddr.sun_path);
-//            qp_socket_destroy(skt);
-            QP_LOGOUT_ERROR("[qp_socket_t] Unix socket priv set fail.");
             return NULL;
         }
 
         /* set server descriptor */
         strcpy(skt->socket_addr.unet_addr.sun_path, name);
-        skt->socket_len = offsetof(struct sockaddr_un, sun_path) \
-            + strlen(name);
+        skt->socket_len = offsetof(struct sockaddr_un, sun_path) + strlen(name);
     }
 
     return skt;
@@ -341,13 +328,14 @@ qp_socket_assign_packet(qp_socket_t* skt)
         return NULL;
     }
     
+    /* NOT SUPPORTED */
     return NULL;
 }
 
 qp_int_t
 qp_socket_close(qp_socket_t* skt, qp_socket_shut_t shut)
 {
-    if (qp_fd_is_valid(&skt->socket)) {
+    if (skt && qp_fd_is_valid(&skt->socket)) {
         
         /* close socket at once */
         if (shut != QP_SOCKET_SHUT_CLOSE) {
@@ -372,7 +360,6 @@ qp_socket_listen(qp_socket_t* skt, qp_int_t mod)
     skt->socket.errono = errno;
     
     if (QP_SUCCESS != skt->socket.retsno) {
-        QP_LOGOUT_ERROR("[qp_socket_t] Socket bind fail.");
         return QP_ERROR;
     }
 
@@ -380,7 +367,6 @@ qp_socket_listen(qp_socket_t* skt, qp_int_t mod)
     skt->socket.errono = errno;
     
     if (QP_SUCCESS != skt->socket.retsno) {
-        QP_LOGOUT_ERROR("[qp_socket_t] Socket listen fail.");
         return QP_ERROR;
     }
     
@@ -395,10 +381,9 @@ qp_socket_listen(qp_socket_t* skt, qp_int_t mod)
 qp_socket_t*
 qp_socket_accept(qp_socket_t* skt, qp_socket_t* sktClient)
 {
-    if (qp_socket_is_listen(skt)) {
+    if (qp_socket_is_listen(skt) && qp_fd_is_valid(&skt->socket)) {
         
         if (NULL == (sktClient = qp_socket_create(sktClient))) {
-            QP_LOGOUT_ERROR("[qp_socket_t] Client create fail.");
             return NULL;
         }
 
@@ -438,7 +423,7 @@ qp_socket_accept(qp_socket_t* skt, qp_socket_t* sktClient)
 qp_int_t
 qp_socket_connect(qp_socket_t* skt)
 {
-    if (qp_socket_is_listen(skt)) {
+    if (qp_socket_is_listen(skt) || !qp_fd_is_valid(&skt->socket)) {
         return QP_ERROR;
     }
 
