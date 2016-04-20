@@ -71,7 +71,6 @@ qp_fd_create(qp_fd_t* fd)
         fd = (qp_fd_t*)qp_alloc(sizeof(qp_fd_t));
         
         if (NULL == fd) {
-            QP_LOGOUT_ERROR("[qp_io_t] FD create fail.");
             return NULL;
         }
 
@@ -190,10 +189,6 @@ qp_fd_setBlock(qp_fd_t *fd)
 
     return fd->retsno;
 }
-
-/**
-  * Use carefully!
-*/
 
 qp_int_t
 qp_fd_close(qp_fd_t* fd)
