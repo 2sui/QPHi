@@ -437,7 +437,7 @@ qp_int_t
 qp_socket_setsockopt(qp_socket_t* skt, qp_int_t level, qp_int_t optname, \
     const void* optval, socklen_t optlen)
 {
-    if (!qp_fd_is_valid(&skt->socket)) {
+    if (!skt || !qp_fd_is_valid(&skt->socket)) {
         return QP_ERROR;
     }
     

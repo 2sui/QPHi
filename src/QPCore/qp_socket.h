@@ -80,78 +80,141 @@ qp_socket_is_alloced(qp_socket_t* skt);
 inline bool
 qp_socket_is_listen(qp_socket_t* skt);
 
-/*
+
+/**
  * Create a socket. 
- * If skt is NULL, it will allocate one for it and free the memory when call 
+ * If skt is NULL, it will allocate one for it and free the memory when calling 
  * qp_socket_destroy, and domain accept AF_UNIX, AF_INET... ,and type
  * accept SOCK_STREAM, SOCK_DGRAM... ,name is the addr string if using AF_INET 
  * or AF_INET6 or sock path using AF_UNIX.
- * If success return address of skt, otherwise return NULL.
+ * 
+ * @param skt: qp_socket_t struct or NULL.
+ * @param domain: AF_INET, AF_INET6(Not support for now), AF_UNIX...
+ * @param type: SOCK_STREAM, SOCK_DGRAM...
+ * @param name: IP string for IP and IPv6 or path for unix socket.
+ * @param port: Socket port for IP and IPv6 socket.
+ * @param as_server: Run as socket server.
+ * @param server_backlog: Backlog of socket server.
+ * @return If success return pointer of skt, otherwise return NULL.
  */
 qp_socket_t*
 qp_socket_init(qp_socket_t* skt, qp_int_t domain, qp_int_t type, 
     const qp_char_t* name, qp_ushort_t port, bool as_server, qp_int_t server_backlog);
 
-/*
+/**
  * Destroy a socket.
+ * 
+ * @param skt: Valid qp_socket_t.s
+ * @return  Return QP_SUCCESS if success, otherwise return QP_ERROR.
  */
 qp_int_t
 qp_socket_destroy(qp_socket_t* skt);
 
-/*
+/**
  * Clsoe an opened socket.
-*/
+ * 
+ * @param skt: Valid qp_socket_t.
+ * @param shut: SHUT_RW, SHUT_WR, SUHT_RDWR.
+ * @return Return QP_SUCCESS if success, otherwise return QP_ERROR.
+ */
 qp_int_t
 qp_socket_close(qp_socket_t* skt, qp_socket_shut_t shut);
 
 /*
- * Listen from created socket.
- * [mod] is only work for unix socket for set the privilege of 
- * listening socket.
- * Return QP_SUCCESS if success otherwise return QP_ERROR.
+ * 
+ * 
 */
+/**
+ * Listen from created socket. [mod] is only work for unix socket for set the 
+ * privilege of listening socket.
+ * 
+ * @param skt: Valid qp_socket_t.
+ * @param mod: S_IRUSR,S_IWUSR,S_IXUSR...
+ * @return Return QP_SUCCESS if success otherwise return QP_ERROR.
+ */
 qp_int_t
 qp_socket_listen(qp_socket_t* skt, qp_int_t mod);
 
-/*
+/**
  * Accept client sockets. If sktClient is NULL it will allocate one
  * and you have to destroy it by call qp_socket_destroy.
- * If success return addr of sktClient, otherwise return NULL.
-*/
+ * 
+ * @param skt: Valid qp_socket_t.
+ * @param sktClient: Client qp_socket_t struct.If it is NULL the client socket 
+ *     struct will be created by this method.
+ * @return If success return addr of sktClient, otherwise return NULL.
+ */
 qp_socket_t*
 qp_socket_accept(qp_socket_t* skt, qp_socket_t* sktClient);
 
-/*
- * Connect to host
-*/
+/**
+ * Connect to host.
+ * 
+ * @param skt: Valid qp_socket_t.
+ * @return Return QP_SUCCESS if success, otherwise return QP_ERROR.
+ */
 qp_int_t
 qp_socket_connect(qp_socket_t* skt);
 
 /**
  * Set socket opt just like setsockopt.
+ * 
+ * @param skt: Valid qp_socket_t.
+ * @param level: Same with setsockopt().
+ * @param optname: Same with setsockopt().
+ * @param optval: Same with setsockopt().
+ * @param optlen: Same with setsockopt().
+ * @return Return QP_SUCCESS if success otherwise reutrn QP_ERROR.
  */
 qp_int_t
 qp_socket_setsockopt(qp_socket_t* skt, qp_int_t level, qp_int_t optname, \
     const void* optval, socklen_t optlen);
 
-/*
- * Send n bytes to socket.It will not break by signal.If success return value 
- * is equal to nbytes, otherwise return the size that LESS than be nbytes.
+/**
+ * Send n bytes to socket.It will not break by signal.
+ * 
+ * @param skt: Valid qp_socket_t.
+ * @param vptr: Send buffer.
+ * @param nbytes: Send data size.
+ * @return If success return value is equal to nbytes, otherwise return the size 
+ *     that LESS than be nbytes.
  */
 size_t
 qp_socket_sendn(qp_socket_t* skt, const void* vptr, size_t nbytes);
 
-/*
- * Recv n bytes from socket.If success return value is equal to nbytes,
- * otherwise return the size that less than nbytes.(do not support TCP_QUICKACK)
-*/
+/**
+ * Recv n bytes from socket.
+ * 
+ * @param skt: Valid qp_socket_t.
+ * @param vptr: Recv buffer.
+ * @param nbytes: Recv data size.
+ * @return If success return value is equal to nbytes, otherwise return the size 
+ *     that less than nbytes.(do not support TCP_QUICKACK).
+ */
 size_t
 qp_socket_recvn(qp_socket_t* skt, void* vptr, size_t nbytes);
 
-
+/**
+ * Just like sendv().
+ * 
+ * @param skt: Valid qp_socket_t.
+ * @param iov: struct iovec pointer.
+ * @param iovcnt: Size of struct iovec.
+ * @return Return send data size.If some error happen return QP_ERROR, and 
+ *     return 0 means peer closed.
+ */
 ssize_t
 qp_socket_sendv(qp_socket_t* skt, const struct iovec* iov, qp_int_t iovcnt);
 
+/**
+ * Just like recvv().
+ * 
+ * @param skt: Valid qp_socket_t.
+ * @param iov: struct iovec pointer.
+ * @param iovcnt: Size of struct iovec.
+ * @return Return recv data size.If some error happen return QP_ERROR, and 
+ *     return 0 means peer closed.
+ */
 ssize_t
 qp_socket_recvv(qp_socket_t* skt, const struct iovec* iov, qp_int_t iovcnt);
 
