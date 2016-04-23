@@ -82,17 +82,20 @@ qp_file_is_directIO(qp_file_t* file);
  * as usual; if mod is QP_FILE_DIRECTIO or QP_FILE_AIO(not support for now), 
  * bufsize mustf be set to spicific cache size.
  * 
- * @param file
- * @param mod
- * @param bufsize
+ * @param file: Your qp_file_t struct.
+ * @param mod: QP_FILE_NORMAL,QP_FILE_DIRECTIO...
+ * @param bufsize: Read/write buf size if you use QP_FILE_DIRECTIO.
  * @return Return qp_file_t pointer if success, otherwise return NULL.
  */
 qp_file_t*
 qp_file_init(qp_file_t* file, qp_int_t mod, size_t bufsize);
 
-/*
+/**
  * Destory an inited file(which is called by qp_file_init or qp_file_create).
-*/
+ * 
+ * @param file
+ * @return 
+ */
 qp_int_t
 qp_file_destroy(qp_file_t* file);
 
@@ -102,12 +105,25 @@ qp_file_destroy(qp_file_t* file);
  * The oflag and mod are just same with open().
 */
 qp_int_t
+/**
+ * 
+ * @param file
+ * @param path
+ * @param oflag
+ * @param mod
+ * @return 
+ */
 qp_file_open(qp_file_t* file, const qp_char_t* path, qp_int_t oflag, qp_int_t mod);
 
 /*
  * Close a opened file.
 */
 qp_int_t
+/**
+ * 
+ * @param file
+ * @return 
+ */
 qp_file_close(qp_file_t* file);
 
 /**
@@ -115,12 +131,23 @@ qp_file_close(qp_file_t* file);
  * Return number of rest data in buffer, and return QP_ERROR if some error happen.
  */
 ssize_t
+/**
+ * 
+ * @param file
+ * @param full
+ * @return 
+ */
 qp_file_flush(qp_file_t* file, bool full);
 
 /**
  * Get data from disk to buffer.
  */
 ssize_t
+/**
+ * 
+ * @param file
+ * @return 
+ */
 qp_file_track(qp_file_t* file);
 
 /**
@@ -128,6 +155,12 @@ qp_file_track(qp_file_t* file);
  * pointor to buf and return buf size. You should use it as your data buffer.
  */
 size_t
+/**
+ * 
+ * @param file
+ * @param buf
+ * @return 
+ */
 qp_file_get_writebuf(qp_file_t* file, qp_uchar_t** buf);
 
 /**
@@ -135,6 +168,12 @@ qp_file_get_writebuf(qp_file_t* file, qp_uchar_t** buf);
  * pointor to buf and return buf size.
  */
 size_t
+/**
+ * 
+ * @param file
+ * @param buf
+ * @return 
+ */
 qp_file_get_readbuf(qp_file_t* file, qp_uchar_t** buf);
 
 /*
@@ -143,6 +182,14 @@ qp_file_get_readbuf(qp_file_t* file, qp_uchar_t** buf);
  * in those scene and you can pass vptr as NULL.
 */
 ssize_t
+/**
+ * 
+ * @param file
+ * @param data
+ * @param len
+ * @param file_offset
+ * @return 
+ */
 qp_file_write(qp_file_t* file, const void* data, size_t len, size_t file_offset);
 
 /*
@@ -153,6 +200,14 @@ qp_file_write(qp_file_t* file, const void* data, size_t len, size_t file_offset)
  *  ** for now,  buffer cache read is not enabled, so it is read directly from file **
 */
 ssize_t
+/**
+ * 
+ * @param file
+ * @param data
+ * @param len
+ * @param file_offset
+ * @return 
+ */
 qp_file_read(qp_file_t* file, void* data, size_t len, size_t file_offset);
 
 /**
@@ -162,6 +217,12 @@ qp_file_read(qp_file_t* file, void* data, size_t len, size_t file_offset);
  * @return 
  */
 ssize_t
+/**
+ * 
+ * @param file
+ * @param len
+ * @return 
+ */
 qp_file_direct_write(qp_file_t* file, size_t len);
 
 /**
@@ -171,6 +232,12 @@ qp_file_direct_write(qp_file_t* file, size_t len);
  * @return 
  */
 ssize_t
+/**
+ * 
+ * @param file
+ * @param len
+ * @return 
+ */
 qp_file_direct_read(qp_file_t* file, size_t len);
 
 /*
@@ -179,6 +246,15 @@ qp_file_direct_read(qp_file_t* file, size_t len);
  * otherwise return QP_ERROR.
 */
 qp_int_t
+/**
+ * 
+ * @param file
+ * @param type
+ * @param offset
+ * @param whence
+ * @param len
+ * @return 
+ */
 qp_file_reglock(qp_file_t *file, qp_int_t type, off_t offset, qp_int_t whence, \
     off_t len);
 
@@ -187,57 +263,164 @@ qp_file_reglock(qp_file_t *file, qp_int_t type, off_t offset, qp_int_t whence, \
  * return QP_FILE_IS_LOCKED, otherwise return QP_FILE_IS_UNLOCKED.
 */
 qp_int_t
+/**
+ * 
+ * @param file
+ * @param type
+ * @param offset
+ * @param whence
+ * @param len
+ * @return 
+ */
 qp_file_locktest(qp_file_t* file, qp_int_t type, off_t offset, qp_int_t whence, \
     off_t len);
 
 /* read lock */
 qp_int_t
+/**
+ * 
+ * @param file
+ * @param offset
+ * @param whence
+ * @param len
+ * @return 
+ */
 qp_file_rdlock(qp_file_t* file, off_t offset, qp_int_t whence, off_t len);
 
 /* write lock */
 qp_int_t
+/**
+ * 
+ * @param file
+ * @param offset
+ * @param whence
+ * @param len
+ * @return 
+ */
 qp_file_wrlock(qp_file_t* file, off_t offset, qp_int_t whence, off_t len);
 
 /* unlock */
 qp_int_t
+/**
+ * 
+ * @param file
+ * @param offset
+ * @param whence
+ * @param len
+ * @return 
+ */
 qp_file_unlock(qp_file_t* file, off_t offset, qp_int_t whence, off_t len);
 
 /* test read lock */
 bool
+/**
+ * 
+ * @param file
+ * @param offset
+ * @param whence
+ * @param len
+ * @return 
+ */
 qp_file_test_rdlock(qp_file_t* file, off_t offset, qp_int_t whence, off_t len);
 
 /* test write lock */
 bool
+/**
+ * 
+ * @param file
+ * @param offset
+ * @param whence
+ * @param len
+ * @return 
+ */
 qp_file_test_wrlock(qp_file_t* file, off_t offset, qp_int_t whence, off_t len);
 
 /* same with qp_file_reglock but use [int] fd */
 qp_int_t
+/**
+ * 
+ * @param fd
+ * @param type
+ * @param offset
+ * @param whence
+ * @param len
+ * @return 
+ */
 qp_file_fd_reglock(qp_int_t fd, qp_int_t type, off_t offset, qp_int_t whence, \
     off_t len);
 
 /* same with qp_file_locktest but use [int] fd */
 qp_int_t
+/**
+ * 
+ * @param fd
+ * @param type
+ * @param offset
+ * @param whence
+ * @param len
+ * @return 
+ */
 qp_file_fd_locktest(qp_int_t fd, qp_int_t type, off_t offset, qp_int_t whence, \
     off_t len);
         
 /* read lock */
 qp_int_t
+/**
+ * 
+ * @param fd
+ * @param offset
+ * @param whence
+ * @param len
+ * @return 
+ */
 qp_file_fd_rdlock(qp_int_t fd, off_t offset, qp_int_t whence, off_t len);
 
 /* write lock */
 qp_int_t
+/**
+ * 
+ * @param fd
+ * @param offset
+ * @param whence
+ * @param len
+ * @return 
+ */
 qp_file_fd_wrlock(qp_int_t fd, off_t offset, qp_int_t whence, off_t len);
 
 /* unlock */
 qp_int_t
+/**
+ * 
+ * @param fd
+ * @param offset
+ * @param whence
+ * @param len
+ * @return 
+ */
 qp_file_fd_unlock(qp_int_t fd, off_t offset, qp_int_t whence, off_t len);
 
 /* test read lock */
 bool
+/**
+ * 
+ * @param fd
+ * @param offset
+ * @param whence
+ * @param len
+ * @return 
+ */
 qp_file_fd_test_rdlock(qp_int_t fd, off_t offset, qp_int_t whence, off_t len);
 
 /* test write lock */
 bool
+/**
+ * 
+ * @param fd
+ * @param offset
+ * @param whence
+ * @param len
+ * @return 
+ */
 qp_file_fd_test_wrlock(qp_int_t fd, off_t offset, qp_int_t whence, off_t len);
 
 #ifdef __cplusplus
