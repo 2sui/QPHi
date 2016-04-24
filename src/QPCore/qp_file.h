@@ -93,121 +93,102 @@ qp_file_init(qp_file_t* file, qp_int_t mod, size_t bufsize);
 /**
  * Destory an inited file(which is called by qp_file_init or qp_file_create).
  * 
- * @param file
- * @return 
+ * @param file: Valid qp_file_t.
+ * @return Return QP_SUCCESS if success otherwise return QP_ERROR.
  */
 qp_int_t
 qp_file_destroy(qp_file_t* file);
 
-/*
- * Open a file .
- * If success return QP_SUCCESS, otherwise return QP_ERROR.
- * The oflag and mod are just same with open().
-*/
-qp_int_t
 /**
+ * Open a file . The oflag and mod are just same with open().
  * 
- * @param file
- * @param path
- * @param oflag
- * @param mod
- * @return 
+ * @param file: Valid qp_file_t.
+ * @param path: File path.
+ * @param oflag: Open flag.(O_WRONLY,O_RDONLY,O_RDWR,O_CREAT...)
+ * @param mod: S_IRUSR,S_IWUSR,S_IXUSR...
+ * @return Return QP_SUCCESS if success, otherwise return QP_ERROR.
  */
+qp_int_t
 qp_file_open(qp_file_t* file, const qp_char_t* path, qp_int_t oflag, qp_int_t mod);
 
-/*
- * Close a opened file.
-*/
-qp_int_t
 /**
+ * Close a opened file.
  * 
- * @param file
- * @return 
+ * @param file: Valid qp_file_t.
+ * @return Return QP_SUCCESS if success otherwise return QP_ERROR.
  */
+qp_int_t
 qp_file_close(qp_file_t* file);
 
 /**
  * Flush data in buffer to disk.
- * Return number of rest data in buffer, and return QP_ERROR if some error happen.
+ * 
+ * @param file: Valid qp_file_t.
+ * @param full: Flush all data in buffer to disk.
+ * @return Return number of rest data in buffer, and return QP_ERROR if some 
+ *     error happen.
  */
 ssize_t
-/**
- * 
- * @param file
- * @param full
- * @return 
- */
 qp_file_flush(qp_file_t* file, bool full);
 
 /**
  * Get data from disk to buffer.
+ * 
+ * @param file: Valid qp_file_t.
+ * @return Return number of data read to buffer, and return QP_ERROR if some 
+ *     error happen.
  */
 ssize_t
-/**
- * 
- * @param file
- * @return 
- */
 qp_file_track(qp_file_t* file);
 
 /**
  * If direct IO enabled, qp_file_write_directbuf will get write_direct buffer 
  * pointor to buf and return buf size. You should use it as your data buffer.
+ * 
+ * @param file: Valid qp_file_t.
+ * @param buf: Pointer that will be set with write buffer address.
+ * @return Write buffer size.
  */
 size_t
-/**
- * 
- * @param file
- * @param buf
- * @return 
- */
 qp_file_get_writebuf(qp_file_t* file, qp_uchar_t** buf);
 
 /**
  * If direct IO enabled, qp_file_read_directbuf will get write_direct buffer 
  * pointor to buf and return buf size.
+ * 
+ * @param file: Valid qp_file_t.
+ * @param buf: Pointer that will be set with read buffer address.
+ * @return  Read buffer size.
  */
 size_t
-/**
- * 
- * @param file
- * @param buf
- * @return 
- */
 qp_file_get_readbuf(qp_file_t* file, qp_uchar_t** buf);
 
-/*
- * Write  to file.If directIO or aio is enabled , you should use 
+/**
+ * Write to file. If directIO or aio is enabled , you should use 
  * qp_file_get_wrbuf to get the inner write buffer, beacuse vptr will be ignored
  * in those scene and you can pass vptr as NULL.
-*/
-ssize_t
-/**
  * 
- * @param file
- * @param data
- * @param len
- * @param file_offset
- * @return 
+ * @param file: Valid qp_file_t.
+ * @param data: Write buffer.
+ * @param len: Write size.
+ * @param file_offset: File offset (for AIO)
+ * @return Reutrn write size or QP_ERROR if some error happen.
  */
+ssize_t
 qp_file_write(qp_file_t* file, const void* data, size_t len, size_t file_offset);
 
-/*
+/**
  * Read from file.If directIO or aio is enabled , you should use 
  * qp_file_get_rdbuf to get the inner write buffer, beacuse vptr will be ignored
  * in those scene and you can pass vptr as NULL.
  * 
- *  ** for now,  buffer cache read is not enabled, so it is read directly from file **
-*/
-ssize_t
-/**
- * 
- * @param file
- * @param data
- * @param len
- * @param file_offset
- * @return 
+ * @param file: Valid qp_file_t.
+ * @param data: Read buffer.
+ * @param len: Max read len.
+ * @param file_offset: File offet (only for AIO)
+ * @return Return QP_SUCCESS if success otherwise return QP_ERROR.
  */
+ssize_t
 qp_file_read(qp_file_t* file, void* data, size_t len, size_t file_offset);
 
 /**
@@ -216,13 +197,13 @@ qp_file_read(qp_file_t* file, void* data, size_t len, size_t file_offset);
  * @param len
  * @return 
  */
-ssize_t
 /**
  * 
  * @param file
  * @param len
  * @return 
  */
+ssize_t
 qp_file_direct_write(qp_file_t* file, size_t len);
 
 /**
