@@ -192,216 +192,113 @@ ssize_t
 qp_file_read(qp_file_t* file, void* data, size_t len, size_t file_offset);
 
 /**
+ * Direct Write to disk (Use qp_file_t`s buffer, which is got by calling 
+ *     qp_file_get_writebuf()).
  * 
- * @param file
- * @param len
- * @return 
- */
-/**
- * 
- * @param file
- * @param len
- * @return 
+ * @param file: Valid qp_file_t.
+ * @param len: Data length to write.
+ * @return Return size of written buffer, and QP_ERROR if some error happen.
  */
 ssize_t
 qp_file_direct_write(qp_file_t* file, size_t len);
 
 /**
+ * Direct Read to disk (Use qp_file_t`s buffer, which is got by calling 
+ *     qp_file_get_readebuf()).
  * 
- * @param file
- * @param len
- * @return 
+ * @param file: Valid qp_file_t.
+ * @param len: Data length to read.
+ * @return Return size of read buffer, and QP_ERROR if some error happen.
  */
 ssize_t
-/**
- * 
- * @param file
- * @param len
- * @return 
- */
 qp_file_direct_read(qp_file_t* file, size_t len);
 
-/*
- * Regist file lock on file with type (read or write).Lock the part from 
- * whence + offset with len bytes. If success return QP_SUCCESS, 
- * otherwise return QP_ERROR.
-*/
-qp_int_t
 /**
+ * Regist file lock on file with type (read or write).Lock the part from 
+ * whence + offset with len bytes. 
  * 
- * @param file
- * @param type
- * @param offset
- * @param whence
- * @param len
- * @return 
+ * @return If success return QP_SUCCESS, otherwise return QP_ERROR.
  */
+qp_int_t
 qp_file_reglock(qp_file_t *file, qp_int_t type, off_t offset, qp_int_t whence, \
     off_t len);
 
-/*
- * Test file lock. If some error happend return QP_ERROR, and if file is locked, 
- * return QP_FILE_IS_LOCKED, otherwise return QP_FILE_IS_UNLOCKED.
-*/
-qp_int_t
 /**
+ * Test file lock. 
  * 
- * @param file
- * @param type
- * @param offset
- * @param whence
- * @param len
- * @return 
+ * @return If some error happend return QP_ERROR, and if file is locked, return 
+ *     QP_FILE_IS_LOCKED, otherwise return QP_FILE_IS_UNLOCKED.
  */
+qp_int_t
 qp_file_locktest(qp_file_t* file, qp_int_t type, off_t offset, qp_int_t whence, \
     off_t len);
 
-/* read lock */
-qp_int_t
 /**
+ * read lock 
  * 
- * @param file
- * @param offset
- * @param whence
- * @param len
- * @return 
+ * @return Return QP_SUCCESS if success , otherwise return QP_ERROR.
  */
+qp_int_t
 qp_file_rdlock(qp_file_t* file, off_t offset, qp_int_t whence, off_t len);
 
-/* write lock */
-qp_int_t
 /**
+ *  write lock 
  * 
- * @param file
- * @param offset
- * @param whence
- * @param len
- * @return 
+ * @return Return QP_SUCCESS if success , otherwise return QP_ERROR.
  */
+qp_int_t
 qp_file_wrlock(qp_file_t* file, off_t offset, qp_int_t whence, off_t len);
 
-/* unlock */
-qp_int_t
-/**
+/** 
+ * unlock 
  * 
- * @param file
- * @param offset
- * @param whence
- * @param len
- * @return 
+ * @return Return QP_SUCCESS if success , otherwise return QP_ERROR.
  */
+qp_int_t
 qp_file_unlock(qp_file_t* file, off_t offset, qp_int_t whence, off_t len);
 
-/* test read lock */
-bool
 /**
- * 
- * @param file
- * @param offset
- * @param whence
- * @param len
- * @return 
+ *  test read lock 
+ * @return If file is locked return false, otherwise return true.
  */
+bool
 qp_file_test_rdlock(qp_file_t* file, off_t offset, qp_int_t whence, off_t len);
 
-/* test write lock */
-bool
-/**
+/** 
+ * test write lock
  * 
- * @param file
- * @param offset
- * @param whence
- * @param len
- * @return 
+ * @return If file is locked return false, otherwise return true. 
  */
+bool
 qp_file_test_wrlock(qp_file_t* file, off_t offset, qp_int_t whence, off_t len);
 
-/* same with qp_file_reglock but use [int] fd */
 qp_int_t
-/**
- * 
- * @param fd
- * @param type
- * @param offset
- * @param whence
- * @param len
- * @return 
- */
 qp_file_fd_reglock(qp_int_t fd, qp_int_t type, off_t offset, qp_int_t whence, \
     off_t len);
 
 /* same with qp_file_locktest but use [int] fd */
 qp_int_t
-/**
- * 
- * @param fd
- * @param type
- * @param offset
- * @param whence
- * @param len
- * @return 
- */
 qp_file_fd_locktest(qp_int_t fd, qp_int_t type, off_t offset, qp_int_t whence, \
     off_t len);
         
 /* read lock */
 qp_int_t
-/**
- * 
- * @param fd
- * @param offset
- * @param whence
- * @param len
- * @return 
- */
 qp_file_fd_rdlock(qp_int_t fd, off_t offset, qp_int_t whence, off_t len);
 
 /* write lock */
 qp_int_t
-/**
- * 
- * @param fd
- * @param offset
- * @param whence
- * @param len
- * @return 
- */
 qp_file_fd_wrlock(qp_int_t fd, off_t offset, qp_int_t whence, off_t len);
 
 /* unlock */
 qp_int_t
-/**
- * 
- * @param fd
- * @param offset
- * @param whence
- * @param len
- * @return 
- */
 qp_file_fd_unlock(qp_int_t fd, off_t offset, qp_int_t whence, off_t len);
 
 /* test read lock */
 bool
-/**
- * 
- * @param fd
- * @param offset
- * @param whence
- * @param len
- * @return 
- */
 qp_file_fd_test_rdlock(qp_int_t fd, off_t offset, qp_int_t whence, off_t len);
 
 /* test write lock */
 bool
-/**
- * 
- * @param fd
- * @param offset
- * @param whence
- * @param len
- * @return 
- */
 qp_file_fd_test_wrlock(qp_int_t fd, off_t offset, qp_int_t whence, off_t len);
 
 #ifdef __cplusplus
