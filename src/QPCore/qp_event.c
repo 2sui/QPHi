@@ -275,7 +275,6 @@ qp_event_tiktok(qp_event_t *emodule, qp_int_t timeout)
             }
         }
          
-        
         eevent_num = qp_epoll_wait(emodule, event_queue, emodule->event_size,\
             emodule->timer_resolution);
 
@@ -301,12 +300,12 @@ qp_event_tiktok(qp_event_t *emodule, qp_int_t timeout)
             continue;
         }
         
-        
+        /* update timer if no timeout in epoll */
         if ((emodule->timer_resolution * 8) <= emodule->timer_progress) {
             emodule->timer_update = true;
         }
          
-        
+        /* add event */
         for (itr = 0; itr < eevent_num; itr++) { 
             eevent = (qp_event_fd_t*)(event_queue[itr].data.ptr);
             eevent->eflag = event_queue[itr].events;
