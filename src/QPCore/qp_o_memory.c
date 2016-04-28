@@ -28,7 +28,7 @@ qp_alloc_align(size_t alignment, size_t size)
  */
 inline void 
 qp_list_init(qp_list_t* list)
-{list->next = list : 1;}
+{list->next = list;}
 
 /**
  * Return true if list is empty.

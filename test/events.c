@@ -11,7 +11,8 @@
 #define  HTTP_RSP  \
 "HTTP/1.1 OK 200\r\n"\
 "Server: qp_test\r\n"\
-"connection: close"
+"connection: close\r\n\r\n"\
+"12345678901234567890123456789012"
 
 
 static qp_pool_manager_t    manager;
@@ -81,7 +82,7 @@ main()
     }
     
     
-    if (!qp_socket_init(&skt, AF_INET, SOCK_STREAM, "0.0.0.0", 8080, true) 
+    if (!qp_socket_init(&skt, AF_INET, SOCK_STREAM, "0.0.0.0", 8080, true, 128) 
         || !qp_event_init(&emodule, 1024, 500,  
         init_handler, destroy_handler, true, true, NULL, NULL)) 
     {

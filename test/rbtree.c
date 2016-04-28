@@ -14,11 +14,11 @@ looping(qp_rbtree_t* rbtree, qp_rbtree_node_t* root)
     }
     
     if (root == rbtree->root) {
-        fprintf(stderr, "\nRoot is %d with %s.", root->key, 
+        fprintf(stderr, "\nRoot is %lu with %s.", root->key, 
         qp_rbtree_is_red(root) ? "red" : "black");
         
     } else {
-        fprintf(stderr, "\n%d is %d`s %s child , with %s.", root->key, 
+        fprintf(stderr, "\n%lu is %lu`s %s child , with %s.", root->key, 
         root->parent->key, qp_rbtree_is_left(root) ? "left" : "right",
         qp_rbtree_is_red(root) ? "red" : "black");
         
@@ -52,10 +52,10 @@ main(int argc, char** argv)
     fprintf(stderr, "\n#### Inserting ####");
     for (i = 0; i < 20; i++) {
         qp_rbtree_insert(&rbtree, &node[i]);
-        fprintf(stderr, "\ninsert %d", node[i].key);
+        fprintf(stderr, "\ninsert %lu", node[i].key);
     }
     
-    fprintf(stderr, "\n Max is %d, Min is %d", qp_rbtree_max(&rbtree, NULL)->key,
+    fprintf(stderr, "\n Max is %lu, Min is %lu", qp_rbtree_max(&rbtree, NULL)->key,
         qp_rbtree_min(&rbtree, NULL)->key);
     looping(&rbtree, rbtree.root);
     

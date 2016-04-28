@@ -30,7 +30,7 @@ main(int argc, char** argv)
     }
     
     if (NULL == qp_socket_init(&skt, AF_INET, SOCK_STREAM, SERV_ADDR, SERV_PORT, 
-        is_server))
+        is_server, 128))
     {
         INFO("Socket init fail.");
         return QP_ERROR;
