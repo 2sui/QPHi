@@ -237,8 +237,8 @@ qp_int_t
 qp_event_addevent(qp_event_t* emodule, qp_int_t fd, qp_int_t timeout,
     bool listen,bool auto_close);
 
-inline void
-qp_event_disable(qp_event_t* emodule);
+//inline void
+//qp_event_disable(qp_event_t* emodule);
 
 #ifdef __cplusplus
 }
