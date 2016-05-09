@@ -103,7 +103,7 @@ main()
     }
     
     qp_event_tiktok(&emodule, 30000);
-    qp_event_disable(&emodule);
+//    qp_event_disable(&emodule);
     
     
     end:

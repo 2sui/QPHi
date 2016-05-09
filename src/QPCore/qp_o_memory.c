@@ -524,7 +524,7 @@ qp_rbtree_delete(qp_rbtree_t* rbtree, qp_rbtree_node_t* node)
     qp_rbtree_node_t* subst = NULL;
     qp_rbtree_node_t* tmp = NULL;
     
-    if (!node || !rbtree) {
+    if (!node || !rbtree || qp_rbtree_is_empty(rbtree)) {
         return NULL;
     }
     

@@ -269,6 +269,7 @@ qp_event_tiktok(qp_event_t *emodule, qp_int_t timeout)
                     break;
                 }
                 
+                QP_LOGOUT_LOG("event timeout (%d)", eevent->efd);
                 eevent = qp_rbtree_data(tnode, qp_event_fd_t, timer_node);
                 qp_event_close(eevent);
                 qp_event_removeevent(emodule, eevent);
@@ -285,6 +286,7 @@ qp_event_tiktok(qp_event_t *emodule, qp_int_t timeout)
                 
                 /* error quit */
                 if (EINTR != errno) {
+                    QP_LOGOUT_LOG("epoll timeout error, [%s]", strerror(errno));
                     break;
                 }
             }
@@ -302,6 +304,7 @@ qp_event_tiktok(qp_event_t *emodule, qp_int_t timeout)
         
         /* update timer if no timeout in epoll */
         if ((emodule->timer_resolution * 8) <= emodule->timer_progress) {
+            QP_LOGOUT_LOG("update timer");
             emodule->timer_update = true;
         }
          
@@ -336,6 +339,7 @@ qp_event_tiktok(qp_event_t *emodule, qp_int_t timeout)
                     {
                         qp_event_close(eevent);
                         qp_event_removeevent(emodule, eevent);
+                        QP_LOGOUT_LOG("accept event error, [%d]", eevent->efd);
                     }
                     
                     break;
@@ -345,6 +349,7 @@ qp_event_tiktok(qp_event_t *emodule, qp_int_t timeout)
                     qp_event_addevent(emodule, accept_fd, timeout, false, true))
                 {
                     close(accept_fd);
+                    QP_LOGOUT_LOG("event add fail, [%d]", accept_fd);
                 }
 
             } while (eevent->edge);
@@ -563,7 +568,7 @@ qp_event_addevent(qp_event_t* emodule, qp_int_t fd, qp_int_t timeout,
                 qp_pool_free(&emodule->event_pool, revent);
                 return QP_ERROR;
             }
-             
+            
         }
         
         return QP_SUCCESS;
@@ -595,7 +600,7 @@ qp_event_removeevent(qp_event_t* emodule, qp_event_fd_t* eventfd)
     if (!emodule || !eventfd) {
         return QP_ERROR;
     }
-    
+    QP_LOGOUT_LOG("Remove event %d", eventfd->efd);
     if (!eventfd->listen) {
         qp_rbtree_delete(&emodule->timer, &eventfd->timer_node);
     }
