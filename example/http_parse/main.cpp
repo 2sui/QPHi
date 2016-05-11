@@ -45,7 +45,7 @@ using namespace std;
 int main(int argc, char** argv) {
     
     /*******************************************************
-     * 27 - 43 行为demo创建监听套接字,用来接受网络连接.
+     * 50-72 行为demo创建监听套接字,用来接受网络连接.
      */
     int skt = socket(AF_INET, SOCK_STREAM, NULL);
     
@@ -75,9 +75,7 @@ int main(int argc, char** argv) {
     int client = -1;
     /* 创建接受缓冲, 长度为 4k */
     char  readbuf[4096];
-    /************************/
     /* 创建 http parser 对象 */
-    /************************/
     qp_http_parse  parser; 
     
     /* 接受连接 */
@@ -88,11 +86,9 @@ int main(int argc, char** argv) {
         /* 连续接收数据 */
         while (0 < (recv_size = read(client, readbuf, 4096))) {
             
-            /************************/
             /* 调用parse的request_parse方法解析收到的请求数据, 这里每接受一点数据就
              * 解析一点,直到接受完整的请求后,解析也就完了.
              */
-            /************************/
             switch (parser.request_parse(readbuf, recv_size)) {
                 
                 /* 如果 parser.request_parse 返回 QP_PARSER_SUCCESS 表示解析完成 */
