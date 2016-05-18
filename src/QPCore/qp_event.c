@@ -12,6 +12,9 @@
 #define QP_EVENT_UNSET_ALLOCED(event) (((qp_event_t*)(event))->is_alloced=false)
 
 
+//#define ENABLE_TIMER    
+
+
 #ifndef  QP_OS_LINUX
 qp_int_t
 epoll_create(int __size)
@@ -240,6 +243,10 @@ qp_event_tiktok(qp_event_t *emodule, qp_int_t timeout)
     qp_int_t          rflag = 0;
     qp_int_t          itr = 0;
     
+#ifndef ENABLE_TIMER
+    tnode = tnode;
+#endif
+    
     if (!emodule || !qp_fd_is_valid(&emodule->evfd)) {
         return QP_ERROR;
     }
@@ -257,7 +264,7 @@ qp_event_tiktok(qp_event_t *emodule, qp_int_t timeout)
     while (emodule->is_run && qp_pool_used(&emodule->event_pool)) {
         
         /* clean timeout node */
-        
+#ifdef ENABLE_TIMER
         if (emodule->timer_update) {
             qp_event_update_timer(emodule);
             emodule->timer_update = false;
@@ -275,6 +282,7 @@ qp_event_tiktok(qp_event_t *emodule, qp_int_t timeout)
                 qp_event_removeevent(emodule, eevent);
             }
         }
+#endif
          
         eevent_num = qp_epoll_wait(emodule, event_queue, emodule->event_size,\
             emodule->timer_resolution);
@@ -286,7 +294,6 @@ qp_event_tiktok(qp_event_t *emodule, qp_int_t timeout)
                 
                 /* error quit */
                 if (EINTR != errno) {
-                    QP_LOGOUT_LOG("epoll timeout error, [%s]", strerror(errno));
                     break;
                 }
             }
@@ -303,10 +310,12 @@ qp_event_tiktok(qp_event_t *emodule, qp_int_t timeout)
         }
         
         /* update timer if no timeout in epoll */
-        if ((emodule->timer_resolution * 8) <= emodule->timer_progress) {
+#ifdef ENABLE_TIMER
+        if ((emodule->timer_resolution) <= emodule->timer_progress) {
             QP_LOGOUT_LOG("update timer");
             emodule->timer_update = true;
         }
+#endif
          
         /* add event */
         for (itr = 0; itr < eevent_num; itr++) { 
@@ -349,7 +358,7 @@ qp_event_tiktok(qp_event_t *emodule, qp_int_t timeout)
                     qp_event_addevent(emodule, accept_fd, timeout, false, true))
                 {
                     close(accept_fd);
-                    QP_LOGOUT_LOG("event add fail, [%d]", accept_fd);
+                    QP_LOGOUT_LOG("new event add fail, [%d] closed", accept_fd);
                 }
 
             } while (eevent->edge);
@@ -557,18 +566,22 @@ qp_event_addevent(qp_event_t* emodule, qp_int_t fd, qp_int_t timeout,
             
         } else {
             revent->stat = QP_EVENT_NEW;
+#ifdef ENABLE_TIMER
             revent->timer_node.key = emodule->timer_begin + \
-                ((timeout > 0) ? timeout : QP_EVENT_TIMER_TIMEOUT) + \
-                (++emodule->timer_progress) / 8;
+                ((timeout > 0) ? timeout : QP_EVENT_TIMER_TIMEOUT) * 1000 + \
+                (++emodule->timer_progress);
             
             
             if (!qp_rbtree_insert(&emodule->timer, &revent->timer_node)) {
                 qp_event_del(emodule, revent);
                 qp_event_clear_flag(revent);
                 qp_pool_free(&emodule->event_pool, revent);
+                QP_LOGOUT_LOG("rbtree insert fail");
                 return QP_ERROR;
             }
-            
+#else
+            timeout = timeout;
+#endif
         }
         
         return QP_SUCCESS;
@@ -581,14 +594,17 @@ qp_int_t
 qp_event_timerevent(qp_event_t* emodule, qp_event_fd_t* eventfd, 
     qp_int_t timeout)
 {
+#ifdef ENABLE_TIMER
+    return QP_SUCCESS;
+#endif
     if (!emodule || !eventfd) {
         return QP_ERROR;
     }
     
     qp_rbtree_delete(&emodule->timer, &eventfd->timer_node);
     eventfd->timer_node.key = emodule->timer_begin + \
-        ((timeout > 0) ? timeout : QP_EVENT_TIMER_TIMEOUT) + \
-        (++emodule->timer_progress) / 8;
+        ((timeout > 0) ? timeout : QP_EVENT_TIMER_TIMEOUT) * 1000 + \
+        (++emodule->timer_progress);
     qp_rbtree_insert(&emodule->timer, &eventfd->timer_node);
      
     return QP_SUCCESS;
@@ -600,10 +616,11 @@ qp_event_removeevent(qp_event_t* emodule, qp_event_fd_t* eventfd)
     if (!emodule || !eventfd) {
         return QP_ERROR;
     }
-    QP_LOGOUT_LOG("Remove event %d", eventfd->efd);
+#ifdef ENABLE_TIMER
     if (!eventfd->listen) {
         qp_rbtree_delete(&emodule->timer, &eventfd->timer_node);
     }
+#endif
      
     qp_event_del(emodule, eventfd);
     qp_event_clear_flag(eventfd);
@@ -619,13 +636,16 @@ qp_event_disable(qp_event_t* emodule)
 qp_int_t
 qp_event_update_timer(qp_event_t* emodule)
 {
+#ifdef ENABLE_TIMER 
+    return QP_SUCCESS;
+#endif
     if (!emodule) {
         return QP_ERROR;
     }
     
     struct timeval etime;
     gettimeofday(&etime, NULL);
-    emodule->timer_begin = etime.tv_sec * 1000 + etime.tv_usec / 1000;
+    emodule->timer_begin = etime.tv_sec * 1000000 + etime.tv_usec;
     return QP_SUCCESS;
 }
 
