@@ -55,7 +55,6 @@ qp_socket_create(qp_socket_t* skt) {
         skt = (qp_socket_t*)qp_alloc(sizeof(qp_socket_t));
         
         if (NULL == skt) {
-            QP_LOGOUT_ERROR("[qp_socket_t] Socket create attr fail.");
             return NULL;
         }
 
@@ -73,7 +72,6 @@ qp_socket_create(qp_socket_t* skt) {
             qp_free(skt);
         }
 
-        QP_LOGOUT_ERROR("[qp_socket_t] Socket fd create fail.");
         return NULL;
     }
 

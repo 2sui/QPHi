@@ -63,7 +63,6 @@ qp_pool_create(qp_pool_t* pool)
         pool = (qp_pool_t*)qp_alloc(sizeof(qp_pool_t));
         
         if (NULL == pool) {
-            QP_LOGOUT_ERROR("[qp_pool_t]Pool create fail.")
             return NULL;
         }
         
@@ -100,7 +99,6 @@ qp_pool_init(qp_pool_t* pool, size_t elmsize, size_t count)
     
     if (NULL == pool->room) {   
         qp_pool_destroy(pool, true);
-        QP_LOGOUT_ERROR("[qp_pool_t]Pool element room create fail.");
         return NULL;
     }
     
@@ -121,7 +119,6 @@ qp_pool_destroy(qp_pool_t* pool, bool force)
         if (!force) {
             
             if (pool->nfree != pool->nsize) {
-                QP_LOGOUT_ERROR("[qp_pool_t]Pool still in used.");
                 return QP_ERROR;
             }
         }
@@ -153,7 +150,6 @@ qp_pool_alloc(qp_pool_t* pool, size_t size)
         node = qp_list_first(&pool->idle);
         
         if (!node) {
-            QP_LOGOUT_ERROR("[qp_pool_t]Pool used up.");
             return NULL;
         }
 
@@ -175,8 +171,6 @@ qp_pool_free(qp_pool_t* pool, void* ptr)
     if (qp_pool_is_inited(pool)) {
         
         if (elements->root != pool) {
-            QP_LOGOUT_ERROR("[qp_pool_t]Free ptr error: Need pool 0x%lx,"
-                "But call pool 0x%lx.", (unsigned long)(elements->root), 
                 (unsigned long)pool);
             return QP_ERROR;
         }
@@ -228,7 +222,6 @@ qp_pool_manager_create(qp_pool_manager_t* manager)
         manager = (qp_pool_manager_t*)qp_alloc(sizeof(qp_pool_manager_t));
         
         if (NULL == manager) {
-            QP_LOGOUT_ERROR("[qp_pool_manager_t]Manager create fail.");
             return NULL;
         }
         
@@ -278,9 +271,7 @@ qp_pool_manager_destroy(qp_pool_manager_t* manager, bool force)
             counter++;
 #endif 
         }
-        
-        QP_LOGOUT_LOG("[qp_pool_manager_t]Totle destroy %lu pools.", counter);
-        
+     
         return QP_SUCCESS;
     }
     
@@ -316,12 +307,10 @@ qp_pool_manager_alloc(qp_pool_manager_t* manager, size_t size, qp_pool_t** npool
             
             /* if no pool available, create one */
             if (NULL == manager->current) {
-                QP_LOGOUT_LOG("[qp_pool_manager_t]No new pool, realloc.");
                 manager->current = \
                     (qp_pool_manager_elm_t*)qp_alloc(sizeof(qp_pool_manager_elm_t));
                 
                 if (NULL == manager->current) {
-                    QP_LOGOUT_ERROR("[qp_pool_manager_t]Pool create fail.");
                     return NULL;
                 }
                 
@@ -330,7 +319,6 @@ qp_pool_manager_alloc(qp_pool_manager_t* manager, size_t size, qp_pool_t** npool
                 {
                     qp_free(manager->current);
                     manager->current = NULL;
-                    QP_LOGOUT_ERROR("[qp_pool_manager_t]Pool init fail.");
                     return NULL;
                 }
                 
@@ -338,8 +326,6 @@ qp_pool_manager_alloc(qp_pool_manager_t* manager, size_t size, qp_pool_t** npool
                     &(manager->current->queue));
                 manager->current->manager = manager;
                 manager->pool_count++;
-                QP_LOGOUT_LOG("[qp_pool_manager_t]Current have %lu pool "
-                    "in manager.", manager->pool_count);
             }
         }
         
@@ -388,17 +374,9 @@ qp_pool_manager_free(qp_pool_manager_t* manager, void* ptr, qp_pool_t* npool)
                 qp_pool_destroy(&(element->pool), true);
                 qp_free(element);
                 manager->pool_count--;
-                QP_LOGOUT_LOG("[qp_pool_manager_t]Pool destroy,"
-                    "Current have %lu pool in manager.", manager->pool_count);
                 
             } else {
-                
-                if (element->manager != manager) {
-                    QP_LOGOUT_ERROR("[qp_pool_manager_t]Freed pool does not "
-                    "blong to this manager: Need manager %lx, "
-                    "But call manager: %lx.",
-                    (unsigned long)(element->manager), (unsigned long)manager);
-                }
+                // TODO:
             }  
         }
         

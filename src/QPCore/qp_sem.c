@@ -39,7 +39,6 @@ qp_sem_create(qp_sem_t* sem, bool shared)
         sem = (qp_sem_t*)qp_alloc(sizeof(qp_sem_t));
         
         if (NULL == sem) {
-            QP_LOGOUT_ERROR("[qp_sem_t] Sem create fail.");
             return NULL;
         }
         
@@ -54,7 +53,6 @@ qp_sem_create(qp_sem_t* sem, bool shared)
     
     if (QP_SUCCESS != sem_init(&sem->sem, (qp_int_t)(sem->is_shared), 0)) {
         qp_sem_is_alloced(sem) ? qp_free(sem) : 1;
-        QP_LOGOUT_ERROR("[qp_sem_t] Sem init fail.");
         return NULL;
     }
     
@@ -76,7 +74,6 @@ qp_sem_destroy(qp_sem_t* sem)
         qp_sem_post(sem);
         
         if (QP_SUCCESS != sem_destroy(&sem->sem)) {
-            QP_LOGOUT_ERROR("[qp_sem_t] Sem destroy error.");
             return QP_ERROR;
         }
         

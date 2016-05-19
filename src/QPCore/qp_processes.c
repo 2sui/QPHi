@@ -100,7 +100,6 @@ qp_thread_create(qp_thread_t *thread)
         thread = (qp_thread_t*)qp_alloc(sizeof(qp_thread_t));
         
         if (NULL == thread) {
-            QP_LOGOUT_ERROR("[qp_thread_t]Thread create fail.");
             return NULL;
         }
 
@@ -159,7 +158,6 @@ qp_thread_runner(void *arg)
     qp_thread_t* thread = (qp_thread_t*)arg;
     
     if (thread->tid != pthread_self()) {
-        QP_LOGOUT_ERROR("[qp_thread_t]Thread id error.");
         goto end;
     }
     
@@ -167,7 +165,6 @@ qp_thread_runner(void *arg)
         
         if (QP_SUCCESS != pthread_detach(thread->tid)) {
             qp_thread_unset_detach(thread);
-            QP_LOGOUT_ERROR("[qp_thread_t]Thread set detach fail.");
         }
     }
     
@@ -196,11 +193,9 @@ qp_thread_start(qp_thread_t* thread, void* (*handler_ptr)(void*), void* arg)
             thread->tid = QP_THREAD_INVALID;
             thread->handler.handler_ptr = NULL;
             thread->handler.args_ptr = NULL;
-            QP_LOGOUT_ERROR("[qp_thread_t]Thread start fail.");
             return QP_ERROR;
         }
         
-        QP_LOGOUT_LOG("[qp_thread_t]Thread start[%lu].", thread->tid);
         return QP_SUCCESS;
     }
     
@@ -217,7 +212,6 @@ qp_thread_stop(qp_thread_t* thread)
         } else {
             
             if (qp_thread_is_running(thread)) {
-                QP_LOGOUT_ERROR("[qp_thread_t]Thread still running.");
                 return QP_ERROR;
             }
         }
@@ -246,7 +240,6 @@ qp_process_create(qp_process_t* process)
         process = (qp_process_t*)qp_alloc(sizeof(qp_process_t));
         
         if (NULL == process) {
-            QP_LOGOUT_ERROR("[qp_process_t]Process create fail.");
             return NULL;
         }
         
@@ -358,7 +351,6 @@ qp_process_start(qp_process_t* process)
                 switch (process->pid) {
                     
                     case -1: {
-                        QP_LOGOUT_ERROR("[qp_process_t]Process fork fail.");
                         return QP_ERROR;
                     }break;
                     
@@ -368,8 +360,6 @@ qp_process_start(qp_process_t* process)
                     
                     default: {
                         qp_process_set_running(process);
-                        QP_LOGOUT_LOG("[qp_process_t]Fork process [%lu].", \
-                            (qp_ulong_t)process->pid);
                         return process->pid;
                     }
                 }
@@ -383,7 +373,6 @@ qp_process_start(qp_process_t* process)
                 }
                 
                 execv(process->handler.argv[0], process->handler.argv);
-                QP_LOGOUT_ERROR("[qp_process_t]Process execv fail.");
                 return QP_ERROR;
                 
             }break;
@@ -399,7 +388,6 @@ qp_process_start(qp_process_t* process)
                 switch (process->pid) {
                     
                     case -1: {
-                        QP_LOGOUT_ERROR("[qp_process_t]Process fork fail.");
                         return QP_ERROR;
                     }break;
                     
@@ -410,8 +398,6 @@ qp_process_start(qp_process_t* process)
                     
                     default: {
                         qp_process_set_running(process);
-                        QP_LOGOUT_LOG("[qp_process_t]Exec process [%lu].", \
-                            (qp_ulong_t)process->pid);
                         return process->pid;
                     }
                 }
@@ -433,7 +419,6 @@ qp_process_start(qp_process_t* process)
                     (qp_char_t*)qp_alloc(process->handler.stack_size);
                 
                 if (NULL == process->stack) {
-                    QP_LOGOUT_ERROR("[qp_process_t]Process stack create fail.");
                     return QP_ERROR;
                 }
                 
@@ -446,14 +431,11 @@ qp_process_start(qp_process_t* process)
                 }
                 
                 qp_process_set_running(process);
-                QP_LOGOUT_LOG("[qp_process_t]Clone process [%lu].", \
-                    (qp_ulong_t)process->pid);
                 return process->pid;
                 
             }break;
             
             default: {
-                QP_LOGOUT_ERROR("[qp_process_t]Process type error.");
             }
         }
     }
@@ -481,12 +463,9 @@ qp_process_stop(qp_process_t* process, bool force)
             {
                 if(ECHILD == errno) {
 //                    qp_process_unset_running(process);
-                    QP_LOGOUT_ERROR("[qp_process_t]Wait process dose not exist "
-                        "or not a child process.");
 //                    return QP_ERROR;
                 }
                 
-                QP_LOGOUT_ERROR("[qp_process_t]Got SIGCHILD when wait process.");
 //                return QP_ERROR;
             }
             
@@ -506,22 +485,6 @@ qp_process_kill(qp_process_t* process, qp_int_t sig)
     if (qp_process_is_running(process)) {
         
         if (QP_ERROR == kill(process->pid, sig)) {
-#ifdef QP_DEBUG
-            switch (errno) {
-                
-                case EINVAL: {
-                    QP_LOGOUT_ERROR("[qp_process_t]Signal invalid.");
-                }break;
-                
-                case EPERM: {
-                    QP_LOGOUT_ERROR("[qp_process_t]Signal permission denied.");
-                }break;
-                
-                default: {
-                    QP_LOGOUT_ERROR("[qp_process_t]No process found.");
-                }break;
-            }
-#endif
             return QP_ERROR;
         }
         

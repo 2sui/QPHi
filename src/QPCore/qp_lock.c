@@ -118,7 +118,6 @@ qp_lock_create(qp_lock_t *lock, bool shared, bool spin)
         lock = (qp_lock_t*)qp_alloc(sizeof(qp_lock_t));
         
         if (NULL == lock) {
-            QP_LOGOUT_ERROR("[qp_lock_t] Lock create fail.");
             return NULL;
         }
 
@@ -140,7 +139,6 @@ qp_lock_create(qp_lock_t *lock, bool shared, bool spin)
 
     if (QP_SUCCESS != pthread_mutexattr_init(&attr)) {
         qp_lock_is_alloced(lock) ? qp_free(lock) : 1;
-        QP_LOGOUT_ERROR("[qp_lock_t] Lock create attr fail.");
         return NULL;
     }
     
@@ -148,7 +146,6 @@ qp_lock_create(qp_lock_t *lock, bool shared, bool spin)
         PTHREAD_MUTEX_ERRORCHECK))
     {
         qp_lock_is_alloced(lock) ? qp_free(lock) : 1;
-        QP_LOGOUT_ERROR("[qp_lock_t] Lock set attr fail.");
         return NULL;
     }
     
@@ -159,7 +156,6 @@ qp_lock_create(qp_lock_t *lock, bool shared, bool spin)
             PTHREAD_PROCESS_SHARED))
         {
             qp_lock_is_alloced(lock) ? qp_free(lock) : 1;
-            QP_LOGOUT_ERROR("[qp_lock_t] Lock set attr [shared] fail.");
             return NULL;
         }
         
@@ -169,7 +165,6 @@ qp_lock_create(qp_lock_t *lock, bool shared, bool spin)
     
     if (QP_SUCCESS != pthread_mutex_init(&(lock->lock.mutex), &attr)) {
         qp_lock_is_alloced(lock) ? qp_free(lock) : 1;
-        QP_LOGOUT_ERROR("[qp_lock_t] Lock init fail.");
         return NULL;
     }
     
@@ -190,7 +185,6 @@ qp_lock_destroy(qp_lock_t *lock)
     if (qp_lock_is_inited(lock)) {
         /* incase the lock still locked */
         if (EBUSY == qp_lock_trylock(lock)) {
-            QP_LOGOUT_ERROR("[qp_lock_t] Lock has not unlocked.");
             return QP_ERROR;
         }
         
@@ -198,7 +192,6 @@ qp_lock_destroy(qp_lock_t *lock)
         
         if (!qp_lock_is_spin(lock)) {
             if (QP_SUCCESS != pthread_mutex_destroy(&(lock->lock.mutex))) {
-                QP_LOGOUT_ERROR("[qp_lock_t] Lock destroy error.");
                 return QP_ERROR;
             }
         }

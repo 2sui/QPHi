@@ -276,7 +276,6 @@ qp_event_tiktok(qp_event_t *emodule, qp_int_t timeout)
                     break;
                 }
                 
-                QP_LOGOUT_LOG("event timeout (%d)", eevent->efd);
                 eevent = qp_rbtree_data(tnode, qp_event_fd_t, timer_node);
                 qp_event_close(eevent);
                 qp_event_removeevent(emodule, eevent);
@@ -312,7 +311,6 @@ qp_event_tiktok(qp_event_t *emodule, qp_int_t timeout)
         /* update timer if no timeout in epoll */
 #ifdef ENABLE_TIMER
         if ((emodule->timer_resolution) <= emodule->timer_progress) {
-            QP_LOGOUT_LOG("update timer");
             emodule->timer_update = true;
         }
 #endif
@@ -348,7 +346,6 @@ qp_event_tiktok(qp_event_t *emodule, qp_int_t timeout)
                     {
                         qp_event_close(eevent);
                         qp_event_removeevent(emodule, eevent);
-                        QP_LOGOUT_LOG("accept event error, [%d]", eevent->efd);
                     }
                     
                     break;
@@ -358,7 +355,6 @@ qp_event_tiktok(qp_event_t *emodule, qp_int_t timeout)
                     qp_event_addevent(emodule, accept_fd, timeout, false, true))
                 {
                     close(accept_fd);
-                    QP_LOGOUT_LOG("new event add fail, [%d] closed", accept_fd);
                 }
 
             } while (eevent->edge);
@@ -576,7 +572,6 @@ qp_event_addevent(qp_event_t* emodule, qp_int_t fd, qp_int_t timeout,
                 qp_event_del(emodule, revent);
                 qp_event_clear_flag(revent);
                 qp_pool_free(&emodule->event_pool, revent);
-                QP_LOGOUT_LOG("rbtree insert fail");
                 return QP_ERROR;
             }
 #else

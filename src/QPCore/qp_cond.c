@@ -41,7 +41,6 @@ qp_cond_create(qp_cond_t* cond, bool shared)
         cond = (qp_cond_t*)qp_alloc(sizeof(qp_cond_t));
         
         if (NULL == cond) {
-            QP_LOGOUT_ERROR("[qp_cond_t] Cond create fail.");
             return NULL;
         }
         
@@ -54,13 +53,11 @@ qp_cond_create(qp_cond_t* cond, bool shared)
     
     if (QP_SUCCESS != pthread_condattr_init(&attr)) {
         qp_cond_is_alloced(cond) ? qp_free(cond) : 1;
-        QP_LOGOUT_ERROR("[qp_cond_t] Cond create attr fail.");
         return NULL;
     }
     
     if (NULL == qp_lock_init(&(cond->cond_lock), shared, false)) {
         qp_cond_is_alloced(cond) ? qp_free(cond) : 1;
-        QP_LOGOUT_ERROR("[qp_cond_t] Cond lock init fail.");
         return NULL;
     }
     
@@ -74,7 +71,6 @@ qp_cond_create(qp_cond_t* cond, bool shared)
             pthread_condattr_destroy(&attr);
             qp_lock_destroy(&(cond->cond_lock));
             qp_cond_is_alloced(cond) ? qp_free(cond) : 1;
-            QP_LOGOUT_ERROR("[qp_cond_t] Cond set attr [shared] fail.");
             return NULL;
         }
         
@@ -86,7 +82,6 @@ qp_cond_create(qp_cond_t* cond, bool shared)
         pthread_condattr_destroy(&attr);
         qp_lock_destroy(&(cond->cond_lock));
         qp_cond_is_alloced(cond) ? qp_free(cond) : 1;
-        QP_LOGOUT_ERROR("[qp_cond_t] Cond init fail.");
         return NULL;
     }
     
@@ -106,7 +101,6 @@ qp_cond_destroy(qp_cond_t* cond)
     if (qp_cond_is_inited(cond)) {
         
         if (EBUSY == pthread_cond_destroy(&cond->cond)) {
-            QP_LOGOUT_ERROR("[qp_cond_t] Cond destroy fail.");
             return QP_ERROR;
         }
         

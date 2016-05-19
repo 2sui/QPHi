@@ -41,7 +41,6 @@ qp_rwlock_create(qp_rwlock_t* rwlock, bool shared)
         rwlock = (qp_rwlock_t*)qp_alloc(sizeof(qp_rwlock_t));
         
         if (NULL == rwlock) {
-            QP_LOGOUT_ERROR("[qp_rwlock_t] RWLock create fail.");
             return NULL;
         }
         
@@ -54,7 +53,6 @@ qp_rwlock_create(qp_rwlock_t* rwlock, bool shared)
     
     if (QP_SUCCESS != pthread_rwlockattr_init(&attr)) {
         qp_rwlock_is_alloced(rwlock) ? qp_free(rwlock) : 1;
-        QP_LOGOUT_ERROR("[qp_rwlock_t] RWLock create attr fail.");
         return NULL;
     }
     
@@ -65,7 +63,6 @@ qp_rwlock_create(qp_rwlock_t* rwlock, bool shared)
             PTHREAD_PROCESS_SHARED)) 
         {
             qp_rwlock_is_alloced(rwlock) ? qp_free(rwlock) : 1;
-            QP_LOGOUT_ERROR("[qp_rwlock_t] RWLock set attr [shared] fail.");
             return NULL;
         }
         
@@ -75,7 +72,6 @@ qp_rwlock_create(qp_rwlock_t* rwlock, bool shared)
     
     if (QP_SUCCESS != pthread_rwlock_init(&(rwlock->rwlock), &attr)) {
         qp_rwlock_is_alloced(rwlock) ? qp_free(rwlock) : 1;
-        QP_LOGOUT_ERROR("[qp_rwlock_t] RWLock init fail.");
         return NULL;
     }
     
@@ -96,21 +92,18 @@ qp_rwlock_destroy(qp_rwlock_t* rwlock)
     if (qp_rwlock_is_inited(rwlock)) {
         /* incase the lock still locked */
         if (EBUSY == qp_rwlock_tryrdlock(rwlock)) {
-            QP_LOGOUT_ERROR("[qp_rwlock_t] RWLock has not unlocked.");
             return QP_ERROR;
         }
         
         qp_rwlock_unlock(rwlock);
         
         if (EBUSY == qp_rwlock_trywrlock(rwlock)) {
-            QP_LOGOUT_ERROR("[qp_rwlock_t] RWLock has not unlocked.");
             return QP_ERROR;
         }
         
         qp_rwlock_unlock(rwlock);
         
         if (QP_SUCCESS != pthread_rwlock_destroy(&(rwlock->rwlock))) {
-            QP_LOGOUT_ERROR("[qp_rwlock_t] RWLock destroy error.");
             return QP_ERROR;
         }
         

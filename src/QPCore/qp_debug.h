@@ -14,10 +14,9 @@
 
 #ifdef QP_DEBUG
 #define QP_LOGOUT_FAIL(reason...) { \
-    fprintf(LOGOUT_TO, "\n[FAIL]\n### QP_Debug Failed at %s:%i:%s() ###\n ", \
+    fprintf(LOGOUT_TO, "\n[FAIL] QP_Debug Failed at %s:%i:%s()\n\t", \
     __FILE__, __LINE__, __FUNCTION__);	\
     fprintf(LOGOUT_TO, reason);  \
-    fprintf(LOGOUT_TO, "\n##########################"); \
     exit(1); \
 }
 #else
@@ -27,10 +26,9 @@
 
 #ifdef QP_DEBUG
 #define  QP_LOGOUT_ERROR(reason...) { \
-    fprintf(LOGOUT_TO, "\n[ERROR]### QP_Debug Error at %s:%i:%s() ###\n ", \
+    fprintf(LOGOUT_TO, "\n[ERROR] QP_Debug Error at %s:%i:%s()\n\t", \
     __FILE__, __LINE__, __FUNCTION__); \
     fprintf(LOGOUT_TO, reason); \
-    fprintf(LOGOUT_TO, "\n##########################"); \
 }
 #else
 #define QP_LOGOUT_ERROR(reason...) 

@@ -87,8 +87,11 @@ In `QPHi/test/events.c`:
 
 ```
 
-----
 
+## License
+QPHi is released under a MIT License.See [LICENSE](./LICENSE) file for details.
+
+----
 ##### created by 2sui
 
 

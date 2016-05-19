@@ -31,7 +31,6 @@ qp_shm_create(qp_shm_t* shm, size_t size, qp_int_t fd)
         shm = (qp_shm_t*)qp_alloc(sizeof(qp_shm_t));
         
         if (NULL == shm) {
-            QP_LOGOUT_ERROR("[qp_shm_t] Shm create fail.");
             return NULL;
         }
         
@@ -70,7 +69,6 @@ qp_shm_create(qp_shm_t* shm, size_t size, qp_int_t fd)
     
     if (MAP_FAILED == shm->addr) {
         qp_shm_is_alloced(shm) ? qp_free(shm) : 1;
-        QP_LOGOUT_ERROR("[qp_shm_t] Shm create fail.");
         return NULL;
     }
     
@@ -88,7 +86,6 @@ qp_shm_init(qp_shm_t* shm, size_t size, const qp_char_t* name)
             S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH); 
         
         if (fd < 0) {
-            QP_LOGOUT_ERROR("[qp_shm_t] Shm open fail.");
             return NULL;
         }
     }
@@ -111,7 +108,6 @@ qp_shm_destroy(qp_shm_t* shm)
     if (qp_shm_is_inited(shm)) {
         
         if (QP_ERROR == munmap(shm->addr, shm->size)) {
-            QP_LOGOUT_ERROR("[qp_shm_t] Shm destroy error.");
             return QP_ERROR;
         }
         
