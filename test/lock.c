@@ -333,7 +333,7 @@ test_sem()
 
 
 int 
-main(int argc, char** argv)
+main()
 {
     if (QP_ERROR == test_shm()) {
         return QP_ERROR;

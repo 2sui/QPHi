@@ -35,7 +35,7 @@ looping(qp_rbtree_t* rbtree, qp_rbtree_node_t* root)
 
 
 int
-main(int argc, char** argv) 
+main() 
 {
     qp_rbtree_t   rbtree;
     qp_uint32_t   data[20] = {12, 1, 9, 2, 0, 11, 7, 19, 4, 15, 18, 5, 14, 13,

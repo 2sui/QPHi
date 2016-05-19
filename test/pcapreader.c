@@ -230,7 +230,7 @@ print_help()
 
 
 int 
-main(int argc, char* argv[])
+main()
 {
     printf("%lu", sizeof(struct aiocb));
     return 0;

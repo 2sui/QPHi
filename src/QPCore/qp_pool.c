@@ -171,7 +171,6 @@ qp_pool_free(qp_pool_t* pool, void* ptr)
     if (qp_pool_is_inited(pool)) {
         
         if (elements->root != pool) {
-                (unsigned long)pool);
             return QP_ERROR;
         }
         
