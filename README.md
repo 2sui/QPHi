@@ -1,17 +1,17 @@
 
 # QPHi
 
-Linux libraries for learning and developing .(still in programming…)
+Linux libraries for learning and developing.
 
 ----
 
 ## Build and Install
-Change current dirctrory to _src/QPCore_ in **QPHi**:
+Change current dirctrory to [_src/QPCore_](./src/QPCore) in **QPHi**:
 
 ```
 $ QPHi$ cd src/QPCore
 ```
-Then run `cmake` in _src/QPCore_ to pre-build library:
+Then run `cmake` in [_src/QPCore_](./src/QPCore) to pre-build library:
 
 ```
 QPHi/src/QPCore$ cmake
@@ -25,9 +25,9 @@ QPHi/src/QPCore$ make && sudo make install
 ----
 
 ## Usage
-There are also some examples showing how to use those libraries in `QPHi/test` and `QPHi/example`:
+There are also some examples showing how to use those libraries in [`QPHi/test`](./test) and [`QPHi/example`](./example):
 
-In `QPHi/test/events.c`:
+In [`QPHi/test/events.c`](./test/events.c):
 
 ```
 	static qp_pool_manager_t    manager;
@@ -48,7 +48,7 @@ In `QPHi/test/events.c`:
     /* Initialize a tcp socket server, bind address "0.0.0.0", port 8080 
      * and initialize the event module (allow 1024 event fd).
      */
-    if (!qp_socket_init(&skt, AF_INET, SOCK_STREAM, "0.0.0.0", 8080, true) 
+    if (!qp_socket_init(&skt, AF_INET, SOCK_STREAM, "0.0.0.0", 8080, true, 128) 
         || !qp_event_init(&emodule, 1024, true, true, 
         init_handler, destroy_handler, NULL, NULL)) 
     {
@@ -86,7 +86,6 @@ In `QPHi/test/events.c`:
     qp_pool_manager_destroy(&manager, true);
 
 ```
-
 
 ## License
 QPHi is released under a MIT License.See [LICENSE](./LICENSE) file for details.
