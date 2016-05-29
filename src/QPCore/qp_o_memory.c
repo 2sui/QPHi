@@ -5,6 +5,7 @@
 
 
 #include "qp_o_memory.h"
+#include "qp_o_atomic.h"
 
 
 #if defined(QP_OS_LINUX)  || defined(QP_OS_BSD4) || defined(QP_OS_SOLARIS)
@@ -23,25 +24,48 @@ qp_alloc_align(size_t alignment, size_t size)
 #endif
 
 
+struct qp_list_s {
+    struct qp_list_s*    next;
+};
+
+struct qp_queue_s {
+    struct qp_queue_s*    prev;
+    struct qp_queue_s*    next;
+};
+
+struct qp_rbtree_node_s {
+    struct qp_rbtree_node_s*    left;
+    struct qp_rbtree_node_s*    right;
+    struct qp_rbtree_node_s*    parent;
+    void*                       data;
+    qp_uint64_t                 key;
+    qp_uint32_t                 color;
+};
+
+struct qp_rbtree_s {
+    struct qp_rbtree_node_s*    root;
+    struct qp_rbtree_node_s     sentinel;
+};
+
 /**
  * Init list.
  */
 inline void 
-qp_list_init(qp_list_t* list)
-{list->next = list;}
+qp_list_init(qp_list_t list)
+{ list->next = list;}
 
 /**
  * Return true if list is empty.
  */
 inline bool
-qp_list_is_empty(qp_list_t* list)
+qp_list_is_empty(qp_list_t list)
 { return list == list->next;}
 
 /**
  * Push x to l.
  */
 inline void
-qp_list_push(qp_list_t* list, qp_list_t* node)
+qp_list_push(qp_list_t list, qp_list_t node)
 {
     node->next = list->next;
     list->next = node;
@@ -51,21 +75,21 @@ qp_list_push(qp_list_t* list, qp_list_t* node)
  * Pop element from l.
  */
 inline void
-qp_list_pop(qp_list_t* list)
+qp_list_pop(qp_list_t list)
 { list->next = list->next->next;}
 
 /**
  * Get the list head.
  */
-inline qp_list_t*
-qp_list_head(qp_list_t* list)
+inline qp_list_t
+qp_list_head(qp_list_t list)
 { return list;}
 
 /**
  * Get top element of list.
  */
-inline qp_list_t* 
-qp_list_first(qp_list_t* list)
+inline qp_list_t 
+qp_list_first(qp_list_t list)
 { return qp_list_is_empty(list) ? NULL : list->next;}
     
 
@@ -73,7 +97,7 @@ qp_list_first(qp_list_t* list)
  * Init queue.
 */
 inline void
-qp_queue_init(qp_queue_t* queue)
+qp_queue_init(qp_queue_t queue)
 {
     queue->prev = queue;
     queue->next = queue;
@@ -83,14 +107,14 @@ qp_queue_init(qp_queue_t* queue)
  * Return true if queue is empty.
 */
 inline bool
-qp_queue_is_empty(qp_queue_t* queue)
+qp_queue_is_empty(qp_queue_t queue)
 { return queue == queue->prev;}
 
 /*
  * Insert element before first element of queue.
 */
 inline void
-qp_queue_insert_after_head(qp_queue_t* queue, qp_queue_t* node)
+qp_queue_insert_after_head(qp_queue_t queue, qp_queue_t node)
 {
     node->next = queue->next;
     node->next->prev = node;
@@ -102,7 +126,7 @@ qp_queue_insert_after_head(qp_queue_t* queue, qp_queue_t* node)
  * Insert element after last element of queue.
 */
 inline void
-qp_queue_insert_after_tail(qp_queue_t* queue, qp_queue_t* node)
+qp_queue_insert_after_tail(qp_queue_t queue, qp_queue_t node)
 {
     node->prev = queue->prev;
     node->prev->next = node;
@@ -113,37 +137,37 @@ qp_queue_insert_after_tail(qp_queue_t* queue, qp_queue_t* node)
 /*
  * Get first element of queue.
 */
-inline qp_queue_t*
-qp_queue_first(qp_queue_t* queue)
+inline qp_queue_t
+qp_queue_first(qp_queue_t queue)
 { return qp_queue_is_empty(queue) ? NULL : queue->next;}
 
 /*
  * Ge last element of queue.
 */
-inline qp_queue_t*
-qp_queue_last(qp_queue_t* queue)
+inline qp_queue_t
+qp_queue_last(qp_queue_t queue)
 { return qp_queue_is_empty(queue) ? NULL : queue->prev;}
         
 
 /*
  * Get queue head.
 */
-inline qp_queue_t*
-qp_queue_head(qp_queue_t* queue)
+inline qp_queue_t
+qp_queue_head(qp_queue_t queue)
 { return queue;}
 
 /*
  * Get next element of q.
 */
-inline qp_queue_t*
-qp_queue_next(qp_queue_t* node)
+inline qp_queue_t
+qp_queue_next(qp_queue_t node)
 { return node->next;}
 
 /*
  * Get preview element of q.
 */
-inline qp_queue_t*
-qp_queue_prev(qp_queue_t* node)
+inline qp_queue_t
+qp_queue_prev(qp_queue_t node)
 { return node->prev;}
 
 
@@ -151,7 +175,7 @@ qp_queue_prev(qp_queue_t* node)
  * Remove element from queue.
 */
 inline void
-qp_queue_remove(qp_queue_t* node)
+qp_queue_remove(qp_queue_t node)
 {
     node->next->prev = node->prev;
     node->prev->next = node->next;
@@ -162,7 +186,7 @@ qp_queue_remove(qp_queue_t* node)
  * Split queue h from element q to new queue n.
 */
 inline void
-qp_queue_split(qp_queue_t* queue, qp_queue_t* node, qp_queue_t* newq)
+qp_queue_split(qp_queue_t queue, qp_queue_t node, qp_queue_t newq)
 {
     newq->prev = queue->prev;
     newq->prev->next = newq;
@@ -176,7 +200,7 @@ qp_queue_split(qp_queue_t* queue, qp_queue_t* node, qp_queue_t* newq)
  * Merge queue n to queue h (and after h).
 */
 inline void
-qp_queue_merge(qp_queue_t* queue, qp_queue_t* newq)
+qp_queue_merge(qp_queue_t queue, qp_queue_t newq)
 {
     queue->prev->next = newq->next;
     newq->next->prev = queue->prev;
@@ -191,64 +215,64 @@ qp_queue_merge(qp_queue_t* queue, qp_queue_t* newq)
  * and if the node has no child, set its left and right as sentinal.
  */
 inline void
-qp_rbtree_set_red(qp_rbtree_node_t* node)
+qp_rbtree_set_red(qp_rbtree_node_t node)
 { node->color = QP_RBTREE_RED;}
 
 inline void
-qp_rbtree_set_black(qp_rbtree_node_t* node)
+qp_rbtree_set_black(qp_rbtree_node_t node)
 { node->color = QP_RBTREE_BLACK;}
 
 inline bool
-qp_rbtree_is_red(qp_rbtree_node_t* node)
+qp_rbtree_is_red(qp_rbtree_node_t node)
 { return node->color == QP_RBTREE_RED;}
 
 inline bool
-qp_rbtree_is_black(qp_rbtree_node_t* node)
+qp_rbtree_is_black(qp_rbtree_node_t node)
 { return node->color == QP_RBTREE_BLACK;}
 
-inline qp_rbtree_node_t*
-qp_rbtree_parent(qp_rbtree_node_t* node)
+inline qp_rbtree_node_t
+qp_rbtree_parent(qp_rbtree_node_t node)
 { return node->parent;}
 
-inline qp_rbtree_node_t*
-qp_rbtree_grandpa(qp_rbtree_node_t* node)
+inline qp_rbtree_node_t
+qp_rbtree_grandpa(qp_rbtree_node_t node)
 { return qp_rbtree_parent(qp_rbtree_parent(node));}
 
 inline bool
-qp_rbtree_is_left(qp_rbtree_node_t* node)
+qp_rbtree_is_left(qp_rbtree_node_t node)
 { return (node == qp_rbtree_parent(node)->left);}
 
 inline bool
-qp_rbtree_is_right(qp_rbtree_node_t* node)
+qp_rbtree_is_right(qp_rbtree_node_t node)
 { return (node == qp_rbtree_parent(node)->right);}
 
-inline qp_rbtree_node_t*
-qp_rbtree_uncle(qp_rbtree_node_t* node)
+inline qp_rbtree_node_t
+qp_rbtree_uncle(qp_rbtree_node_t node)
 { 
     return qp_rbtree_is_left(qp_rbtree_parent(node)) ? \
         qp_rbtree_grandpa(node)->right : \
         qp_rbtree_grandpa(node)->left;
 }
 
-inline qp_rbtree_node_t*
-qp_rbtree_brother(qp_rbtree_node_t* node)
+inline qp_rbtree_node_t
+qp_rbtree_brother(qp_rbtree_node_t node)
 {
     return qp_rbtree_is_left(node) ? \
         qp_rbtree_parent(node)->right : \
         qp_rbtree_parent(node)->left;
 }
 
-inline qp_rbtree_node_t*
-qp_rbtree_nil(qp_rbtree_t* rbtree)
+inline qp_rbtree_node_t
+qp_rbtree_nil(qp_rbtree_t rbtree)
 { return &rbtree->sentinel;}
 
 inline bool
-qp_rbtree_is_empty(qp_rbtree_t* rbtree)
+qp_rbtree_is_empty(qp_rbtree_t rbtree)
 { return rbtree->root == qp_rbtree_nil(rbtree);}
 
 /* init rbtree */
 inline void
-qp_rbtree_init(qp_rbtree_t* rbtree)
+qp_rbtree_init(qp_rbtree_t rbtree)
 {
     rbtree->sentinel.left = qp_rbtree_nil(rbtree);
     rbtree->sentinel.right = qp_rbtree_nil(rbtree);
@@ -259,9 +283,9 @@ qp_rbtree_init(qp_rbtree_t* rbtree)
 
 /* left rotate */
 void
-qp_rbtree_left_rotate(qp_rbtree_t* rbtree, qp_rbtree_node_t* node)
+qp_rbtree_left_rotate(qp_rbtree_t rbtree, qp_rbtree_node_t node)
 {
-    qp_rbtree_node_t* right = node->right;
+    qp_rbtree_node_t right = node->right;
     right->parent = qp_rbtree_parent(node);
     
     if (node == rbtree->root) {
@@ -289,10 +313,10 @@ qp_rbtree_left_rotate(qp_rbtree_t* rbtree, qp_rbtree_node_t* node)
 
 /* right rotate */
 void
-qp_rbtree_right_rotate(qp_rbtree_t* rbtree, qp_rbtree_node_t* node)
+qp_rbtree_right_rotate(qp_rbtree_t rbtree, qp_rbtree_node_t node)
 {
     /* get left subtree */
-    qp_rbtree_node_t* left = node->left;
+    qp_rbtree_node_t left = node->left;
     
     /* change the left subtree`s parent and the parent`s child */
     left->parent = qp_rbtree_parent(node);
@@ -324,7 +348,7 @@ qp_rbtree_right_rotate(qp_rbtree_t* rbtree, qp_rbtree_node_t* node)
 
 /* insert fix */
 void
-qp_rbtree_insert_fix(qp_rbtree_t* rbtree, qp_rbtree_node_t* node)
+qp_rbtree_insert_fix(qp_rbtree_t rbtree, qp_rbtree_node_t node)
 {
     while (node != rbtree->root && qp_rbtree_is_red(qp_rbtree_parent(node))) {
         
@@ -375,7 +399,7 @@ qp_rbtree_insert_fix(qp_rbtree_t* rbtree, qp_rbtree_node_t* node)
 
 /* delete fix */
 void
-qp_rbtree_delete_fix(qp_rbtree_t* rbtree, qp_rbtree_node_t* node)
+qp_rbtree_delete_fix(qp_rbtree_t rbtree, qp_rbtree_node_t node)
 {
     while (node != rbtree->root && qp_rbtree_is_black(node)) {
             
@@ -457,11 +481,11 @@ qp_rbtree_delete_fix(qp_rbtree_t* rbtree, qp_rbtree_node_t* node)
 }
 
 /* insert node into rbtree */
-qp_rbtree_node_t* 
-qp_rbtree_insert(qp_rbtree_t* rbtree, qp_rbtree_node_t* node)
+qp_rbtree_node_t
+qp_rbtree_insert(qp_rbtree_t rbtree, qp_rbtree_node_t node)
 {
-    qp_rbtree_node_t* cur = NULL;
-    qp_rbtree_node_t* next = NULL;
+    qp_rbtree_node_t cur = NULL;
+    qp_rbtree_node_t next = NULL;
     
     if (!node) {
         return NULL;
@@ -518,11 +542,11 @@ qp_rbtree_insert(qp_rbtree_t* rbtree, qp_rbtree_node_t* node)
 }
 
 /* delete node from rbtree */
-qp_rbtree_node_t*
-qp_rbtree_delete(qp_rbtree_t* rbtree, qp_rbtree_node_t* node)
+qp_rbtree_node_t
+qp_rbtree_delete(qp_rbtree_t rbtree, qp_rbtree_node_t node)
 {
-    qp_rbtree_node_t* subst = NULL;
-    qp_rbtree_node_t* tmp = NULL;
+    qp_rbtree_node_t subst = NULL;
+    qp_rbtree_node_t tmp = NULL;
     
     if (!node || !rbtree || qp_rbtree_is_empty(rbtree)) {
         return NULL;
@@ -576,10 +600,10 @@ qp_rbtree_delete(qp_rbtree_t* rbtree, qp_rbtree_node_t* node)
 }
 
 /* find node with key in rbtree */
-qp_rbtree_node_t*
-qp_rbtree_find(qp_rbtree_t* rbtree, qp_uint32_t key)
+qp_rbtree_node_t
+qp_rbtree_find(qp_rbtree_t rbtree, qp_uint32_t key)
 {
-    qp_rbtree_node_t* node = rbtree->root;
+    qp_rbtree_node_t node = rbtree->root;
     
     while ((node != qp_rbtree_nil(rbtree)) && (key != node->key)) {
         
@@ -595,8 +619,8 @@ qp_rbtree_find(qp_rbtree_t* rbtree, qp_uint32_t key)
 }
 
 /* min node from [node] */
-inline qp_rbtree_node_t*
-qp_rbtree_min(qp_rbtree_t* rbtree, qp_rbtree_node_t* node)
+inline qp_rbtree_node_t
+qp_rbtree_min(qp_rbtree_t rbtree, qp_rbtree_node_t node)
 {
     if (qp_rbtree_is_empty(rbtree)) {
         return NULL;
@@ -612,8 +636,8 @@ qp_rbtree_min(qp_rbtree_t* rbtree, qp_rbtree_node_t* node)
 }
 
 /* max node from [node] */
-inline qp_rbtree_node_t*
-qp_rbtree_max(qp_rbtree_t* rbtree, qp_rbtree_node_t* node) 
+inline qp_rbtree_node_t
+qp_rbtree_max(qp_rbtree_t rbtree, qp_rbtree_node_t node) 
 {
     if (qp_rbtree_is_empty(rbtree)) {
         return NULL;

@@ -13,8 +13,8 @@
 extern "C" {
 #endif
 
-
-#include "qp_o_memory.h"
+    
+#include "qp_o_typedef.h"
     
     
 #define  QP_FD_INVALID        QP_ERROR
@@ -27,40 +27,26 @@ enum qp_fd_type_e {
 };
 
 typedef enum qp_fd_type_e    qp_fd_type_t;
-
-
-struct  qp_fd_s {
-    qp_int_t          fd;
-    qp_fd_type_t      type;        /* type of this fd */
-    struct aiocb*     aio;         /* fd */
-    ssize_t           retsno;      /* return value (errno) */
-    qp_int_t          errono;      /* error value */
-    bool              is_inited;   /* is struct inited */
-    bool              is_alloced;  /* is this fd allocated? */
-    bool              is_noblock;  /* is fd noblock? */
-//    bool              is_async;    /* is async(not used) */
-};
-
-typedef  struct qp_fd_s      qp_fd_t;
+typedef  struct qp_fd_s*      qp_fd_t;
 
 
 inline bool
-qp_fd_is_inited(qp_fd_t* fd);
+qp_fd_is_inited(qp_fd_t fd);
 
 inline bool
-qp_fd_is_alloced(qp_fd_t* fd) ;
+qp_fd_is_alloced(qp_fd_t fd) ;
 
 inline bool
-qp_fd_is_noblock(qp_fd_t* fd);
+qp_fd_is_noblock(qp_fd_t fd);
 
 inline bool
-qp_fd_is_aio(qp_fd_t* fd);
+qp_fd_is_aio(qp_fd_t fd);
 
 //inline bool
-//qp_fd_is_async(qp_fd_t* fd);
+//qp_fd_is_async(qp_fd_t fd);
 
 inline bool
-qp_fd_is_valid(qp_fd_t* fd);
+qp_fd_is_valid(qp_fd_t fd);
 
 /**
  * Init a qp_fd_t struct with specific type.If the fd is NULL it will allocate 
@@ -73,8 +59,8 @@ qp_fd_is_valid(qp_fd_t* fd);
  * @param aio: Should be set as AIO mod. 
  * @return  If success return qp_fd_t pointer,  otherwise return NULL.
  */
-qp_fd_t* 
-qp_fd_init(qp_fd_t* fd, qp_fd_type_t type, bool aio);
+qp_fd_t 
+qp_fd_init(qp_fd_t fd, qp_fd_type_t type, bool aio);
 
 /**
  * Destroy a fd. If the fd is allocated by qp_fd_create, it will be freed.
@@ -83,7 +69,7 @@ qp_fd_init(qp_fd_t* fd, qp_fd_type_t type, bool aio);
  * @return QP_SUCCESS if success, otherwise return QP_ERROR.
  */
 qp_int_t
-qp_fd_destroy(qp_fd_t* fd);
+qp_fd_destroy(qp_fd_t fd);
 
 /**
  * Get the type of fd.
@@ -92,7 +78,7 @@ qp_fd_destroy(qp_fd_t* fd);
  * @return Type of qp_fd_t if success, otherwise return QP_FD_TYPE_UNKNOW.
  */
 qp_fd_type_t
-qp_fd_type(qp_fd_t* fd);
+qp_fd_type(qp_fd_t fd);
 
 /**
  * Set the fd with NOBLOCK mod.
@@ -101,7 +87,7 @@ qp_fd_type(qp_fd_t* fd);
  * @return Return QP_SUCCESS if success otherwise return QP_ERROR.
  */
 qp_int_t
-qp_fd_setNoBlock(qp_fd_t* fd);
+qp_fd_setNoBlock(qp_fd_t fd);
 
 /**
  * Set the fd BLOCK mod.
@@ -110,7 +96,26 @@ qp_fd_setNoBlock(qp_fd_t* fd);
  * @return Return QP_SUCCESS if success otherwise return QP_ERROR.
  */
 qp_int_t
-qp_fd_setBlock(qp_fd_t* fd);
+qp_fd_setBlock(qp_fd_t fd);
+
+/**
+ * Set qp_fd_t value.
+ * 
+ * @param fd
+ * @param ifd
+ * @return 
+ */
+qp_int_t
+qp_fd_set_fd(qp_fd_t fd, qp_int_t ifd);
+
+/**
+ * Get qp_fd_t value.
+ * 
+ * @param fd
+ * @return 
+ */
+qp_int_t
+qp_fd_get_fd(qp_fd_t fd);
 
 /**
  * Close an opened fd.
@@ -119,7 +124,7 @@ qp_fd_setBlock(qp_fd_t* fd);
  * @return Return QP_SUCCESS if success otherwise return QP_ERROR.
  */
 qp_int_t
-qp_fd_close(qp_fd_t* fd);
+qp_fd_close(qp_fd_t fd);
 
 /**
  * Same with system write .
@@ -131,7 +136,7 @@ qp_fd_close(qp_fd_t* fd);
  *     and return QP_ERROR if some error happend.
  */
 ssize_t
-qp_fd_write(qp_fd_t* fd, const void* vptr, size_t nbytes);
+qp_fd_write(qp_fd_t fd, const void* vptr, size_t nbytes);
 
 /**
  * Same with system read.
@@ -143,7 +148,7 @@ qp_fd_write(qp_fd_t* fd, const void* vptr, size_t nbytes);
  *     and return QP_ERROR if some error happend.
  */
 ssize_t
-qp_fd_read(qp_fd_t* fd, void* vptr, size_t nbytes);
+qp_fd_read(qp_fd_t fd, void* vptr, size_t nbytes);
 
 /**
  * Write [nbytes] bytes to fd. 
@@ -155,7 +160,7 @@ qp_fd_read(qp_fd_t* fd, void* vptr, size_t nbytes);
  *     may happen, check fd->errono.
  */
 size_t
-qp_fd_writen(qp_fd_t* fd, const void* vptr, size_t nbytes);
+qp_fd_writen(qp_fd_t fd, const void* vptr, size_t nbytes);
 
 /**
  * Read [nbytes] bytes from fd. 
@@ -168,7 +173,7 @@ qp_fd_writen(qp_fd_t* fd, const void* vptr, size_t nbytes);
  *     may happen, check fd->errono.
  */
 size_t
-qp_fd_readn(qp_fd_t* fd, void* vptr, size_t nbytes);
+qp_fd_readn(qp_fd_t fd, void* vptr, size_t nbytes);
 
 /**
  * Write vector to fd.
@@ -180,7 +185,7 @@ qp_fd_readn(qp_fd_t* fd, void* vptr, size_t nbytes);
  *     and return QP_ERROR if some error happend.
  */
 ssize_t
-qp_fd_writev(qp_fd_t* fd, const struct iovec* iov, qp_int_t iovcnt);
+qp_fd_writev(qp_fd_t fd, const struct iovec* iov, qp_int_t iovcnt);
 
 /**
  * Read vector from fd.
@@ -192,7 +197,7 @@ qp_fd_writev(qp_fd_t* fd, const struct iovec* iov, qp_int_t iovcnt);
  *     and return QP_ERROR if some error happend.
  */
 ssize_t
-qp_fd_readv(qp_fd_t* fd, const struct iovec* iov, qp_int_t iovcnt);
+qp_fd_readv(qp_fd_t fd, const struct iovec* iov, qp_int_t iovcnt);
 
 /**
  * If enable aio, sync all data in queue to disk.
@@ -201,7 +206,7 @@ qp_fd_readv(qp_fd_t* fd, const struct iovec* iov, qp_int_t iovcnt);
  * @return 
  */
 qp_int_t
-qp_fd_aio_sync(qp_fd_t* fd);
+qp_fd_aio_sync(qp_fd_t fd);
 
 /**
  * Get aio stat of aio_read, aio_write or aio_sync.
@@ -210,7 +215,7 @@ qp_fd_aio_sync(qp_fd_t* fd);
  * @return 
  */
 qp_int_t
-qp_fd_aio_stat(qp_fd_t* fd);
+qp_fd_aio_stat(qp_fd_t fd);
 
 /**
  * Same with aio_write.
@@ -222,7 +227,7 @@ qp_fd_aio_stat(qp_fd_t* fd);
  * @return 
  */
 ssize_t
-qp_fd_aio_write(qp_fd_t* fd, const void* vptr, size_t nbytes, size_t offset);
+qp_fd_aio_write(qp_fd_t fd, const void* vptr, size_t nbytes, size_t offset);
 
 /**
  * Same with aio_read.
@@ -234,7 +239,7 @@ qp_fd_aio_write(qp_fd_t* fd, const void* vptr, size_t nbytes, size_t offset);
  * @return 
  */
 ssize_t
-qp_fd_aio_read(qp_fd_t* fd, void* vptr, size_t nbytes, size_t offset);
+qp_fd_aio_read(qp_fd_t fd, void* vptr, size_t nbytes, size_t offset);
 
 #ifdef __cplusplus
 }

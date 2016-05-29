@@ -5,80 +5,93 @@
 
 
 #include "qp_o_io.h"
+#include "qp_o_memory.h"
 
+
+struct  qp_fd_s {
+    qp_int_t          fd;
+    qp_fd_type_t      type;        /* type of this fd */
+    struct aiocb*     aio;         /* fd */
+    ssize_t           retsno;      /* return value (errno) */
+    qp_int_t          errono;      /* error value */
+    bool              is_inited;   /* is struct inited */
+    bool              is_alloced;  /* is this fd allocated? */
+    bool              is_noblock;  /* is fd noblock? */
+//    bool              is_async;    /* is async(not used) */
+};
 
 inline void
-qp_fd_set_inited(qp_fd_t* fd)
+qp_fd_set_inited(qp_fd_t fd)
 { fd ? fd->is_inited = true: 1;}
 
 inline void
-qp_fd_set_alloced(qp_fd_t* fd)
+qp_fd_set_alloced(qp_fd_t fd)
 { fd ? fd->is_alloced = true : 1;}
 
 inline void
-qp_fd_set_noblock(qp_fd_t* fd)
+qp_fd_set_noblock(qp_fd_t fd)
 { fd ? fd->is_noblock = true : 1;}
 
 //inline void
-//qp_fd_set_async(qp_fd_t* fd)
+//qp_fd_set_async(qp_fd_t fd)
 //{ fd->is_async = true;}
 
 inline void
-qp_fd_unset_inited(qp_fd_t* fd)
+qp_fd_unset_inited(qp_fd_t fd)
 { fd ? fd->is_inited = false : 1;}
 
 inline void
-qp_fd_unset_alloced(qp_fd_t* fd)
+qp_fd_unset_alloced(qp_fd_t fd)
 { fd ? fd->is_alloced = false : 1;}
 
 inline void
-qp_fd_unset_noblock(qp_fd_t* fd)
+qp_fd_unset_noblock(qp_fd_t fd)
 { fd ? fd->is_noblock = false : 1;}
 
 //inline void
-//qp_fd_unset_async(qp_fd_t* fd)
+//qp_fd_unset_async(qp_fd_t fd)
 //{ fd->is_async = false;}
 
 inline bool
-qp_fd_is_inited(qp_fd_t* fd) 
+qp_fd_is_inited(qp_fd_t fd) 
 { return fd ? fd->is_inited : false; }
 
 inline bool
-qp_fd_is_alloced(qp_fd_t* fd) 
+qp_fd_is_alloced(qp_fd_t fd) 
 { return fd ? fd->is_alloced : false; }
 
 inline bool
-qp_fd_is_noblock(qp_fd_t* fd) 
+qp_fd_is_noblock(qp_fd_t fd) 
 { return fd ? fd->is_noblock : false; }
 
 inline bool
-qp_fd_is_aio(qp_fd_t* fd)
+qp_fd_is_aio(qp_fd_t fd)
 { return fd ? (NULL != fd->aio) : false; }
 
 //inline bool
-//qp_fd_is_async(qp_fd_t* fd) 
+//qp_fd_is_async(qp_fd_t fd) 
 //{ return fd->is_async; }
 
 inline bool
-qp_fd_is_valid(qp_fd_t* fd) 
+qp_fd_is_valid(qp_fd_t fd) 
 { return fd ? (QP_FD_INVALID != fd->fd) : false;}
 
 
-qp_fd_t*
-qp_fd_create(qp_fd_t* fd)
+qp_fd_t
+qp_fd_create(qp_fd_t fd)
 {
     if (NULL == fd) {
-        fd = (qp_fd_t*)qp_alloc(sizeof(qp_fd_t));
+        fd = (qp_fd_t)qp_alloc(sizeof(struct  qp_fd_s));
         
         if (NULL == fd) {
             return NULL;
         }
 
-        memset(fd, 0, sizeof(qp_fd_t));
+        memset(fd, 0, sizeof(struct  qp_fd_s));
         qp_fd_set_alloced(fd);
 
     } else {
-        memset(fd, 0, sizeof(qp_fd_t));
+        memset(fd, 0, sizeof(struct  qp_fd_s));
     }
 
     fd->fd = QP_FD_INVALID;
@@ -87,8 +100,8 @@ qp_fd_create(qp_fd_t* fd)
     return fd;
 }
 
-qp_fd_t*
-qp_fd_init(qp_fd_t* fd, qp_fd_type_t type, bool aio)
+qp_fd_t
+qp_fd_init(qp_fd_t fd, qp_fd_type_t type, bool aio)
 {
     fd = qp_fd_create(fd);
     
@@ -109,7 +122,7 @@ qp_fd_init(qp_fd_t* fd, qp_fd_type_t type, bool aio)
 }
 
 qp_int_t
-qp_fd_destroy(qp_fd_t *fd)
+qp_fd_destroy(qp_fd_t fd)
 {
     if (qp_fd_is_inited(fd)) {
         qp_fd_close(fd);
@@ -135,13 +148,13 @@ qp_fd_destroy(qp_fd_t *fd)
 }
 
 qp_fd_type_t
-qp_fd_type(qp_fd_t *fd)
+qp_fd_type(qp_fd_t fd)
 {
     return qp_fd_is_inited(fd) ? fd->type : QP_FD_TYPE_UNKNOW;
 }
 
 qp_int_t
-qp_fd_setNoBlock(qp_fd_t* fd)
+qp_fd_setNoBlock(qp_fd_t fd)
 {
     if (!qp_fd_is_valid(fd) || fd->aio) {
         return QP_ERROR;
@@ -166,7 +179,7 @@ qp_fd_setNoBlock(qp_fd_t* fd)
 }
 
 qp_int_t
-qp_fd_setBlock(qp_fd_t *fd)
+qp_fd_setBlock(qp_fd_t fd)
 {
     if (!qp_fd_is_valid(fd) || fd->aio) {
         return QP_ERROR;
@@ -191,7 +204,26 @@ qp_fd_setBlock(qp_fd_t *fd)
 }
 
 qp_int_t
-qp_fd_close(qp_fd_t* fd)
+qp_fd_set_fd(qp_fd_t fd, qp_int_t ifd) {
+    if (qp_fd_is_inited(fd)) {
+        fd->fd = ifd;
+        return QP_SUCCESS;
+    }
+    
+    return QP_ERROR;
+}
+
+qp_int_t
+qp_fd_get_fd(qp_fd_t fd) {
+    if (qp_fd_is_inited(fd)) {
+        return fd->fd;
+    }
+    
+    return QP_ERROR;
+}
+
+qp_int_t
+qp_fd_close(qp_fd_t fd)
 {
     if (qp_fd_is_valid(fd)) {
         fd->retsno = close(fd->fd);
@@ -204,7 +236,7 @@ qp_fd_close(qp_fd_t* fd)
 }
 
 ssize_t
-qp_fd_write(qp_fd_t* fd, const void* vptr, size_t nbytes)
+qp_fd_write(qp_fd_t fd, const void* vptr, size_t nbytes)
 {
     if (!qp_fd_is_valid(fd)) {
         return QP_ERROR;
@@ -216,7 +248,7 @@ qp_fd_write(qp_fd_t* fd, const void* vptr, size_t nbytes)
 }
 
 ssize_t
-qp_fd_read(qp_fd_t* fd, void* vptr, size_t nbytes)
+qp_fd_read(qp_fd_t fd, void* vptr, size_t nbytes)
 {
     if (!qp_fd_is_valid(fd)) {
         return QP_ERROR;
@@ -228,7 +260,7 @@ qp_fd_read(qp_fd_t* fd, void* vptr, size_t nbytes)
 }
 
 size_t
-qp_fd_writen(qp_fd_t *fd, const void *vptr, size_t nbytes)
+qp_fd_writen(qp_fd_t fd, const void *vptr, size_t nbytes)
 {
     if (!qp_fd_is_valid(fd)) {
         return 0;
@@ -261,7 +293,7 @@ qp_fd_writen(qp_fd_t *fd, const void *vptr, size_t nbytes)
 }
 
 size_t
-qp_fd_readn(qp_fd_t *fd, void *vptr, size_t nbytes)
+qp_fd_readn(qp_fd_t fd, void *vptr, size_t nbytes)
 {
     if (!qp_fd_is_valid(fd)) {
         return 0;
@@ -295,7 +327,7 @@ qp_fd_readn(qp_fd_t *fd, void *vptr, size_t nbytes)
 }
 
 ssize_t
-qp_fd_writev(qp_fd_t *fd, const struct iovec *iov, qp_int_t iovcnt)
+qp_fd_writev(qp_fd_t fd, const struct iovec *iov, qp_int_t iovcnt)
 {
     if (!qp_fd_is_valid(fd)) {
         return QP_ERROR;
@@ -307,7 +339,7 @@ qp_fd_writev(qp_fd_t *fd, const struct iovec *iov, qp_int_t iovcnt)
 }
 
 ssize_t
-qp_fd_readv(qp_fd_t *fd, const struct iovec *iov, qp_int_t iovcnt)
+qp_fd_readv(qp_fd_t fd, const struct iovec *iov, qp_int_t iovcnt)
 {
     if (!qp_fd_is_valid(fd)) {
         return QP_ERROR;
@@ -320,7 +352,7 @@ qp_fd_readv(qp_fd_t *fd, const struct iovec *iov, qp_int_t iovcnt)
 
 
 qp_int_t
-qp_fd_aio_sync(qp_fd_t* fd)
+qp_fd_aio_sync(qp_fd_t fd)
 {
     if (!qp_fd_is_valid(fd)) {
         return QP_ERROR;
@@ -339,7 +371,7 @@ qp_fd_aio_sync(qp_fd_t* fd)
 }
 
 qp_int_t
-qp_fd_aio_stat(qp_fd_t* fd)
+qp_fd_aio_stat(qp_fd_t fd)
 {
     if (!qp_fd_is_valid(fd)) {
         return QP_ERROR;
@@ -358,7 +390,7 @@ qp_fd_aio_stat(qp_fd_t* fd)
 }
 
 ssize_t
-qp_fd_aio_write(qp_fd_t* fd, const void* vptr, size_t nbytes, size_t offset)
+qp_fd_aio_write(qp_fd_t fd, const void* vptr, size_t nbytes, size_t offset)
 {
     if (!qp_fd_is_valid(fd)) {
         return QP_ERROR;
@@ -382,7 +414,7 @@ qp_fd_aio_write(qp_fd_t* fd, const void* vptr, size_t nbytes, size_t offset)
 }
 
 ssize_t
-qp_fd_aio_read(qp_fd_t* fd, void* vptr, size_t nbytes, size_t offset)
+qp_fd_aio_read(qp_fd_t fd, void* vptr, size_t nbytes, size_t offset)
 {
     if (!qp_fd_is_valid(fd)) {
         return QP_ERROR;
