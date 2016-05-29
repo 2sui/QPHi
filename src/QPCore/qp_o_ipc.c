@@ -5,6 +5,7 @@
 
 
 #include "qp_o_ipc.h"
+#include "qp_o_atomic.h"
 #include "qp_o_memory.h"
 
 

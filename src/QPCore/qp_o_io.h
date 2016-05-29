@@ -26,8 +26,8 @@ enum qp_fd_type_e {
     QP_FD_TYPE_EVENT
 };
 
-typedef enum qp_fd_type_e    qp_fd_type_t;
-typedef  struct qp_fd_s*      qp_fd_t;
+typedef enum qp_fd_type_e     qp_fd_type_t;
+typedef struct qp_fd_s*       qp_fd_t;
 
 
 inline bool
