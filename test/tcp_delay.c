@@ -86,7 +86,7 @@ main(int argc, char** argv)
                  * And fortunately, the close is called by client and the rest 
                  * 114 bytes is sent to server.
                  */
-                INFO("Serv recv %ld byte at %lu, Nagle diff time: %d.", \
+                INFO("Serv recv %d byte at %lu, Nagle diff time: %lu.", \
                     rets, end, end - beg);
                 
                 beg = end;
@@ -120,7 +120,7 @@ main(int argc, char** argv)
                 gettimeofday(&ntime, NULL);
                 end = ntime.tv_sec * 1000 + ntime.tv_usec / 1000;
                 
-                INFO("Client send %ld byte at %lu, send diff time: %d.", \
+                INFO("Client send %d byte at %lu, send diff time: %lu.", \
                     rets, end, (end - beg));
                 
                 beg = end;
