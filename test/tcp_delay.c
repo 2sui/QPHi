@@ -6,7 +6,8 @@
  */
 
 
-#include <qp_core.h>
+#include <qp_socket.h>
+#include <qp_system.h>
 
 #define SERV_ADDR             "127.0.0.1"
 #define SERV_PORT             80
@@ -52,11 +53,11 @@ main(int argc, char** argv)
             goto end;
         }
         
-//        if (QP_ERROR == qp_change_user_by_name(USER)) {
-//            some_error = true;
-//            INFO("Change user fail");
-//            goto end;
-//        }
+        if (QP_ERROR == qp_change_user_by_name(USER)) {
+            some_error = true;
+            INFO("Change user fail");
+            goto end;
+        }
         
         while (qp_socket_accept(skt, client)) {
             end = 0;
