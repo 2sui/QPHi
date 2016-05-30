@@ -42,9 +42,6 @@ qp_fd_is_noblock(qp_fd_t fd);
 inline bool
 qp_fd_is_aio(qp_fd_t fd);
 
-//inline bool
-//qp_fd_is_async(qp_fd_t fd);
-
 inline bool
 qp_fd_is_valid(qp_fd_t fd);
 
@@ -77,7 +74,7 @@ qp_fd_destroy(qp_fd_t fd);
  * @param fd: Inited qp_fd_t.
  * @return Type of qp_fd_t if success, otherwise return QP_FD_TYPE_UNKNOW.
  */
-qp_fd_type_t
+inline qp_fd_type_t
 qp_fd_type(qp_fd_t fd);
 
 /**
@@ -99,7 +96,7 @@ qp_int_t
 qp_fd_setBlock(qp_fd_t fd);
 
 /**
- * Set qp_fd_t value.
+ * Set qp_fd_t value. And current errno will be set to qp_fd_t.
  * 
  * @param fd
  * @param ifd
@@ -114,7 +111,7 @@ qp_fd_set_fd(qp_fd_t fd, qp_int_t ifd);
  * @param fd
  * @return 
  */
-qp_int_t
+inline qp_int_t
 qp_fd_get_fd(qp_fd_t fd);
 
 /**

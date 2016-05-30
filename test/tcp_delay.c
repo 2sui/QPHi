@@ -17,9 +17,10 @@
 int 
 main(int argc, char** argv)
 {
-    qp_socket_t        skt, client;
+    qp_socket_t        skt = NULL, client = NULL;
     qp_ulong_t         beg, end;
     struct timeval     ntime;
+    int                rets;
     int                count;
     qp_uchar_t         buf[BUFSIZE];
     bool is_server = false;
@@ -29,8 +30,8 @@ main(int argc, char** argv)
         is_server = true;
     }
     
-    if (NULL == qp_socket_init(&skt, AF_INET, SOCK_STREAM, SERV_ADDR, SERV_PORT, 
-        is_server, 128))
+    if (NULL == (skt = qp_socket_init(skt, AF_INET, SOCK_STREAM, SERV_ADDR, SERV_PORT, 
+        is_server, 128)))
     {
         INFO("Socket init fail.");
         return QP_ERROR;
@@ -38,38 +39,38 @@ main(int argc, char** argv)
     
     if (is_server) {
         
-        if (QP_ERROR == qp_socket_set_reuse(&skt, QP_SOCKET_SO_REUSE_ADDR, 1)) 
+        if (QP_ERROR == qp_socket_set_reuse(skt, QP_SOCKET_SO_REUSE_ADDR, 1)) 
         {
             some_error = true;
             INFO("Socket set reuse fail.");
             goto end;
         }
         
-        if (QP_ERROR == qp_socket_listen(&skt, 0)) {
+        if (QP_ERROR == qp_socket_listen(skt, 0)) {
             some_error = true;
             INFO("Socket set listen fail.");
             goto end;
         }
         
-        if (QP_ERROR == qp_change_user_by_name(USER)) {
-            some_error = true;
-            INFO("Change user fail");
-            goto end;
-        }
+//        if (QP_ERROR == qp_change_user_by_name(USER)) {
+//            some_error = true;
+//            INFO("Change user fail");
+//            goto end;
+//        }
         
-        while (qp_socket_accept(&skt, &client)) {
+        while (qp_socket_accept(skt, client)) {
             end = 0;
             gettimeofday(&ntime, NULL);
             beg = ntime.tv_sec * 1000 + ntime.tv_usec / 1000;
             INFO("Serv accept at %lu. sec:%lu, usec:%lu", beg, ntime.tv_sec, ntime.tv_usec);
             /* disable Nagle */
-            qp_socket_set_nodelay(&client, 1);
-            qp_socket_set_quickack(&client, 1);
+            qp_socket_set_nodelay(client, 1);
+            qp_socket_set_quickack(client, 1);
             
             while (1) {
                 
                 /* test for Nagle */
-                if (1 > qp_socket_recv(&client, buf, BUFSIZE, 0)) {
+                if (1 > (rets = qp_socket_recv(client, buf, BUFSIZE, 0))) {
                     break;
                 }
                 
@@ -85,13 +86,13 @@ main(int argc, char** argv)
                  * And fortunately, the close is called by client and the rest 
                  * 114 bytes is sent to server.
                  */
-                INFO("Serv recv %ld byte at %lu, Nagle diff time: %lu.", \
-                    client.socket.retsno, end, end - beg);
+                INFO("Serv recv %ld byte at %lu, Nagle diff time: %d.", \
+                    rets, end, end - beg);
                 
                 beg = end;
             }
             
-            qp_socket_destroy(&client);
+            qp_socket_destroy(client);
             gettimeofday(&ntime, NULL);
             beg = ntime.tv_sec * 1000 + ntime.tv_usec / 1000;
             INFO("Serv peer close at %lu.", beg);
@@ -99,7 +100,7 @@ main(int argc, char** argv)
         
     } else {
         
-        if (QP_SUCCESS == qp_socket_connect(&skt)) {
+        if (QP_SUCCESS == qp_socket_connect(skt)) {
             count = 21;
             end = 0;
             gettimeofday(&ntime, NULL);
@@ -107,20 +108,20 @@ main(int argc, char** argv)
             INFO("Client connect at %lu.", beg);
             
             /* disable Nagle */
-            qp_socket_set_nodelay(&skt, 1);
-            qp_socket_set_quickack(&skt, 1);
+            qp_socket_set_nodelay(skt, 1);
+            qp_socket_set_quickack(skt, 1);
             
             while (count--) {
                 
-                if (1 > qp_socket_send(&skt, buf, 16, 0)) {
+                if (1 > (rets = qp_socket_send(skt, buf, 16, 0))) {
                     break;
                 }
                 
                 gettimeofday(&ntime, NULL);
                 end = ntime.tv_sec * 1000 + ntime.tv_usec / 1000;
                 
-                INFO("Client send %ld byte at %lu, send diff time: %lu.", \
-                    skt.socket.retsno, end, (end - beg));
+                INFO("Client send %ld byte at %lu, send diff time: %d.", \
+                    rets, end, (end - beg));
                 
                 beg = end;
                 
@@ -133,7 +134,7 @@ main(int argc, char** argv)
     }
     
     end:
-    qp_socket_destroy(&skt);
+    qp_socket_destroy(skt);
     
     if (some_error) {
         return QP_ERROR;

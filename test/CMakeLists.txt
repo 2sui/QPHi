@@ -54,11 +54,11 @@ ADD_DEFINITIONS(-W -Wall -D_REENTRANT -g -D_FILE_OFFSET_BITS=64 -DQP_DEBUG)
 # exec target
 
 # pcapreader
-ADD_EXECUTABLE(${pcapreader}  
-    ${pcapreader_src} 
-    ${DEP_QPHi} 
-    ${DEP_QPHi_QP_TINY_STACK})
-TARGET_LINK_LIBRARIES(${pcapreader}  pthread dl rt)
+#ADD_EXECUTABLE(${pcapreader}  
+#    ${pcapreader_src} 
+#    ${DEP_QPHi} 
+#    ${DEP_QPHi_QP_TINY_STACK})
+#TARGET_LINK_LIBRARIES(${pcapreader}  pthread dl rt)
 
 # tcp_delay
 ADD_EXECUTABLE(${tcp_delay}  
@@ -68,29 +68,29 @@ ADD_EXECUTABLE(${tcp_delay}
 TARGET_LINK_LIBRARIES(${tcp_delay}  pthread dl rt)
 
 # lock
-ADD_EXECUTABLE(${lock}  
-    ${lock_src} 
-    ${DEP_QPHi} 
-    ${DEP_QPHi_QP_TINY_STACK})
-TARGET_LINK_LIBRARIES(${lock}  pthread dl rt)
+#ADD_EXECUTABLE(${lock}  
+#    ${lock_src} 
+#    ${DEP_QPHi} 
+#    ${DEP_QPHi_QP_TINY_STACK})
+#TARGET_LINK_LIBRARIES(${lock}  pthread dl rt)
 
 # events
-ADD_EXECUTABLE(${events}  
-    ${events_src} 
-    ${DEP_QPHi} 
-    ${DEP_QPHi_QP_TINY_STACK})
-TARGET_LINK_LIBRARIES(${events}  pthread dl rt)
+#ADD_EXECUTABLE(${events}  
+#    ${events_src} 
+#    ${DEP_QPHi} 
+#    ${DEP_QPHi_QP_TINY_STACK})
+#TARGET_LINK_LIBRARIES(${events}  pthread dl rt)
 
 # rbtree
-ADD_EXECUTABLE(${rbtree}  
-    ${rbtree_src} 
-    ${DEP_QPHi} 
-    ${DEP_QPHi_QP_TINY_STACK})
-TARGET_LINK_LIBRARIES(${rbtree}  pthread dl rt)
+#ADD_EXECUTABLE(${rbtree}  
+#    ${rbtree_src} 
+#    ${DEP_QPHi} 
+#    ${DEP_QPHi_QP_TINY_STACK})
+#TARGET_LINK_LIBRARIES(${rbtree}  pthread dl rt)
 
 # directfile
-ADD_EXECUTABLE(${directFile}  
-    ${directFile_src} 
-    ${DEP_QPHi} 
-    ${DEP_QPHi_QP_TINY_STACK})
-TARGET_LINK_LIBRARIES(${directFile}  pthread dl rt)
+#ADD_EXECUTABLE(${directFile}  
+#    ${directFile_src} 
+#    ${DEP_QPHi} 
+#    ${DEP_QPHi_QP_TINY_STACK})
+#TARGET_LINK_LIBRARIES(${directFile}  pthread dl rt)
