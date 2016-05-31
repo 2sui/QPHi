@@ -5,10 +5,11 @@
  */
 
 
-#include <qp_core.h>
+#include <qp_processes.h>
+#include <qp_o_ipc.h>
 
-static qp_shm_t       *shm = NULL;
-static qp_process_t   *child = NULL;
+static qp_shm_t       shm = NULL;
+static qp_process_t   child = NULL;
 
 typedef union {
     qp_lock_t    lock;
@@ -59,14 +60,14 @@ test_lock()
     INFO(">>>>>>>>>>> Test for lock.");
     
     unsigned long *count = (unsigned long*) qp_shm_start(shm);
-    qp_lock_t* lock = (qp_lock_t*) (qp_shm_start(shm) + sizeof(unsigned long));
+    qp_lock_t lock = (qp_lock_t) (qp_shm_start(shm) + sizeof(unsigned long));
     
     if (!lock) {
         INFO("Lock ptr get fail.");
         return;
     }
     
-    if (!qp_lock_init(lock, true, false)) {
+    if (!(lock = qp_lock_init(lock, true, false))) {
         INFO("Lock init fail.");
         return;
     }
@@ -79,7 +80,7 @@ test_lock()
         return;
     }
     
-    if (0 == child->pid) {
+    if (0 == qp_process_pid(child)) {
         int i = 0;
         
         for (; i < 1000; i++) {
@@ -114,14 +115,14 @@ test_spin()
     INFO(">>>>>>>>>>> Test for spin.");
     
     unsigned long *count = (unsigned long*) qp_shm_start(shm);
-    qp_lock_t* lock = (qp_lock_t*) (qp_shm_start(shm) + sizeof(unsigned long));
+    qp_lock_t lock = (qp_lock_t) (qp_shm_start(shm) + sizeof(unsigned long));
     
     if (!lock) {
         INFO("Lock ptr get fail.");
         return;
     }
     
-    if (!qp_lock_init(lock, true, true)) {
+    if (!(lock = qp_lock_init(lock, true, true))) {
         INFO("Lock init fail.");
         return;
     }
@@ -134,7 +135,7 @@ test_spin()
         return;
     }
     
-    if (0 == child->pid) {
+    if (0 == qp_process_pid(child)) {
         int i = 0;
         
         for (; i < 1000; i++) {
@@ -169,14 +170,14 @@ test_rwlock()
     INFO(">>>>>>>>>>> Test for rwlock.");
     
     unsigned long *count = (unsigned long*) qp_shm_start(shm);
-    qp_rwlock_t* lock = (qp_rwlock_t*)(qp_shm_start(shm) + sizeof(unsigned long));
+    qp_rwlock_t lock = (qp_rwlock_t)(qp_shm_start(shm) + sizeof(unsigned long));
     
     if (!lock) {
         INFO("RWLock ptr get fail.");
         return;
     }
     
-    if (!qp_rwlock_init(lock, true)) {
+    if (!(lock = qp_rwlock_init(lock, true))) {
         INFO("RWLock init fail.");
         return;
     }
@@ -189,26 +190,36 @@ test_rwlock()
         return;
     }
     
-    if (0 == child->pid) {
+    if (0 == qp_process_pid(child)) {
         int i = 0;
         
         for (; i < 10; i++) {
-            qp_rwlock_wrlock(lock);
-            INFO("Child wr: %lu.", ++(*count));
-            sleep(3);
-            qp_rwlock_unlock(lock);
-            qp_rwlock_rdlock(lock);
-            sleep(4);
-            qp_rwlock_unlock(lock);
+            if (QP_ERROR != qp_rwlock_wrlock(lock)) {
+                INFO("Child wr: %lu.", ++(*count));
+                sleep(3);
+                qp_rwlock_unlock(lock);
+            } else {
+                INFO("Child add wr lock error");
+            }
+            
+            if (QP_ERROR != qp_rwlock_rdlock(lock)) {
+                sleep(4);
+                qp_rwlock_unlock(lock);
+            } else {
+                INFO("Child add rd lock error");
+            }
         }
         exit(0);
     }
     
     for (; ; ) {
-        qp_rwlock_rdlock(lock);
-        INFO("Parent rd: %lu.", (*count));
-        qp_rwlock_unlock(lock);
-        
+        if (QP_ERROR != qp_rwlock_rdlock(lock)) {
+            INFO("Parent rd: %lu.", (*count));
+            qp_rwlock_unlock(lock);
+        }else {
+           INFO("Parent add rd lock error");
+        }
+//        sleep(1);
         if (*count == 10) break;
     }
     
@@ -228,7 +239,7 @@ test_cond()
     INFO(">>>>>>>>>>> Test for cond.");
     
     unsigned long *count = (unsigned long*) qp_shm_start(shm);
-    qp_cond_t* cond = (qp_cond_t*)(qp_shm_start(shm) + sizeof(unsigned long));
+    qp_cond_t cond = (qp_cond_t)(qp_shm_start(shm) + sizeof(unsigned long));
     
     if (!cond) {
         INFO("Cond ptr get fail.");
@@ -248,7 +259,7 @@ test_cond()
         return;
     }
     
-    if (0 == child->pid) {
+    if (0 == qp_process_pid(child)) {
         int i = 0;
         
         for (; i < 5; i++) { 
@@ -284,7 +295,7 @@ test_sem()
     INFO(">>>>>>>>>>> Test for sem.");
     
     unsigned long *count = (unsigned long*) qp_shm_start(shm);
-    qp_sem_t* sem = (qp_sem_t*)(qp_shm_start(shm) + sizeof(unsigned long));
+    qp_sem_t sem = (qp_sem_t)(qp_shm_start(shm) + sizeof(unsigned long));
     
     if (!sem) {
         INFO("Cond ptr get fail.");
@@ -304,7 +315,7 @@ test_sem()
         return;
     }
     
-    if (0 == child->pid) {
+    if (0 == qp_process_pid(child)) {
         int i = 0;
         
         for (; i < 5; i++) {
@@ -344,15 +355,15 @@ main()
         return QP_ERROR;
     }
     
-//    test_lock();
+    //test_lock();
     INFO();
-//    test_spin();
+    //test_spin();
     INFO();
-//    test_rwlock();
+    test_rwlock();
     INFO();
-//    test_cond();
+    //test_cond();
     INFO();
-    test_sem();
+    //test_sem();
     
     test_process();
     test_shm();

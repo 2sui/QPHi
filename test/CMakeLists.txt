@@ -68,11 +68,11 @@ ADD_EXECUTABLE(${tcp_delay}
 TARGET_LINK_LIBRARIES(${tcp_delay}  pthread dl rt)
 
 # lock
-#ADD_EXECUTABLE(${lock}  
-#    ${lock_src} 
-#    ${DEP_QPHi} 
-#    ${DEP_QPHi_QP_TINY_STACK})
-#TARGET_LINK_LIBRARIES(${lock}  pthread dl rt)
+ADD_EXECUTABLE(${lock}  
+    ${lock_src} 
+    ${DEP_QPHi} 
+    ${DEP_QPHi_QP_TINY_STACK})
+TARGET_LINK_LIBRARIES(${lock}  pthread dl rt)
 
 # events
 #ADD_EXECUTABLE(${events}  

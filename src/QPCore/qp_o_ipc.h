@@ -224,7 +224,7 @@ qp_shm_destroy(qp_shm_t shm);
 /**
  * Get the shared memory address.
  */
-qp_uchar_t
+qp_uchar_t*
 qp_shm_start(qp_shm_t shm);
 
 
