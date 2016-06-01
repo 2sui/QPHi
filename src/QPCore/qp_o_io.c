@@ -8,16 +8,6 @@
 #include "qp_o_memory.h"
 
 
-struct  qp_fd_s {
-    qp_int_t          fd;
-    qp_fd_type_t      type;        /* type of this fd */
-    struct aiocb*     aio;         /* fd */
-    bool              is_inited;   /* is struct inited */
-    bool              is_alloced;  /* is this fd allocated? */
-    bool              is_noblock;  /* is fd noblock? */
-//    bool              is_async;    /* is async(not used) */
-};
-
 inline void
 qp_fd_set_inited(qp_fd_t fd)
 { fd ? fd->is_inited = true: 1;}

@@ -26,6 +26,16 @@ enum qp_fd_type_e {
     QP_FD_TYPE_EVENT
 };
 
+struct  qp_fd_s {
+    qp_int_t          fd;
+    qp_fd_type_t      type;        /* type of this fd */
+    struct aiocb*     aio;         /* fd */
+    bool              is_inited;   /* is struct inited */
+    bool              is_alloced;  /* is this fd allocated? */
+    bool              is_noblock;  /* is fd noblock? */
+//    bool              is_async;    /* is async(not used) */
+};
+
 typedef enum qp_fd_type_e     qp_fd_type_t;
 typedef struct qp_fd_s*       qp_fd_t;
 
