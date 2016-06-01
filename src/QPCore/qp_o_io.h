@@ -28,7 +28,7 @@ enum qp_fd_type_e {
 
 struct  qp_fd_s {
     qp_int_t          fd;
-    qp_fd_type_t      type;        /* type of this fd */
+    enum qp_fd_type_e type;        /* type of this fd */
     struct aiocb*     aio;         /* fd */
     bool              is_inited;   /* is struct inited */
     bool              is_alloced;  /* is this fd allocated? */
