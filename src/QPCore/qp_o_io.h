@@ -112,8 +112,8 @@ qp_fd_setBlock(qp_fd_t fd);
  * @param ifd
  * @return 
  */
-qp_int_t
-qp_fd_set_fd(qp_fd_t fd, qp_int_t ifd);
+//qp_int_t
+//qp_fd_set_fd(qp_fd_t fd, qp_int_t ifd);
 
 /**
  * Get qp_fd_t value.
@@ -121,8 +121,8 @@ qp_fd_set_fd(qp_fd_t fd, qp_int_t ifd);
  * @param fd
  * @return 
  */
-inline qp_int_t
-qp_fd_get_fd(qp_fd_t fd);
+//inline qp_int_t
+//qp_fd_get_fd(qp_fd_t fd);
 
 /**
  * Close an opened fd.

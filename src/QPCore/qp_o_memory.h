@@ -53,6 +53,30 @@ qp_alloc_align(size_t alignment, size_t size);
 /* Alignment data */
 #define  qp_align(d,a)  (((d)+(a-1)) & ~((a) - 1))
 
+
+struct qp_list_s {
+    struct qp_list_s*    next;
+};
+
+struct qp_queue_s {
+    struct qp_queue_s*    prev;
+    struct qp_queue_s*    next;
+};
+
+struct qp_rbtree_node_s {
+    struct qp_rbtree_node_s*    left;
+    struct qp_rbtree_node_s*    right;
+    struct qp_rbtree_node_s*    parent;
+    void*                       data;
+    qp_uint64_t                 key;
+    qp_uint32_t                 color;
+};
+
+struct qp_rbtree_s {
+    struct qp_rbtree_node_s*    root;
+    struct qp_rbtree_node_s     sentinel;
+};
+
 typedef struct qp_list_s*           qp_list_t;
 typedef struct qp_queue_s*          qp_queue_t;
 typedef struct qp_rbtree_node_s*    qp_rbtree_node_t;

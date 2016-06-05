@@ -59,7 +59,8 @@ main(int argc, char** argv)
             goto end;
         }
         
-        while (qp_socket_accept(skt, client)) {
+        fprintf(stderr, "\nListen on %s:%d", SERV_ADDR, SERV_PORT);
+        while (NULL != (client = qp_socket_accept(skt, NULL))) {
             end = 0;
             gettimeofday(&ntime, NULL);
             beg = ntime.tv_sec * 1000 + ntime.tv_usec / 1000;
@@ -91,6 +92,8 @@ main(int argc, char** argv)
                     rets, end, end - beg);
                 
                 beg = end;
+                
+                fprintf(stderr, "\nRecv : %s", buf);
             }
             
             qp_socket_destroy(client);
@@ -100,7 +103,7 @@ main(int argc, char** argv)
         }
         
     } else {
-        
+        memcpy(buf, "1234567890abcde", 16);
         if (QP_SUCCESS == qp_socket_connect(skt)) {
             count = 21;
             end = 0;

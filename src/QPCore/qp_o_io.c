@@ -106,7 +106,6 @@ qp_fd_destroy(qp_fd_t fd)
         }
         
         qp_fd_unset_noblock(fd);
-//        qp_fd_unset_async(fd);
         qp_fd_unset_inited(fd);
 
         if (qp_fd_is_alloced(fd)) {

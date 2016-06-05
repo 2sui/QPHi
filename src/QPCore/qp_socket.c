@@ -10,7 +10,7 @@
 
 
 struct  qp_socket_s {
-    qp_fd_t                       socket;      /* fd */
+    struct qp_fd_s                socket;      /* fd */
     union {
         struct sockaddr_in        inet_addr;
         struct sockaddr_in6       inet6_addr;
@@ -85,7 +85,7 @@ qp_socket_create(qp_socket_t skt) {
     }
 
     /* init fd */
-    if (NULL == (skt->socket = qp_fd_init(skt->socket, QP_FD_TYPE_SOCKET, false))) {
+    if (NULL == qp_fd_init(&skt->socket, QP_FD_TYPE_SOCKET, false)) {
 
         if (qp_socket_is_alloced(skt)) {
             qp_free(skt);
@@ -164,9 +164,10 @@ qp_socket_init(qp_socket_t skt, qp_int_t domain, qp_int_t type,
     }
 
     /* get socket */
-    qp_fd_set_fd(skt->socket, socket(skt->domain, skt->type, 0));
-
-    if (!qp_fd_is_valid(skt->socket)) {
+//    qp_fd_set_fd(&skt->socket, socket(skt->domain, skt->type, 0));
+    skt->socket.fd = socket(skt->domain, skt->type, 0);
+    
+    if (!qp_fd_is_valid(&skt->socket)) {
         qp_socket_destroy(skt);
         return NULL;
     }
@@ -209,9 +210,9 @@ qp_socket_init(qp_socket_t skt, qp_int_t domain, qp_int_t type,
 qp_int_t
 qp_socket_destroy(qp_socket_t skt)
 {
-    if (skt && qp_fd_is_inited(skt->socket)) {
+    if (skt && qp_fd_is_inited(&skt->socket)) {
         qp_socket_close(skt, QP_SOCKET_SHUT_CLOSE);
-        qp_fd_destroy(skt->socket);
+        qp_fd_destroy(&skt->socket);
         skt->domain = QP_SOCKET_DOMAIN_UNSUPPORT;
         skt->type = QP_SOCKET_TYPE_UNSUPPORT;
 
@@ -272,6 +273,9 @@ qp_socket_assign_inet(qp_socket_t skt, const qp_char_t* name, qp_ushort_t port)
 qp_socket_t
 qp_socket_assign_inet6(qp_socket_t skt, const qp_char_t* name, qp_ushort_t port) 
 {
+    return NULL;
+    
+    // NOT SUPPORTED
     if (!skt || !name || (0 == port)) {
         return NULL;
     }
@@ -314,7 +318,10 @@ qp_socket_assign_unix(qp_socket_t skt, const qp_char_t* name)
         unlink(saddr.sun_path);
 
         /* bind scoket */
-        if (QP_SUCCESS != bind(qp_fd_get_fd(skt->socket), (struct sockaddr*)&saddr, len)) {
+//        if (QP_SUCCESS != bind(qp_fd_get_fd(skt->socket), (struct sockaddr*)&saddr, len)) {
+//            return NULL;
+//        }
+        if (QP_SUCCESS != bind(skt->socket.fd, (struct sockaddr*)&saddr, len)) {
             return NULL;
         }
 
@@ -335,25 +342,28 @@ qp_socket_assign_unix(qp_socket_t skt, const qp_char_t* name)
 qp_socket_t 
 qp_socket_assign_packet(qp_socket_t skt) 
 {
+    /* NOT SUPPORTED */
+    return NULL;
+    
     if (!skt) {
         return NULL;
     }
     
-    /* NOT SUPPORTED */
     return NULL;
 }
 
 qp_int_t
 qp_socket_close(qp_socket_t skt, qp_socket_shut_t shut)
 {
-    if (skt && qp_fd_is_valid(skt->socket)) {
+    if (skt && qp_fd_is_valid(&skt->socket)) {
         
         /* close socket at once */
         if (shut != QP_SOCKET_SHUT_CLOSE) {
-            shutdown(qp_fd_get_fd(skt->socket), shut);
+//            shutdown(qp_fd_get_fd(skt->socket), shut);
+            shutdown(skt->socket.fd, shut);
         }
 
-        return qp_fd_close(skt->socket);
+        return qp_fd_close(&skt->socket);
     }
     
     return QP_ERROR;
@@ -362,16 +372,16 @@ qp_socket_close(qp_socket_t skt, qp_socket_shut_t shut)
 qp_int_t
 qp_socket_listen(qp_socket_t skt, qp_int_t mod)
 {
-    if (!qp_socket_is_listen(skt) || !qp_fd_is_valid(skt->socket)) {
+    if (!qp_socket_is_listen(skt) || !qp_fd_is_valid(&skt->socket)) {
         return QP_ERROR;
     }
     
-    if (QP_SUCCESS != bind(qp_fd_get_fd(skt->socket), \
+    if (QP_SUCCESS != bind(skt->socket.fd, \
         (struct sockaddr*)&skt->socket_addr, skt->socket_len)) {
         return QP_ERROR;
     }
     
-    if (QP_SUCCESS != listen(qp_fd_get_fd(skt->socket), skt->backlog)) {
+    if (QP_SUCCESS != listen(skt->socket.fd, skt->backlog)) {
         return QP_ERROR;
     }
     
@@ -386,7 +396,7 @@ qp_socket_listen(qp_socket_t skt, qp_int_t mod)
 qp_socket_t
 qp_socket_accept(qp_socket_t skt, qp_socket_t sktClient)
 {
-    if (qp_socket_is_listen(skt) && qp_fd_is_valid(skt->socket)) {
+    if (qp_socket_is_listen(skt) && qp_fd_is_valid(&skt->socket)) {
         
         if (NULL == (sktClient = qp_socket_create(sktClient))) {
             return NULL;
@@ -416,8 +426,8 @@ qp_socket_accept(qp_socket_t skt, qp_socket_t sktClient)
         }break;
         }
 
-        qp_fd_set_fd(sktClient->socket, accept(qp_fd_get_fd(skt->socket), \
-            (struct sockaddr*)&sktClient->socket_addr, &sktClient->socket_len));
+        sktClient->socket.fd = accept(skt->socket.fd, \
+            (struct sockaddr*)&sktClient->socket_addr, &sktClient->socket_len);
         return sktClient;
     }
     
@@ -427,11 +437,11 @@ qp_socket_accept(qp_socket_t skt, qp_socket_t sktClient)
 qp_int_t
 qp_socket_connect(qp_socket_t skt)
 {
-    if (qp_socket_is_listen(skt) || !qp_fd_is_valid(skt->socket)) {
+    if (qp_socket_is_listen(skt) || !qp_fd_is_valid(&skt->socket)) {
         return QP_ERROR;
     }
 
-    return connect(qp_fd_get_fd(skt->socket), (struct sockaddr*)&(skt->socket_addr), \
+    return connect(skt->socket.fd, (struct sockaddr*)&(skt->socket_addr),\
         skt->socket_len);
 }
 
@@ -439,35 +449,35 @@ qp_int_t
 qp_socket_setsockopt(qp_socket_t skt, qp_int_t level, qp_int_t optname, \
     const void* optval, socklen_t optlen)
 {
-    if (!skt || !qp_fd_is_valid(skt->socket)) {
+    if (!skt || !qp_fd_is_valid(&skt->socket)) {
         return QP_ERROR;
     }
     
-    return setsockopt(qp_fd_get_fd(skt->socket), level, optname, optval, optlen);
+    return setsockopt(skt->socket.fd, level, optname, optval, optlen);
 }
 
 size_t
 qp_socket_sendn(qp_socket_t skt, const void* vptr, size_t nbytes)
 {
-    return skt ? qp_fd_writen(skt->socket, vptr, nbytes) : 0;
+    return skt ? qp_fd_writen(&skt->socket, vptr, nbytes) : 0;
 }
 
 size_t
 qp_socket_recvn(qp_socket_t skt, void* vptr, size_t nbytes)
 {
-    return skt ? qp_fd_readn(skt->socket, vptr, nbytes) : 0;
+    return skt ? qp_fd_readn(&skt->socket, vptr, nbytes) : 0;
 }
 
 ssize_t
 qp_socket_sendv(qp_socket_t skt, const struct iovec* iov, qp_int_t iovcnt)
 {
-    return skt ? qp_fd_writev(skt->socket, iov, iovcnt) : QP_ERROR;
+    return skt ? qp_fd_writev(&skt->socket, iov, iovcnt) : QP_ERROR;
 }
 
 ssize_t
 qp_socket_recvv(qp_socket_t skt, const struct iovec* iov, qp_int_t iovcnt)
 {
-    return skt ? qp_fd_readv(skt->socket, iov, iovcnt) : QP_ERROR;
+    return skt ? qp_fd_readv(&skt->socket, iov, iovcnt) : QP_ERROR;
 }
 
 ssize_t
@@ -477,7 +487,7 @@ qp_socket_send(qp_socket_t skt, const void* vptr, size_t nbytes, qp_int_t flag)
         return QP_ERROR;
     }
     
-    return send(qp_fd_get_fd(skt->socket), vptr, nbytes, flag);
+    return send(skt->socket.fd, vptr, nbytes, flag);
 }
 
 ssize_t
@@ -487,7 +497,7 @@ qp_socket_recv(qp_socket_t skt, void* vptr, size_t nbytes, qp_int_t flag)
         return QP_ERROR;
     }
     
-    return recv(qp_fd_get_fd(skt->socket), vptr, nbytes, flag);
+    return recv(skt->socket.fd, vptr, nbytes, flag);
 }
 
 

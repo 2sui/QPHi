@@ -31,11 +31,8 @@ enum qp_process_type_e {
 };
 
 typedef enum qp_process_type_e    qp_process_type_t;
-
-typedef struct qp_thread_handler_s*    qp_thread_handler_t;
-typedef struct qp_process_handler_s*   qp_process_handler_t;
-typedef struct qp_thread_s*            qp_thread_t;
-typedef struct qp_process_s*           qp_process_t;
+typedef struct qp_thread_s*       qp_thread_t;
+typedef struct qp_process_s*      qp_process_t;
     
 
 inline bool

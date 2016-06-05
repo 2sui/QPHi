@@ -499,6 +499,8 @@ __extension__
 #define  QP_ERROR             -1
 #define  QP_SUCCESS           0
 
+#ifdef QP_DEBUG
 #include "qp_debug.h"
+#endif
 
 #endif 

@@ -65,9 +65,9 @@ qp_stack_datalink_parse(qp_uchar_t* frame, qp_uint32_t len, qp_int_t link,\
     case DLT_PPP: break;
     /* FDDI */
     case DLT_FDDI: break;
-    /* RFC1483LLC/SNAP ATM；数据包以IEEE802.2 LLC头开始 */
+    /* RFC1483LLC/SNAP ATM；Begin with IEEE802.2 LLC header */
     case DLT_ATM_RFC1483: break;
-    /* 原始IP（raw IP）；数据包以IP头开始D */
+    /* Raw IP */
     case DLT_RAW: break;
     /* 按照RFC1662，基于类HDLC帧的PPP，或者按照RFC1547的4.3.1，
      * 基于HDLC帧的Cisco PPP；前者的第一个字节是0xFF，后者的第一个字节是0x0F或0x8F

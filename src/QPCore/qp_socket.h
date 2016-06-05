@@ -16,7 +16,6 @@ extern "C" {
 
 
 #include "qp_o_typedef.h"
-#include "qp_tiny_stack.h"
     
     
 #define  QP_SOCKET_DEFAULT_LISTENBACKLOG    128

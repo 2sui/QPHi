@@ -355,19 +355,18 @@ main()
         return QP_ERROR;
     }
     
-    //test_lock();
+    test_lock();
     INFO();
-    //test_spin();
+    test_spin();
     INFO();
-    test_rwlock();
+//    test_rwlock();
     INFO();
-    //test_cond();
+    test_cond();
     INFO();
-    //test_sem();
+    test_sem();
     
     test_process();
     test_shm();
     
     return QP_SUCCESS;
 }
-
