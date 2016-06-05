@@ -5,7 +5,9 @@
  */
 
 
-#include <qp_core.h>
+#include <qp_pool.h>
+#include <qp_socket.h>
+#include <qp_event.h>
 
 
 #define  HTTP_RSP  \
@@ -18,7 +20,7 @@
 static qp_pool_manager_t    manager;
 
 qp_int_t
-process_handler(qp_event_data_t* data, qp_int_t fd, qp_event_stat_t stat, 
+process_handler(qp_event_data_t data, qp_int_t fd, qp_event_stat_t stat, 
     bool read_finish, size_t read_cnt, bool write_finish, size_t write_cnt)
 {
     switch (stat) {
@@ -45,28 +47,27 @@ process_handler(qp_event_data_t* data, qp_int_t fd, qp_event_stat_t stat,
 }
 
 void
-init_handler(qp_event_data_t *data)
+init_handler(qp_event_data_t data)
 {
     data->readbuf_max = 512;
-    data->readbuf.block = qp_pool_manager_alloc(&manager, data->readbuf_max, 
-        NULL);
+    data->readbuf.block = qp_pool_manager_alloc(manager, data->readbuf_max, NULL);
     
     data->writebuf_max = 512;
-    data->writebuf.block = qp_pool_manager_alloc(&manager, data->writebuf_max, 
+    data->writebuf.block = qp_pool_manager_alloc(manager, data->writebuf_max, 
         NULL);
     
     data->process_handler = process_handler;
 }
 
 void
-destroy_handler(qp_event_data_t* data)
+destroy_handler(qp_event_data_t data)
 {
     if (data->readbuf.block) {
-        qp_pool_manager_free(&manager, data->readbuf.block, NULL);
+        qp_pool_manager_free(manager, data->readbuf.block, NULL);
     }
     
     if (data->writebuf.block) {
-        qp_pool_manager_free(&manager, data->writebuf.block, NULL);
+        qp_pool_manager_free(manager, data->writebuf.block, NULL);
     }
 }
 
@@ -76,41 +77,40 @@ main()
     qp_event_t    emodule;
     qp_socket_t   skt;
     
-    if (!qp_pool_manager_init(&manager, 512, 2050)) {
+    if (!(manager = qp_pool_manager_init(NULL, 512, 2050))) {
         fprintf(stderr, "\n Pool create fail.");
         return -1;
     }
     
     
-    if (!qp_socket_init(&skt, AF_INET, SOCK_STREAM, "0.0.0.0", 8080, true, 128) 
-        || !qp_event_init(&emodule, 1024, 500,  
-        init_handler, destroy_handler, true, true, NULL, NULL)) 
+    if (!(skt = qp_socket_init(NULL, AF_INET, SOCK_STREAM, "0.0.0.0", 8080, true, 128)) 
+        || !(emodule = qp_event_init(NULL, 1024, 500,  
+        init_handler, destroy_handler, true, true, NULL, NULL))) 
     {
         fprintf(stderr, "\n Socket or event init fail.");
         goto end;
     }
     
-    qp_socket_set_reuse(&skt, QP_SOCKET_SO_REUSE_ADDR, 1);
+    qp_socket_set_reuse(skt, QP_SOCKET_SO_REUSE_ADDR, 1);
     
-    if (QP_ERROR == qp_socket_listen(&skt, 0)) {
+    if (QP_ERROR == qp_socket_listen(skt, 0)) {
         fprintf(stderr, "\n Listen fail.");
         goto end;
     }
     
-    if (QP_ERROR == qp_event_addevent(&emodule, skt.socket.fd, 0, true, false)) {
+    if (QP_ERROR == qp_event_addevent(emodule, skt->socket.fd, 0, true, false)) {
         fprintf(stderr, "\n Add event fail.");
         goto end;
     }
     
-    qp_event_tiktok(&emodule, 30000);
-//    qp_event_disable(&emodule);
+    qp_event_tiktok(emodule, 30000);
+//    qp_event_disable(emodule);
     
     
     end:
-    qp_socket_destroy(&skt);
-    qp_event_destroy(&emodule);
-    qp_pool_manager_destroy(&manager, true);
+    qp_socket_destroy(skt);
+    qp_event_destroy(emodule);
+    qp_pool_manager_destroy(manager, true);
     fprintf(stderr, "\n Quit.");
     return 0;
 }
-

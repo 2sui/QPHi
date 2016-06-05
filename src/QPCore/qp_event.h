@@ -14,7 +14,6 @@
 extern "C" {
 #endif
 
-
 #include "qp_o_typedef.h"
     
     
@@ -78,6 +77,29 @@ typedef  qp_int_t (*qp_event_process_handler)(qp_event_data_t /* fd_data */,
     qp_int_t /*fd*/, qp_event_stat_t /* stat */, bool /*read_finish*/, 
     size_t /* read_cnt */, bool /*write_finish*/, size_t /* write_cnt */);
 
+
+struct  qp_event_data_s {
+    /* read buf */
+    qp_event_buf_t            readbuf; 
+    /* write buf */
+    qp_event_buf_t            writebuf;
+    /* read buf max size/block */
+    size_t                    readbuf_max; 
+    /* read buf max size/block */
+    size_t                    writebuf_max; 
+    /* it will not call do_myself callback untill read_atleast bytes are read */
+    size_t                    read_atleast; 
+    /* it will not call do_myself callback untill write_atleast bytes are writen (it will not effect for now) */
+    size_t                    write_atleast; 
+    /* use block buf or iovec buf for next step */ 
+    qp_event_opt_t            next_read_opt;    
+    /* use block buf or iovec buf for next step */  
+    qp_event_opt_t            next_write_opt; 
+    /* event process handler for user */ 
+    qp_event_process_handler  process_handler;
+    /* user data */
+    void*                     data;   /* user data */
+};
 
 
 inline bool
@@ -149,8 +171,8 @@ qp_event_destroy(qp_event_t emodule);
  * @return Return QP_SUCCESS if succes otherwise return QP_ERROR.
  */
 qp_int_t
-qp_event_addevent(qp_event_t emodule, qp_int_t fd, qp_int_t timeout,
-    bool listen,bool auto_close);
+qp_event_addevent(qp_event_t emodule, qp_int_t fd, qp_int_t timeout, bool listen, 
+    bool auto_close);
 
 //inline void
 //qp_event_disable(qp_event_t emodule);

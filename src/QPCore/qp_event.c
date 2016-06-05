@@ -17,28 +17,28 @@ typedef  void                  qp_epoll_event_s;
 
 typedef  qp_epoll_event_s*       qp_epoll_event_t;
 
-struct  qp_event_data_s {
-    /* read buf */
-    qp_event_buf_t            readbuf; 
-    /* write buf */
-    qp_event_buf_t            writebuf;
-    /* read buf max size/block */
-    size_t                    readbuf_max; 
-    /* read buf max size/block */
-    size_t                    writebuf_max; 
-    /* it will not call do_myself callback untill read_atleast bytes are read */
-    size_t                    read_atleast; 
-    /* it will not call do_myself callback untill write_atleast bytes are writen (it will not effect for now) */
-    size_t                    write_atleast; 
-    /* use block buf or iovec buf for next step */ 
-    qp_event_opt_t            next_read_opt;    
-    /* use block buf or iovec buf for next step */  
-    qp_event_opt_t            next_write_opt; 
-    /* event process handler for user */ 
-    qp_event_process_handler  process_handler;
-    /* user data */
-    void*                     data;   /* user data */
-};
+//struct  qp_event_data_s {
+//    /* read buf */
+//    qp_event_buf_t            readbuf; 
+//    /* write buf */
+//    qp_event_buf_t            writebuf;
+//    /* read buf max size/block */
+//    size_t                    readbuf_max; 
+//    /* read buf max size/block */
+//    size_t                    writebuf_max; 
+//    /* it will not call do_myself callback untill read_atleast bytes are read */
+//    size_t                    read_atleast; 
+//    /* it will not call do_myself callback untill write_atleast bytes are writen (it will not effect for now) */
+//    size_t                    write_atleast; 
+//    /* use block buf or iovec buf for next step */ 
+//    qp_event_opt_t            next_read_opt;    
+//    /* use block buf or iovec buf for next step */  
+//    qp_event_opt_t            next_write_opt; 
+//    /* event process handler for user */ 
+//    qp_event_process_handler  process_handler;
+//    /* user data */
+//    void*                     data;   /* user data */
+//};
 
 struct qp_event_fd_s {
     qp_int_t               index;
@@ -339,7 +339,7 @@ qp_event_tiktok(qp_event_t emodule, qp_int_t timeout)
         return QP_ERROR;
     }
 
-    event_queue = qp_alloc(emodule->event_size * sizeof(struct qp_epoll_event_s));
+    event_queue = qp_alloc(emodule->event_size * sizeof(qp_epoll_event_s));
     
     if (NULL == event_queue) {
         return QP_ERROR;
@@ -740,13 +740,11 @@ qp_epoll_create(qp_event_t emodule, qp_int_t size)
     }
     
 #ifdef QP_OS_LINUX
-    emodule->evfd.retsno = epoll_create(size);
+    emodule->evfd.fd = epoll_create(size);
 #else 
-    emodule->evfd.retsno = QP_ERROR;
+    emodule->evfd.fd = QP_ERROR;
 #endif
-    emodule->evfd.errono = errno;
-    emodule->evfd.fd = emodule->evfd.retsno;
-    return emodule->evfd.retsno;
+    return emodule->evfd.fd;
 }
 
 qp_int_t
@@ -758,13 +756,11 @@ qp_epoll_wait(qp_event_t emodule, qp_epoll_event_t events, qp_int_t maxevents,
     }
     
 #ifdef QP_OS_LINUX
-    emodule->evfd.retsno = epoll_wait(emodule->evfd.fd, events, maxevents, 
+    return epoll_wait(emodule->evfd.fd, events, maxevents, 
         timeout);
 #else 
-    emodule->evfd.retsno = QP_ERROR;
+    return QP_ERROR;
 #endif
-    emodule->evfd.errono = errno;
-    return emodule->evfd.retsno;
 }
 
 qp_int_t
@@ -774,7 +770,7 @@ qp_event_add(qp_event_t emodule, qp_event_fd_t eventfd)
         return QP_ERROR;
     }
     
-    struct qp_epoll_event_s setter;
+    qp_epoll_event_s setter;
     
     if (eventfd->noblock) {
         fcntl(eventfd->efd, F_SETFL, fcntl(eventfd->efd, F_GETFL) | O_NONBLOCK);
@@ -783,13 +779,10 @@ qp_event_add(qp_event_t emodule, qp_event_fd_t eventfd)
 #ifdef  QP_OS_LINUX
     setter.data.ptr = eventfd;
     setter.events = eventfd->flag;
-    emodule->evfd.retsno = epoll_ctl(emodule->evfd.fd, EPOLL_CTL_ADD, 
-        eventfd->efd, &setter);
+    return epoll_ctl(emodule->evfd.fd, EPOLL_CTL_ADD, eventfd->efd, &setter);
 #else
-    return emodule->evfd.retsno = QP_ERROR;
+    return QP_ERROR;
 #endif
-    emodule->evfd.errono = errno;
-    return emodule->evfd.retsno;
 }
 
 qp_int_t
@@ -799,14 +792,12 @@ qp_event_reset(qp_event_t emodule, qp_event_fd_t eventfd, qp_int_t flag)
         return QP_ERROR;
     }
     
-    struct qp_epoll_event_s setter;
+    qp_epoll_event_s setter;
 #ifdef  QP_OS_LINUX
     setter.data.ptr = eventfd;
     setter.events = eventfd->flag | flag;
-    emodule->evfd.retsno = epoll_ctl(emodule->evfd.fd, EPOLL_CTL_MOD, 
+    return epoll_ctl(emodule->evfd.fd, EPOLL_CTL_MOD, 
         eventfd->efd, &setter);
-    emodule->evfd.errono = errno;
-    return emodule->evfd.retsno;
 #else
     return QP_ERROR;
 #endif
@@ -819,14 +810,11 @@ qp_event_del(qp_event_t emodule, qp_event_fd_t eventfd)
         return QP_ERROR;
     }
     
-    struct qp_epoll_event_s setter;
+    qp_epoll_event_s setter;
 #ifdef  QP_OS_LINUX
     setter.data.ptr = eventfd;
     setter.events = 0;
-    emodule->evfd.retsno = epoll_ctl(emodule->evfd.fd, EPOLL_CTL_DEL, 
-        eventfd->efd, &setter);
-    emodule->evfd.errono = errno;
-    return emodule->evfd.retsno;
+    return epoll_ctl(emodule->evfd.fd, EPOLL_CTL_DEL, eventfd->efd, &setter);
 #else
     return QP_ERROR;
 #endif

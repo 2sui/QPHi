@@ -5,18 +5,16 @@
   * Memory pool.
   */
 
-
 #ifndef QP_POOL_H
 #define QP_POOL_H
+
+
+#include "qp_o_typedef.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
     
-
-#include "qp_o_typedef.h"
-    
-
 typedef struct qp_pool_elm_s*            qp_pool_elm_t;
 typedef struct qp_pool_s*                qp_pool_t;
 typedef struct qp_pool_manager_s*        qp_pool_manager_t;
