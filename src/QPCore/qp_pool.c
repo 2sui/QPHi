@@ -409,7 +409,7 @@ qp_pool_manager_free(qp_pool_manager_t manager, void* ptr, qp_pool_t npool)
                 manager->pool_count--;
                 
             } else {
-                // TODO:
+                // TODO: Some error or bugs happend
             }  
         }
         
