@@ -89,6 +89,14 @@ qp_int_t
 qp_socket_destroy(qp_socket_t skt);
 
 /**
+ * Get the [int] fd.
+ * @param skt
+ * @return 
+ */
+qp_int_t
+qp_socket_to_int(qp_socket_t skt);
+
+/**
  * Clsoe an opened socket.
  * 
  * @param skt: Valid qp_socket_t.
@@ -98,10 +106,6 @@ qp_socket_destroy(qp_socket_t skt);
 qp_int_t
 qp_socket_close(qp_socket_t skt, qp_socket_shut_t shut);
 
-/*
- * 
- * 
-*/
 /**
  * Listen from created socket. [mod] is only work for unix socket for set the 
  * privilege of listening socket.

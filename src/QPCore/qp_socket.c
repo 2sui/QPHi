@@ -353,6 +353,16 @@ qp_socket_assign_packet(qp_socket_t skt)
 }
 
 qp_int_t
+qp_socket_to_int(qp_socket_t skt)
+{
+    if (skt && qp_fd_is_valid(&skt->socket)) {
+        return skt->socket.fd;
+    }
+    
+    return QP_ERROR;
+}
+
+qp_int_t
 qp_socket_close(qp_socket_t skt, qp_socket_shut_t shut)
 {
     if (skt && qp_fd_is_valid(&skt->socket)) {
