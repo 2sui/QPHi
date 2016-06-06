@@ -9,13 +9,11 @@
 #define QP_O_IO_H
 
 
+#include "qp_o_typedef.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-    
-#include "qp_o_typedef.h"
-    
     
 #define  QP_FD_INVALID        QP_ERROR
     
@@ -33,11 +31,10 @@ struct  qp_fd_s {
     bool              is_inited;   /* is struct inited */
     bool              is_alloced;  /* is this fd allocated? */
     bool              is_noblock;  /* is fd noblock? */
-//    bool              is_async;    /* is async(not used) */
 };
 
-typedef enum qp_fd_type_e     qp_fd_type_t;
-typedef struct qp_fd_s*       qp_fd_t;
+typedef enum   qp_fd_type_e     qp_fd_type_t;
+typedef struct qp_fd_s*         qp_fd_t;
 
 
 inline bool

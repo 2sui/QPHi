@@ -10,12 +10,11 @@
 #define QP_EVENT_H
 
 
+#include "qp_o_typedef.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "qp_o_typedef.h"
-    
     
 #ifdef  QP_OS_LINUX
     

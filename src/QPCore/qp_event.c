@@ -41,59 +41,59 @@ typedef  qp_epoll_event_s*       qp_epoll_event_t;
 //};
 
 struct qp_event_fd_s {
-    qp_int_t               index;
-    qp_int_t               efd;
-    qp_int_t               eflag;
-    qp_uint32_t            flag;          /* need close */
+    qp_int_t                   index;
+    qp_int_t                   efd;
+    qp_int_t                   eflag;
+    qp_uint32_t                flag;          /* need close */
     
     /* size that already read, it will be set when read done */  
-    size_t                 read_done;     
+    size_t                     read_done;     
     /* size that already writen, it will be set when write done */
-    size_t                 write_done; 
+    size_t                     write_done; 
     
-    struct qp_list_s              ready_next;
-    struct qp_event_data_s        field;
-    struct qp_rbtree_node_s       timer_node;
+    struct qp_list_s           ready_next;
+    struct qp_event_data_s     field;
+    struct qp_rbtree_node_s    timer_node;
     
     /* event fd flags */
-    qp_uint32_t            noblock:1;     /* need noblock */
-    qp_uint32_t            edge:1;        /* ET mod */
+    qp_uint32_t                noblock:1;     /* need noblock */
+    qp_uint32_t                edge:1;        /* ET mod */
     
-    qp_uint32_t            listen:1;      /* is listen event */
-    qp_uint32_t            closed:1;
-    qp_uint32_t            stat:2;
+    qp_uint32_t                listen:1;      /* is listen event */
+    qp_uint32_t                closed:1;
+    qp_uint32_t                stat:2;
     
-    qp_uint32_t            nativeclose:1; /* native closed */
-    qp_uint32_t            peerclose:1;   /* peer closed */
-    qp_uint32_t            write:1;       
-    qp_uint32_t            writehup:1;
-    qp_uint32_t            write_finish:1;
-    qp_uint32_t            read:1; 
-    qp_uint32_t            readhup:1;
-    qp_uint32_t            read_finish:1;
+    qp_uint32_t                nativeclose:1; /* native closed */
+    qp_uint32_t                peerclose:1;   /* peer closed */
+    qp_uint32_t                write:1;       
+    qp_uint32_t                writehup:1;
+    qp_uint32_t                write_finish:1;
+    qp_uint32_t                read:1; 
+    qp_uint32_t                readhup:1;
+    qp_uint32_t                read_finish:1;
     
-    qp_uint32_t            :20;
+    qp_uint32_t                :20;
 };
 
 struct  qp_event_s {
-    struct qp_fd_s                 evfd;          /* event number in pool */
-    qp_event_opt_handler    init;
-    qp_event_opt_handler    destroy;
-    qp_event_idle_handler   idle;
-    void*                   idle_arg;   /* idle event callback arg */
-    struct qp_pool_s               event_pool;    /* mem pool */ 
-    struct qp_list_s               ready;         /* event ready list */
-    struct qp_list_s               listen_ready;
-    struct qp_rbtree_s             timer;
-    qp_uint64_t             timer_begin;
-    qp_int_t                timer_resolution;
-    qp_int_t                timer_progress;
-    qp_int_t                event_size;    /* event pool size */
+    struct qp_fd_s             evfd;          /* event number in pool */
+    qp_event_opt_handler       init;
+    qp_event_opt_handler       destroy;
+    qp_event_idle_handler      idle;
+    void*                      idle_arg;   /* idle event callback arg */
+    struct qp_pool_s           event_pool;    /* mem pool */ 
+    struct qp_list_s           ready;         /* event ready list */
+    struct qp_list_s           listen_ready;
+    struct qp_rbtree_s         timer;
+    qp_uint64_t                timer_begin;
+    qp_int_t                   timer_resolution;
+    qp_int_t                   timer_progress;
+    qp_int_t                   event_size;    /* event pool size */
     /* read buf if user not assign */
-    qp_uchar_t              combuf[QP_EVENT_COMMONDATA_SIZE];
-    bool                    timer_update;
-    bool                    is_alloced; 
-    bool                    is_run;
+    qp_uchar_t                 combuf[QP_EVENT_COMMONDATA_SIZE];
+    bool                       timer_update;
+    bool                       is_alloced; 
+    bool                       is_run;
 };
 
 #define QP_EVENT_SET_ALLOCED(event)   (((qp_event_t)(event))->is_alloced=true)

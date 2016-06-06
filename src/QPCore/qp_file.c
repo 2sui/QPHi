@@ -10,7 +10,7 @@
 
 
 struct qp_file_s {
-    struct qp_fd_s          file;         /* file path */
+    struct qp_fd_s           file;         /* file path */
     qp_int_t                 mod;          /* normal/directIO/AIO */
     qp_int_t                 open_flag;    /* O_RDONLY O_WRONLY O_RDWR O_EXEC O_SEARCH */
     qp_int_t                 open_opt;     /* O_CREAT O_TRUC ... */

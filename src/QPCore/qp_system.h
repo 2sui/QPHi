@@ -10,14 +10,12 @@
 #define QP_SYSTEM_H
 
 
+#include "qp_o_typedef.h"
+#include <dlfcn.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-
-#include "qp_o_typedef.h"
-#include <dlfcn.h>
-    
     
 #define  QP_FILENO_MAX    65535
 #define  QP_LIB_LOAD      1

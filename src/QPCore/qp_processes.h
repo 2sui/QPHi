@@ -10,13 +10,11 @@
 #define QP_PROCESSES_H
 
 
+#include "qp_o_typedef.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-
-#include "qp_o_typedef.h"
-    
     
 #define QP_THREAD_INVALID        QP_ERROR
 #define QP_PROCESS_INVALID       QP_ERROR

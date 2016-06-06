@@ -9,18 +9,18 @@
 
 
 struct  qp_thread_handler_s {
-    void*          (*handler_ptr)(void*);
-    void*          args_ptr;
-    void*          ret;
+    void*                         (*handler_ptr)(void*);
+    void*                         args_ptr;
+    void*                         ret;
 };
 
 struct qp_process_handler_s { 
-    size_t              stack_size;
-    void*               args_ptr;
-    qp_int_t            (*handler_ptr)(void *);
-    qp_char_t* const    *argv; 
-    qp_int_t            flag; 
-    qp_int_t            ret;
+    size_t                        stack_size;
+    void*                         args_ptr;
+    qp_int_t                      (*handler_ptr)(void *);
+    qp_char_t* const              *argv; 
+    qp_int_t                      flag; 
+    qp_int_t                      ret;
 };
 
 struct  qp_thread_s {

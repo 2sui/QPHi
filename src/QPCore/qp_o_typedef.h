@@ -293,14 +293,17 @@
 #  define QP_OS_BSD4     /* ## BSD4 ## */
 #endif
 
+#ifndef QP_OS_LINUX
+#  error "ONLY SUPPORT LINUX FOR NOW!!!"
+#endif
 
-/* in auto conf */
 #if defined(QP_OS_UNIX)
 #  define QP_OS_POSIX
 #else
 #  error "QPHi does not support this OS (1)!"
 #endif
-/* in auto conf */
+
+/* POSIX */
 #ifdef QP_OS_POSIX
 #  define QP_POSIX_XSI
 #endif
@@ -499,8 +502,6 @@ __extension__
 #define  QP_ERROR             -1
 #define  QP_SUCCESS           0
 
-#ifdef QP_DEBUG
 #include "qp_debug.h"
-#endif
 
 #endif 

@@ -15,6 +15,10 @@
 #include "qp_o_memory.h"
 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+    
 struct qp_ipc_lock_s {
     union {
         pthread_mutex_t  mutex;
@@ -58,11 +62,6 @@ struct qp_ipc_shm_s {
     bool                 is_alloced;
     /* share mem always shared in processes */
 };
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 
 #ifdef __cplusplus
 }

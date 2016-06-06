@@ -10,13 +10,11 @@
 #define QP_TINY_STACK_H
 
 
+#include "qp_o_typedef.h"
+
 #ifdef __cplusplus
 extern "C" {
-#endif
-
-    
-#include "qp_o_typedef.h"
- 
+#endif 
     
 #define QP_STACK_LEVEL_DATALINK    1
 #define QP_STACK_LEVEL_NETWORK     2

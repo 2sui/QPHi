@@ -10,12 +10,11 @@
 #define QP_O_MEMORY
 
 
+#include "qp_o_typedef.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "qp_o_typedef.h"
-    
     
 /* PAGE size */
 #ifndef QP_PAGE_SIZE
@@ -55,12 +54,12 @@ qp_alloc_align(size_t alignment, size_t size);
 
 
 struct qp_list_s {
-    struct qp_list_s*    next;
+    struct qp_list_s*           next;
 };
 
 struct qp_queue_s {
-    struct qp_queue_s*    prev;
-    struct qp_queue_s*    next;
+    struct qp_queue_s*          prev;
+    struct qp_queue_s*          next;
 };
 
 struct qp_rbtree_node_s {

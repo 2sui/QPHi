@@ -41,19 +41,15 @@ INSTALL(FILES ${BUILD_LIBS}/lib${PROJECT_NAME}.a
         ${BUILD_LIBS}/lib${PROJECT_NAME}.so
         DESTINATION lib) 
 
-INSTALL(FILES #${PROJECT_SOURCE_DIR}/qp_core.h
+INSTALL(FILES ${PROJECT_SOURCE_DIR}/qp_core.h
         ${PROJECT_SOURCE_DIR}/qp_debug.h
-#        ${PROJECT_SOURCE_DIR}/qp_event.h
-#        ${PROJECT_SOURCE_DIR}/qp_file.h
-        ${PROJECT_SOURCE_DIR}/qp_o_atomic.h
-        ${PROJECT_SOURCE_DIR}/qp_o_io.h
-#        ${PROJECT_SOURCE_DIR}/qp_o_ipc.h
-        ${PROJECT_SOURCE_DIR}/qp_o_memory.h
+        ${PROJECT_SOURCE_DIR}/qp_event.h
+        ${PROJECT_SOURCE_DIR}/qp_file.h
         ${PROJECT_SOURCE_DIR}/qp_o_typedef.h
-#        ${PROJECT_SOURCE_DIR}/qp_pool.h
-#        ${PROJECT_SOURCE_DIR}/qp_processes.h
+        ${PROJECT_SOURCE_DIR}/qp_pool.h
+        ${PROJECT_SOURCE_DIR}/qp_processes.h
         ${PROJECT_SOURCE_DIR}/qp_socket.h
-#        ${PROJECT_SOURCE_DIR}/qp_system.h
+        ${PROJECT_SOURCE_DIR}/qp_system.h
         ${PROJECT_SOURCE_DIR}/qp_tiny_stack.h
         DESTINATION include)
 
