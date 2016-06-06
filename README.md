@@ -2,6 +2,7 @@
 # QPHi
 [![license](https://img.shields.io/badge/license-MIT%20License-blue.svg)](https://mit-license.org/)
 [![tag](https://img.shields.io/badge/tag-v1.0.0-brightgreen.svg)](https://github.com/2sui/QPHi/tree/1.0.0)
+[![build](https://travis-ci.org/2sui/QPHi.svg?branch=master)](https://github.com/2sui/QPHi)
 
 Linux libraries for developing.
 
