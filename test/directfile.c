@@ -5,7 +5,7 @@
  */
 
 
-#include <qp_core.h>
+#include <qp_file.h>
 #include <stdlib.h>
 
 const qp_char_t* str = "12345678901234567890123456789012345678901234567890"
@@ -76,7 +76,7 @@ main()
     size_t size = 0;
     qp_int_t i = 4096 * 20;
     qp_uchar_t*  write = 0;
-    qp_file_t* file = NULL;
+    qp_file_t file = NULL;
     
     printf("\n Test normal IO ++++++++");
     

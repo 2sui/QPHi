@@ -89,8 +89,8 @@ TARGET_LINK_LIBRARIES(${events}  pthread dl rt)
 #TARGET_LINK_LIBRARIES(${rbtree}  pthread dl rt)
 
 # directfile
-#ADD_EXECUTABLE(${directFile}  
-#    ${directFile_src} 
-#    ${DEP_QPHi} 
-#    ${DEP_QPHi_QP_TINY_STACK})
-#TARGET_LINK_LIBRARIES(${directFile}  pthread dl rt)
+ADD_EXECUTABLE(${directFile}  
+    ${directFile_src} 
+    ${DEP_QPHi} 
+    ${DEP_QPHi_QP_TINY_STACK})
+TARGET_LINK_LIBRARIES(${directFile}  pthread dl rt)
