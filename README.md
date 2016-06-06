@@ -1,7 +1,9 @@
 
 # QPHi
+[![license](https://img.shields.io/badge/license-MIT%20License-blue.svg)](https://mit-license.org/)
+[![tag](https://img.shields.io/badge/tag-v1.0.0-brightgreen.svg)](https://github.com/2sui/QPHi/tree/1.0.0)
 
-Linux libraries for learning and developing.
+Linux libraries for developing.
 
 ----
 
