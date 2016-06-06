@@ -519,12 +519,12 @@ qp_socket_set_reuse(qp_socket_t skt, qp_int_t reuse, qp_int_t enable)
         return qp_socket_setsockopt(skt, SOL_SOCKET, SO_REUSEADDR, \
             (const void *)&enable, sizeof(enable));
     }
-    
+#ifdef QP_OS_BSD4
     if (reuse == QP_SOCKET_SO_REUSE_PORT) {
         return qp_socket_setsockopt(skt, SOL_SOCKET, SO_REUSEPORT, \
             (const void *)&enable, sizeof(enable));
     }
-    
+#endif
     return QP_SUCCESS;
 }
 
