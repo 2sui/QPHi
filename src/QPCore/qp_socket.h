@@ -50,10 +50,10 @@ typedef enum qp_socket_type_e      qp_socket_type_t;
 typedef struct qp_socket_s*        qp_socket_t;
 
 
-inline bool
+bool
 qp_socket_is_alloced(qp_socket_t skt);
 
-inline bool
+bool
 qp_socket_is_listen(qp_socket_t skt);
 
 

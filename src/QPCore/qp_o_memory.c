@@ -4,8 +4,8 @@
   */
 
 
-#include "qp_o_memory.h"
 #include "qp_o_atomic.h"
+#include "qp_o_memory.h"
 
 
 #if defined(QP_OS_LINUX)  || defined(QP_OS_BSD4) || defined(QP_OS_SOLARIS)

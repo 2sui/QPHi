@@ -21,16 +21,16 @@ typedef struct qp_pool_manager_s*        qp_pool_manager_t;
 typedef struct qp_pool_manager_elm_s*    qp_pool_manager_elm_t;
 
 
-inline bool
+bool
 qp_pool_is_inited(qp_pool_t pool);
 
-inline bool
+bool
 qp_pool_is_alloced(qp_pool_t pool);
 
-inline bool
+bool
 qp_pool_mamager_is_inited(qp_pool_manager_t manager);
 
-inline bool
+bool
 qp_pool_manager_is_shared(qp_pool_manager_t manager);
 
 

@@ -37,19 +37,19 @@ typedef enum   qp_fd_type_e     qp_fd_type_t;
 typedef struct qp_fd_s*         qp_fd_t;
 
 
-inline bool
+bool
 qp_fd_is_inited(qp_fd_t fd);
 
-inline bool
+bool
 qp_fd_is_alloced(qp_fd_t fd) ;
 
-inline bool
+bool
 qp_fd_is_noblock(qp_fd_t fd);
 
-inline bool
+bool
 qp_fd_is_aio(qp_fd_t fd);
 
-inline bool
+bool
 qp_fd_is_valid(qp_fd_t fd);
 
 /**
@@ -81,7 +81,7 @@ qp_fd_destroy(qp_fd_t fd);
  * @param fd: Inited qp_fd_t.
  * @return Type of qp_fd_t if success, otherwise return QP_FD_TYPE_UNKNOW.
  */
-inline qp_fd_type_t
+qp_fd_type_t
 qp_fd_type(qp_fd_t fd);
 
 /**
@@ -118,7 +118,7 @@ qp_fd_setBlock(qp_fd_t fd);
  * @param fd
  * @return 
  */
-//inline qp_int_t
+//qp_int_t
 //qp_fd_get_fd(qp_fd_t fd);
 
 /**

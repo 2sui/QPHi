@@ -37,8 +37,8 @@ SET(BUILD_BIN  ${PROJECT_SOURCE_DIR}/../build/bin)
 SET(DEPS_QPHI  ${PROJECT_SOURCE_DIR}/../src/QPCore)
 
 # sources dir
-AUX_SOURCE_DIRECTORY(${DEPS_QPHI}  DEP_QPHi)
-AUX_SOURCE_DIRECTORY(${DEPS_QPHI}/qp_tiny_stack  DEP_QPHi_QP_TINY_STACK)
+#AUX_SOURCE_DIRECTORY(${DEPS_QPHI}  DEP_QPHi)
+#AUX_SOURCE_DIRECTORY(${DEPS_QPHI}/qp_tiny_stack  DEP_QPHi_QP_TINY_STACK)
 
 # headers dir
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}  ${DEPS_QPHI})
@@ -65,21 +65,21 @@ ADD_EXECUTABLE(${tcp_delay}
     ${tcp_delay_src} 
     ${DEP_QPHi} 
     ${DEP_QPHi_QP_TINY_STACK})
-TARGET_LINK_LIBRARIES(${tcp_delay}  pthread dl rt)
+TARGET_LINK_LIBRARIES(${tcp_delay}  pthread dl rt QPCore)
 
 # lock
 ADD_EXECUTABLE(${lock}  
     ${lock_src} 
     ${DEP_QPHi} 
     ${DEP_QPHi_QP_TINY_STACK})
-TARGET_LINK_LIBRARIES(${lock}  pthread dl rt)
+TARGET_LINK_LIBRARIES(${lock}  pthread dl rt QPCore)
 
 # events
 ADD_EXECUTABLE(${events}  
     ${events_src} 
     ${DEP_QPHi} 
     ${DEP_QPHi_QP_TINY_STACK})
-TARGET_LINK_LIBRARIES(${events}  pthread dl rt)
+TARGET_LINK_LIBRARIES(${events}  pthread dl rt QPCore)
 
 # rbtree
 #ADD_EXECUTABLE(${rbtree}  
