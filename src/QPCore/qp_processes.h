@@ -33,25 +33,25 @@ typedef struct qp_thread_s*       qp_thread_t;
 typedef struct qp_process_s*      qp_process_t;
     
 
-inline bool
+bool
 qp_thread_is_alloced(qp_thread_t thread);
 
-inline bool
+bool
 qp_thread_is_inited(qp_thread_t thread);
 
-inline bool
+bool
 qp_thread_is_detach(qp_thread_t thread);
 
-inline bool
+bool
 qp_thread_is_running(qp_thread_t thread);
 
-inline bool
+bool
 qp_process_is_alloced(qp_process_t process);
 
-inline bool
+bool
 qp_process_is_inited(qp_process_t process);
 
-inline bool
+bool
 qp_process_is_running(qp_process_t process);
 
 

@@ -101,7 +101,7 @@ struct  qp_event_data_s {
 };
 
 
-inline bool
+bool
 qp_event_is_alloced(qp_event_t evfd);
 
 /****************************************************************************

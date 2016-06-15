@@ -45,6 +45,7 @@ INSTALL(FILES ${PROJECT_SOURCE_DIR}/qp_core.h
         ${PROJECT_SOURCE_DIR}/qp_debug.h
         ${PROJECT_SOURCE_DIR}/qp_event.h
         ${PROJECT_SOURCE_DIR}/qp_file.h
+        ${PROJECT_SOURCE_DIR}/qp_ipc.h
         ${PROJECT_SOURCE_DIR}/qp_o_typedef.h
         ${PROJECT_SOURCE_DIR}/qp_pool.h
         ${PROJECT_SOURCE_DIR}/qp_processes.h

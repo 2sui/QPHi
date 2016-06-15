@@ -6,7 +6,8 @@
  */
 
 
-#include <qp_core.h>
+#include <qp_file.h>
+#include <qp_tiny_stack.h>
 
 
 #define  MAX_SNAPLEN    65535

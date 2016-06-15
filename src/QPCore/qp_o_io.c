@@ -8,47 +8,47 @@
 #include "qp_o_memory.h"
 
 
-inline void
+void
 qp_fd_set_inited(qp_fd_t fd)
 { fd ? fd->is_inited = true: 1;}
 
-inline void
+void
 qp_fd_set_alloced(qp_fd_t fd)
 { fd ? fd->is_alloced = true : 1;}
 
-inline void
+void
 qp_fd_set_noblock(qp_fd_t fd)
 { fd ? fd->is_noblock = true : 1;}
 
-inline void
+void
 qp_fd_unset_inited(qp_fd_t fd)
 { fd ? fd->is_inited = false : 1;}
 
-inline void
+void
 qp_fd_unset_alloced(qp_fd_t fd)
 { fd ? fd->is_alloced = false : 1;}
 
-inline void
+void
 qp_fd_unset_noblock(qp_fd_t fd)
 { fd ? fd->is_noblock = false : 1;}
 
-inline bool
+bool
 qp_fd_is_inited(qp_fd_t fd) 
 { return fd ? fd->is_inited : false; }
 
-inline bool
+bool
 qp_fd_is_alloced(qp_fd_t fd) 
 { return fd ? fd->is_alloced : false; }
 
-inline bool
+bool
 qp_fd_is_noblock(qp_fd_t fd) 
 { return fd ? fd->is_noblock : false; }
 
-inline bool
+bool
 qp_fd_is_aio(qp_fd_t fd)
 { return fd ? (NULL != fd->aio) : false; }
 
-inline bool
+bool
 qp_fd_is_valid(qp_fd_t fd) 
 { return fd ? (QP_FD_INVALID != fd->fd) : false;}
 
@@ -175,12 +175,12 @@ qp_fd_set_fd(qp_fd_t fd, qp_int_t ifd) {
     return QP_ERROR;
 }
 
-inline qp_int_t
+qp_int_t
 qp_fd_get_fd(qp_fd_t fd) {
     return qp_fd_is_inited(fd) ? fd->fd : QP_ERROR;
 }
 
-inline qp_fd_type_t
+qp_fd_type_t
 qp_fd_type(qp_fd_t fd)
 {
     return qp_fd_is_inited(fd) ? fd->type : QP_FD_TYPE_UNKNOW;

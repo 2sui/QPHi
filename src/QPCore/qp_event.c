@@ -125,7 +125,7 @@ epoll_wait(int __epfd, epoll_event *__events, int __maxevents, int __timeout)
 #endif
 
 
-inline bool
+bool
 qp_event_is_alloced(qp_event_t emodule) 
 { return emodule ? emodule->is_alloced : false; }
 
@@ -711,7 +711,7 @@ qp_event_removeevent(qp_event_t emodule, qp_event_fd_t eventfd)
     return QP_SUCCESS;
 }
 
-inline void
+void
 qp_event_disable(qp_event_t emodule)
 { emodule ? emodule->is_run = false : 1; }
 

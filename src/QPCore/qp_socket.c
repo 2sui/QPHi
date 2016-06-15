@@ -25,28 +25,28 @@ struct  qp_socket_s {
     bool                          is_alloced;  /* is alloced */
 };
 
-inline void
+void
 qp_socket_set_alloced(qp_socket_t skt)
 { skt ? skt->is_alloced = true : 1;}
 
-inline void
+void
 qp_socket_set_listen(qp_socket_t skt)
 { skt ? skt->is_listen = true : 1;}
 
-inline void
+void
 qp_socket_unset_alloced(qp_socket_t skt)
 { skt ? skt->is_alloced = false : 1;}
 
-inline void
+void
 qp_socket_unset_listen(qp_socket_t skt)
 { skt ? skt->is_listen = false : 1;}
 
 
-inline bool
+bool
 qp_socket_is_alloced(qp_socket_t skt) 
 { return skt ? skt->is_alloced : false; }
 
-inline bool
+bool
 qp_socket_is_listen(qp_socket_t skt) 
 { return skt ? skt->is_listen : false; }
 

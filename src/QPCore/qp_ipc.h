@@ -25,49 +25,49 @@ typedef struct qp_ipc_sem_s*       qp_sem_t;
 typedef struct qp_ipc_shm_s*       qp_shm_t;
 
 
-inline bool
+bool
 qp_lock_is_inited(qp_lock_t lock);
 
-inline bool
+bool
 qp_rwlock_is_inited(qp_rwlock_t rwlock);
 
-inline bool
+bool
 qp_cond_is_inited(qp_cond_t cond);
 
-inline bool
+bool
 qp_sem_is_inited(qp_sem_t sem);
 
-inline bool
+bool
 qp_shm_is_inited(qp_shm_t shm);
 
-inline bool
+bool
 qp_lock_is_alloced(qp_lock_t lock);
 
-inline bool
+bool
 qp_rwlock_is_alloced(qp_rwlock_t rwlock);
 
-inline bool
+bool
 qp_cond_is_alloced(qp_cond_t cond);
 
-inline bool
+bool
 qp_sem_is_alloced(qp_sem_t sem);
 
-inline bool
+bool
 qp_shm_is_alloced(qp_shm_t shm);
 
-inline bool
+bool
 qp_lock_is_shared(qp_lock_t lock);
 
-inline bool
+bool
 qp_rwlock_is_shared(qp_rwlock_t rwlock);
 
-inline bool
+bool
 qp_cond_is_shared(qp_cond_t cond);
 
-inline bool
+bool
 qp_sem_is_shared(qp_sem_t sem);
 
-inline bool
+bool
 qp_lock_is_spin(qp_lock_t lock);
 
 

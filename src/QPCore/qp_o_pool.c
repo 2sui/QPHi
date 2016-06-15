@@ -7,51 +7,51 @@
 #include "qp_o_pool.h"
 
 
-inline void
+void
 qp_pool_set_inited(qp_pool_t pool)
 { pool ? pool->is_inited = true : 1;}
 
-inline void
+void
 qp_pool_set_alloced(qp_pool_t pool)
 { pool ? pool->is_alloced = true : 1;}
 
-inline void
+void
 qp_pool_manager_set_inited(qp_pool_manager_t manager)
 { manager ? manager->is_inited = true : 1;}
 
-inline void
+void
 qp_pool_manager_set_alloced(qp_pool_manager_t manager)
 { manager ? manager->is_alloced = true : 1;}
 
-inline void
+void
 qp_pool_unset_inited(qp_pool_t pool)
 { pool ? pool->is_inited = false : 1;}
 
-inline void
+void
 qp_pool_unset_alloced(qp_pool_t pool)
 { pool ? pool->is_alloced = false : 1;}
 
-inline void
+void
 qp_pool_manager_unset_inited(qp_pool_manager_t manager)
 { manager ? manager->is_inited = false : 1;}
 
-inline void
+void
 qp_pool_manager_unset_alloced(qp_pool_manager_t manager)
 { manager ? manager->is_alloced = false : 1;}
 
-inline bool
+bool
 qp_pool_is_inited(qp_pool_t pool) 
 { return pool ? pool->is_inited : false;}
 
-inline bool
+bool
 qp_pool_is_alloced(qp_pool_t pool)
 { return pool ? pool->is_alloced : false;}
 
-inline bool
+bool
 qp_pool_manager_is_inited(qp_pool_manager_t manager)
 { return manager ? manager->is_inited : false;}
 
-inline bool
+bool
 qp_pool_manager_is_alloced(qp_pool_manager_t manager)
 { return manager ? manager->is_alloced : false;}
 

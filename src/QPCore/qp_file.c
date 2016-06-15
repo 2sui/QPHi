@@ -37,28 +37,28 @@ struct qp_file_s {
 #define  QP_FILE_UNSET_DIRECTIO(file)  (((qp_file_t)(file))->is_directIO=false)
 
 
-inline void
+void
 qp_file_set_alloced(qp_file_t file)
 { file ? file->is_alloced = true : 1;}
 
-inline void
+void
 qp_file_set_directIO(qp_file_t file)
 { file ? file->is_directIO = true : 1;}
 
-inline void
+void
 qp_file_unset_alloced(qp_file_t file)
 { file ? file->is_alloced = false : 1;}
 
-inline void
+void
 qp_file_unset_directIO(qp_file_t file)
 { file ? file->is_directIO = false : 1;}
 
 
-inline bool
+bool
 qp_file_is_alloced(qp_file_t file) 
 { return file ? file->is_alloced : false; }
 
-inline bool
+bool
 qp_file_is_directIO(qp_file_t file) 
 { return file ? file->is_directIO : false; }
 

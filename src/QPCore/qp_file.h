@@ -48,10 +48,10 @@ extern "C" {
 typedef struct qp_file_s*     qp_file_t;
 
 
-inline bool
+bool
 qp_file_is_alloced(qp_file_t file);
 
-inline bool
+bool
 qp_file_is_directIO(qp_file_t file);
 
 /**

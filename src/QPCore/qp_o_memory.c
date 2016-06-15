@@ -26,21 +26,21 @@ qp_alloc_align(size_t alignment, size_t size)
 /**
  * Init list.
  */
-inline void 
+void 
 qp_list_init(qp_list_t list)
 { list->next = list;}
 
 /**
  * Return true if list is empty.
  */
-inline bool
+bool
 qp_list_is_empty(qp_list_t list)
 { return list == list->next;}
 
 /**
  * Push x to l.
  */
-inline void
+void
 qp_list_push(qp_list_t list, qp_list_t node)
 {
     node->next = list->next;
@@ -50,21 +50,21 @@ qp_list_push(qp_list_t list, qp_list_t node)
 /**
  * Pop element from l.
  */
-inline void
+void
 qp_list_pop(qp_list_t list)
 { list->next = list->next->next;}
 
 /**
  * Get the list head.
  */
-inline qp_list_t
+qp_list_t
 qp_list_head(qp_list_t list)
 { return list;}
 
 /**
  * Get top element of list.
  */
-inline qp_list_t 
+qp_list_t 
 qp_list_first(qp_list_t list)
 { return qp_list_is_empty(list) ? NULL : list->next;}
     
@@ -72,7 +72,7 @@ qp_list_first(qp_list_t list)
 /*
  * Init queue.
 */
-inline void
+void
 qp_queue_init(qp_queue_t queue)
 {
     queue->prev = queue;
@@ -82,14 +82,14 @@ qp_queue_init(qp_queue_t queue)
 /*
  * Return true if queue is empty.
 */
-inline bool
+bool
 qp_queue_is_empty(qp_queue_t queue)
 { return queue == queue->prev;}
 
 /*
  * Insert element before first element of queue.
 */
-inline void
+void
 qp_queue_insert_after_head(qp_queue_t queue, qp_queue_t node)
 {
     node->next = queue->next;
@@ -101,7 +101,7 @@ qp_queue_insert_after_head(qp_queue_t queue, qp_queue_t node)
 /*
  * Insert element after last element of queue.
 */
-inline void
+void
 qp_queue_insert_after_tail(qp_queue_t queue, qp_queue_t node)
 {
     node->prev = queue->prev;
@@ -113,14 +113,14 @@ qp_queue_insert_after_tail(qp_queue_t queue, qp_queue_t node)
 /*
  * Get first element of queue.
 */
-inline qp_queue_t
+qp_queue_t
 qp_queue_first(qp_queue_t queue)
 { return qp_queue_is_empty(queue) ? NULL : queue->next;}
 
 /*
  * Ge last element of queue.
 */
-inline qp_queue_t
+qp_queue_t
 qp_queue_last(qp_queue_t queue)
 { return qp_queue_is_empty(queue) ? NULL : queue->prev;}
         
@@ -128,21 +128,21 @@ qp_queue_last(qp_queue_t queue)
 /*
  * Get queue head.
 */
-inline qp_queue_t
+qp_queue_t
 qp_queue_head(qp_queue_t queue)
 { return queue;}
 
 /*
  * Get next element of q.
 */
-inline qp_queue_t
+qp_queue_t
 qp_queue_next(qp_queue_t node)
 { return node->next;}
 
 /*
  * Get preview element of q.
 */
-inline qp_queue_t
+qp_queue_t
 qp_queue_prev(qp_queue_t node)
 { return node->prev;}
 
@@ -150,7 +150,7 @@ qp_queue_prev(qp_queue_t node)
 /*
  * Remove element from queue.
 */
-inline void
+void
 qp_queue_remove(qp_queue_t node)
 {
     node->next->prev = node->prev;
@@ -161,7 +161,7 @@ qp_queue_remove(qp_queue_t node)
 /*
  * Split queue h from element q to new queue n.
 */
-inline void
+void
 qp_queue_split(qp_queue_t queue, qp_queue_t node, qp_queue_t newq)
 {
     newq->prev = queue->prev;
@@ -175,7 +175,7 @@ qp_queue_split(qp_queue_t queue, qp_queue_t node, qp_queue_t newq)
 /*
  * Merge queue n to queue h (and after h).
 */
-inline void
+void
 qp_queue_merge(qp_queue_t queue, qp_queue_t newq)
 {
     queue->prev->next = newq->next;
@@ -190,39 +190,39 @@ qp_queue_merge(qp_queue_t queue, qp_queue_t newq)
  * If the node is root , set its parent as NULL;
  * and if the node has no child, set its left and right as sentinal.
  */
-inline void
+void
 qp_rbtree_set_red(qp_rbtree_node_t node)
 { node->color = QP_RBTREE_RED;}
 
-inline void
+void
 qp_rbtree_set_black(qp_rbtree_node_t node)
 { node->color = QP_RBTREE_BLACK;}
 
-inline bool
+bool
 qp_rbtree_is_red(qp_rbtree_node_t node)
 { return node->color == QP_RBTREE_RED;}
 
-inline bool
+bool
 qp_rbtree_is_black(qp_rbtree_node_t node)
 { return node->color == QP_RBTREE_BLACK;}
 
-inline qp_rbtree_node_t
+qp_rbtree_node_t
 qp_rbtree_parent(qp_rbtree_node_t node)
 { return node->parent;}
 
-inline qp_rbtree_node_t
+qp_rbtree_node_t
 qp_rbtree_grandpa(qp_rbtree_node_t node)
 { return qp_rbtree_parent(qp_rbtree_parent(node));}
 
-inline bool
+bool
 qp_rbtree_is_left(qp_rbtree_node_t node)
 { return (node == qp_rbtree_parent(node)->left);}
 
-inline bool
+bool
 qp_rbtree_is_right(qp_rbtree_node_t node)
 { return (node == qp_rbtree_parent(node)->right);}
 
-inline qp_rbtree_node_t
+qp_rbtree_node_t
 qp_rbtree_uncle(qp_rbtree_node_t node)
 { 
     return qp_rbtree_is_left(qp_rbtree_parent(node)) ? \
@@ -230,7 +230,7 @@ qp_rbtree_uncle(qp_rbtree_node_t node)
         qp_rbtree_grandpa(node)->left;
 }
 
-inline qp_rbtree_node_t
+qp_rbtree_node_t
 qp_rbtree_brother(qp_rbtree_node_t node)
 {
     return qp_rbtree_is_left(node) ? \
@@ -238,16 +238,16 @@ qp_rbtree_brother(qp_rbtree_node_t node)
         qp_rbtree_parent(node)->left;
 }
 
-inline qp_rbtree_node_t
+qp_rbtree_node_t
 qp_rbtree_nil(qp_rbtree_t rbtree)
 { return &rbtree->sentinel;}
 
-inline bool
+bool
 qp_rbtree_is_empty(qp_rbtree_t rbtree)
 { return rbtree->root == qp_rbtree_nil(rbtree);}
 
 /* init rbtree */
-inline void
+void
 qp_rbtree_init(qp_rbtree_t rbtree)
 {
     rbtree->sentinel.left = qp_rbtree_nil(rbtree);
@@ -595,7 +595,7 @@ qp_rbtree_find(qp_rbtree_t rbtree, qp_uint32_t key)
 }
 
 /* min node from [node] */
-inline qp_rbtree_node_t
+qp_rbtree_node_t
 qp_rbtree_min(qp_rbtree_t rbtree, qp_rbtree_node_t node)
 {
     if (qp_rbtree_is_empty(rbtree)) {
@@ -612,7 +612,7 @@ qp_rbtree_min(qp_rbtree_t rbtree, qp_rbtree_node_t node)
 }
 
 /* max node from [node] */
-inline qp_rbtree_node_t
+qp_rbtree_node_t
 qp_rbtree_max(qp_rbtree_t rbtree, qp_rbtree_node_t node) 
 {
     if (qp_rbtree_is_empty(rbtree)) {
