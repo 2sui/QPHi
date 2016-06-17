@@ -124,12 +124,15 @@ pcap_open(const char* path, pcap* cap)
     
     qp_uint32_t magic = 0xa1b2c3d4;
     
-    if (cap->file_hdr.snaplen > MAX_SNAPLEN 
-       || memcmp(&cap->file_hdr.magic, &magic, sizeof(qp_uint32_t)))
+    if (memcmp(&cap->file_hdr.magic, &magic, sizeof(qp_uint32_t)))
     {
         pcap_close(cap);
-        QP_LOGOUT_LOG("[pcap_open] File header error [length: %d].", cap->file_hdr.snaplen);
+        QP_LOGOUT_LOG("[pcap_open] Get header info error.");
         return QP_ERROR;
+    }
+    
+    if (cap->file_hdr.snaplen > MAX_SNAPLEN) {
+        cap->file_hdr.snaplen = MAX_SNAPLEN;
     }
     
     fstat(fileno(cap->file), &cap->stat);
