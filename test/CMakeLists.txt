@@ -54,11 +54,11 @@ ADD_DEFINITIONS(-W -Wall -D_REENTRANT -g -D_FILE_OFFSET_BITS=64 -DQP_DEBUG)
 # exec target
 
 # pcapreader
-#ADD_EXECUTABLE(${pcapreader}
-#    ${pcapreader_src} )
+ADD_EXECUTABLE(${pcapreader}
+    ${pcapreader_src} )
 #    ${DEP_QPHi} 
 #    ${DEP_QPHi_QP_TINY_STACK})
-#TARGET_LINK_LIBRARIES(${pcapreader}  pthread dl rt)
+TARGET_LINK_LIBRARIES(${pcapreader}  pthread dl rt QPCore)
 
 # tcp_delay
 ADD_EXECUTABLE(${tcp_delay}

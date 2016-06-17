@@ -10,11 +10,11 @@
 #define QP_TINY_STACK_H
 
 
-#include "qp_o_typedef.h"
-
+#include "qp_o_typedef.h" 
+    
 #ifdef __cplusplus
 extern "C" {
-#endif 
+#endif
     
 #define QP_STACK_LEVEL_DATALINK    1
 #define QP_STACK_LEVEL_NETWORK     2
@@ -63,7 +63,6 @@ extern "C" {
 #define QP_STACK_PROTO_EGP                0x0107
 #define QP_STACK_PROTO_IGP                0x0108
 #define QP_STACK_PROTO_PUP                0x0109
-
     
 typedef struct qp_stack_mac_addr_s {
     qp_uint8_t    sit1;
@@ -247,21 +246,21 @@ typedef struct qp_stack_frame_result_s {
         qp_stack_ipv4_addr_type_t*    ipv4;
         qp_stack_ipv6_addr_type_t*    ipv6;
         qp_uint8_t*                   other;
-    }              src;
+    } src;
     
     union {
         qp_stack_ipv4_addr_type_t*    ipv4;
         qp_stack_ipv6_addr_type_t*    ipv6;
         qp_uint8_t*                   other;
-    }              dst;
-}qp_stack_frame_result_t;
+    } dst;
+} qp_stack_frame_result_t;
 
 
 /**
  * Parse a frame. (Current support link type is DLT_EN10MB or 1)
  */
 qp_int_t
-qp_stack_parse(qp_uchar_t*  frame, qp_uint32_t len, qp_int_t link,\
+qp_stack_parse(qp_uchar_t* frame, qp_uint32_t len, qp_int_t link,\
     qp_stack_frame_result_t* result, qp_uint16_t level);
 
 #ifdef __cplusplus

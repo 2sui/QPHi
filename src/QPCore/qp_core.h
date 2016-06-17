@@ -13,5 +13,6 @@
 #include "qp_event.h"
 #include "qp_processes.h"
 #include "qp_system.h" 
+#include "qp_tiny_stack.h"
 
 #endif // QP_CORE

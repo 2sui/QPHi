@@ -64,9 +64,7 @@ int
 pcap_process(qp_uchar_t* user, pcap_pkthdr* hdr, qp_uchar_t* data)
 {
     pcap* cap = (pcap*)user;
-    
-    qp_stack_parse(data, hdr->caplen, 1, &cap->pkt_result, \
-        QP_STACK_LEVEL_TRANSMIT);
+    qp_stack_parse(data, hdr->caplen, 1, &cap->pkt_result, QP_STACK_LEVEL_TRANSMIT);
     
     if (QP_STACK_PROTO_TCP != cap->pkt_result.l4_type) {
         return QP_SUCCESS;
@@ -130,7 +128,7 @@ pcap_open(const char* path, pcap* cap)
        || memcmp(&cap->file_hdr.magic, &magic, sizeof(qp_uint32_t)))
     {
         pcap_close(cap);
-        QP_LOGOUT_LOG("[pcap_open] File header error.");
+        QP_LOGOUT_LOG("[pcap_open] File header error [length: %d].", cap->file_hdr.snaplen);
         return QP_ERROR;
     }
     
@@ -226,18 +224,21 @@ pcap_read(pcap* cap)
 void
 print_help()
 {
-    fprintf(stderr, "Usage: pcapreader -i <file>.");
+    fprintf(stderr, "Usage: pcapreader <file>.");
 }
 
 
 int 
-main()
+main(int argc, const char** argv)
 {
-    printf("%lu", sizeof(struct aiocb));
-    return 0;
+    if (2 > argc) {
+        print_help();
+        return 0;
+    }
+    
     pcap cap;
     
-    if (QP_ERROR == pcap_open("test.pcap", &cap)) {
+    if (QP_ERROR == pcap_open(argv[1], &cap)) {
         return QP_ERROR;
     }
     
