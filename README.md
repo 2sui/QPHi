@@ -1,5 +1,7 @@
 
 # QPHi
+
+----
 [![license](https://img.shields.io/badge/license-MIT%20License-blue.svg)](https://mit-license.org/)
 [![tag](https://img.shields.io/badge/tag-v1.0.0-yellow.svg)](https://github.com/2sui/QPHi/tree/1.0.0)
 [![Build Status](https://travis-ci.org/2sui/QPHi.svg?branch=master)](https://travis-ci.org/2sui/QPHi)
@@ -24,6 +26,33 @@ And run `make && sudo make install` to build and install library (You may need t
 ```
 QPHi/src/QPCore$ make && sudo make install
 ```
+
+----
+
+## Module List
+##### qp_socket
+Socket module for TCP and Unix socket. (example: [events.c](./test/events.c), [tcp_delay.c](./test/tcp_delay.c))
+
+##### qp_file
+File module with general I/O and direct I/O.(example: [pcapreader.c](./test/pcapreader.c))
+
+##### qp_event
+Simple event loop.(example: [events.c](./test/events.c))
+
+##### qp_ipc
+Linux ipc wrapper.(example: [lock.c](./test/lock.c))
+
+##### qp_pool
+Memory pool manager(example: [events.c](./test/events.c))
+
+##### qp_process
+Process and thread manager.(example: [lock.c](./test/lock.c))
+
+##### qp_system
+System method wrapper.
+
+##### qp_tiny_stack
+Tiny tcp/ip stack implementations.(example: [pcapreader.c](./test/pcapreader.c))
 
 ----
 
@@ -91,10 +120,13 @@ In [`QPHi/test/events.c`](./test/events.c):
 
 ```
 
+----
+
 ## License
 QPHi is released under a MIT License.See [LICENSE](./LICENSE) file for details.
 
 ----
+
 ##### created by 2sui
 
 
