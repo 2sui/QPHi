@@ -279,13 +279,22 @@ qp_lock_lock(qp_lock_t lock)
         return QP_ERROR;
     }
     
-    qp_uint_t  n = 1024, i, j;
+    if (0 != lock->hold_counter) {
+        if (lock->hold_thread == pthread_self()) {
+            qp_atom_fetch_add(&lock->hold_counter, 1);
+            QP_LOGOUT_LOG("current counter; %u.", lock->hold_counter);
+            return QP_SUCCESS;
+        }
+    }
     
     if (qp_lock_is_spin(lock)) {
+        qp_uint_t  n = 1024, i, j;
         
         for ( ;; ) {
             
-            if (lock->lock.spin == 0 && qp_atom_cmp_set(&lock->lock.spin,0,1)) {
+            if (qp_atom_cmp_set(&lock->lock.spin,0,1)) {
+                lock->hold_thread = pthread_self();
+                qp_atom_fetch_add(&lock->hold_counter, 1);
                 return QP_SUCCESS;
             }
             
@@ -297,9 +306,10 @@ qp_lock_lock(qp_lock_t lock)
                         qp_cpu_pause();
                     }
                     
-                    if (lock->lock.spin == 0 && \
-                        qp_atom_cmp_set(&lock->lock.spin, 0, 1)) 
+                    if (qp_atom_cmp_set(&lock->lock.spin, 0, 1)) 
                     {
+                        lock->hold_thread = pthread_self();
+                        qp_atom_fetch_add(&lock->hold_counter, 1);
                         return QP_SUCCESS;
                     }
                 }
@@ -309,7 +319,14 @@ qp_lock_lock(qp_lock_t lock)
         }
     }
     
-    return pthread_mutex_lock(&lock->lock.mutex);
+    if (QP_SUCCESS == pthread_mutex_lock(&lock->lock.mutex)) {
+        lock->hold_thread = pthread_self();
+        qp_atom_fetch_add(&lock->hold_counter, 1);
+        QP_LOGOUT_LOG("current counter; %u.", lock->hold_counter);
+        return QP_SUCCESS;
+    } 
+    
+    return QP_ERROR;
 }
 
 qp_int_t
@@ -319,9 +336,18 @@ qp_lock_trylock(qp_lock_t lock)
         return QP_ERROR;
     }
     
+    if (0 != lock->hold_counter) {
+        if (lock->hold_thread == pthread_self()) {
+            qp_atom_fetch_add(&lock->hold_counter, 1);
+            QP_LOGOUT_LOG("current counter; %u.", lock->hold_counter);
+            return QP_SUCCESS;
+        }
+    }
+    
     if (qp_lock_is_spin(lock)) {
-        
-        if (lock->lock.spin == 0 && qp_atom_cmp_set(&lock->lock.spin, 0, 1)) {
+        if (qp_atom_cmp_set(&lock->lock.spin, 0, 1)) {
+            lock->hold_thread = pthread_self();
+            qp_atom_fetch_add(&lock->hold_counter, 1);
             return QP_SUCCESS;
             
         } else {
@@ -329,19 +355,41 @@ qp_lock_trylock(qp_lock_t lock)
         }
     }
     
-    return pthread_mutex_trylock(&lock->lock.mutex);
+    if (QP_SUCCESS == pthread_mutex_trylock(&lock->lock.mutex)) {
+        lock->hold_thread = pthread_self();
+        qp_atom_fetch_add(&lock->hold_counter, 1);
+        QP_LOGOUT_LOG("current counter; %u.", lock->hold_counter);
+        return QP_SUCCESS;
+    } 
+    
+    return QP_ERROR;
 }
 
 
 qp_int_t
 qp_lock_unlock(qp_lock_t lock)
 {
-    if (!lock) {
+    if (!lock || 1 > lock->hold_counter) {
         return QP_ERROR;
     }
     
+    // may be unlocked by another thread
+    if (lock->hold_thread == pthread_self()) {
+        qp_atom_fetch_sub(&lock->hold_counter, 1);
+        QP_LOGOUT_LOG("current counter; %u.", lock->hold_counter);
+        
+        if (0 != lock->hold_counter) {
+            return QP_SUCCESS;
+        }
+            
+    } else {
+        return QP_ERROR;
+    }
+    
+    lock->hold_thread = 0;
+    
     if (qp_lock_is_spin(lock)) {
-        return (lock->lock.spin == 1 && qp_atom_cmp_set(&lock->lock.spin, 1, 0));
+        return qp_atom_cmp_set(&lock->lock.spin, 1, 0);
     }
     
     return pthread_mutex_unlock(&lock->lock.mutex);

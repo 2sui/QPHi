@@ -24,6 +24,8 @@ struct qp_ipc_lock_s {
         pthread_mutex_t  mutex;
         qp_atom_t        spin;
     }                    lock;
+    pthread_t            hold_thread;
+    qp_uint_t            hold_counter;
     bool                 is_inited;
     bool                 is_alloced;
     bool                 is_shared;

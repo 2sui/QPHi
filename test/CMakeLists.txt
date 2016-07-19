@@ -72,11 +72,11 @@ ADD_DEFINITIONS(-W -Wall -D_REENTRANT -g -D_FILE_OFFSET_BITS=64 -DQP_DEBUG)
 #TARGET_LINK_LIBRARIES(${tcp_delay}  pthread dl rt QPCore)
 
 # lock
-#ADD_EXECUTABLE(${lock}
-#    ${lock_src} )
-#    ${DEP_QPHi} 
-#    ${DEP_QPHi_QP_TINY_STACK})
-#TARGET_LINK_LIBRARIES(${lock}  pthread dl rt QPCore)
+ADD_EXECUTABLE(${lock}
+    ${lock_src} 
+    ${DEP_QPHi} 
+    ${DEP_QPHi_QP_TINY_STACK})
+TARGET_LINK_LIBRARIES(${lock}  pthread dl rt QPCore)
 
 # events
 #ADD_EXECUTABLE(${events}
@@ -99,8 +99,8 @@ ADD_DEFINITIONS(-W -Wall -D_REENTRANT -g -D_FILE_OFFSET_BITS=64 -DQP_DEBUG)
  #   ${DEP_QPHi_QP_TINY_STACK})
 #TARGET_LINK_LIBRARIES(${directFile}  pthread dl rt QPCore)
 
-ADD_EXECUTABLE(${libevent}
-    ${libevent_src} )
+#ADD_EXECUTABLE(${libevent}
+#    ${libevent_src} )
  #   ${DEP_QPHi} 
  #   ${DEP_QPHi_QP_TINY_STACK})
-TARGET_LINK_LIBRARIES(${libevent}  pthread dl rt event)
+#TARGET_LINK_LIBRARIES(${libevent}  pthread dl rt event)

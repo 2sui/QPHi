@@ -10,6 +10,7 @@
 
 static qp_shm_t       shm = NULL;
 static qp_process_t   child = NULL;
+static qp_thread_t    tchild = NULL;
 
 typedef union {
     qp_lock_t    lock;
@@ -54,6 +55,23 @@ test_process()
     return QP_SUCCESS;
 }
 
+int
+test_thread() 
+{
+    if (tchild) {
+        qp_thread_destroy(tchild);
+        tchild = NULL;
+        return QP_SUCCESS;
+    }    
+    
+    if (!(tchild == qp_thread_init(tchild, false))) {
+        INFO("Thread init fail.");
+        return QP_ERROR;
+    }
+    
+    return QP_SUCCESS;
+}
+
 void
 test_lock()
 {   
@@ -73,6 +91,53 @@ test_lock()
     }
     
     *count = 0;
+    
+    if (QP_ERROR == qp_process_start(child)) {
+        qp_lock_destroy(lock);
+        INFO("Start process fail.");
+        return;
+    }
+    
+    if (0 == qp_process_pid(child)) {
+        int i = 0;
+        
+        for (; i < 1000; i++) {
+            qp_lock_lock(lock);
+            INFO("Child do: %lu.", ++(*count));
+            qp_lock_unlock(lock);
+        }
+        exit(0);
+    }
+    
+    int i = 0;
+    usleep(10000);
+    for (; i < 1000; i++) {
+        qp_lock_lock(lock);
+        INFO("Parent do: %lu.", ++(*count));
+        qp_lock_unlock(lock);
+    }
+    
+    qp_process_stop(child, false);
+    
+    if (QP_ERROR == qp_lock_destroy(lock)) {
+        qp_lock_unlock(lock);
+        qp_lock_destroy(lock);
+    }
+    
+    INFO(">>>>>>>>>>> Test for lock done.");
+}
+
+void
+test_reslock()
+{   
+    INFO(">>>>>>>>>>> Test for reslock.");
+    
+    unsigned long count = 0;
+    qp_lock_t lock = NULL;
+    if (!(lock = qp_lock_init(lock, true, false))) {
+        INFO("Lock init fail.");
+        return;
+    }
     
     if (QP_ERROR == qp_process_start(child)) {
         qp_lock_destroy(lock);
