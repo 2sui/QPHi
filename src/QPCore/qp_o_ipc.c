@@ -282,7 +282,7 @@ qp_lock_lock(qp_lock_t lock)
     if (0 != lock->hold_counter) {
         if (lock->hold_thread == pthread_self()) {
             qp_atom_fetch_add(&lock->hold_counter, 1);
-            QP_LOGOUT_LOG("current counter; %u.", lock->hold_counter);
+//            QP_LOGOUT_LOG("current counter; %u.", lock->hold_counter);
             return QP_SUCCESS;
         }
     }
@@ -322,7 +322,7 @@ qp_lock_lock(qp_lock_t lock)
     if (QP_SUCCESS == pthread_mutex_lock(&lock->lock.mutex)) {
         lock->hold_thread = pthread_self();
         qp_atom_fetch_add(&lock->hold_counter, 1);
-        QP_LOGOUT_LOG("current counter; %u.", lock->hold_counter);
+//        QP_LOGOUT_LOG("current counter; %u.", lock->hold_counter);
         return QP_SUCCESS;
     } 
     
@@ -339,7 +339,7 @@ qp_lock_trylock(qp_lock_t lock)
     if (0 != lock->hold_counter) {
         if (lock->hold_thread == pthread_self()) {
             qp_atom_fetch_add(&lock->hold_counter, 1);
-            QP_LOGOUT_LOG("current counter; %u.", lock->hold_counter);
+//            QP_LOGOUT_LOG("current counter; %u.", lock->hold_counter);
             return QP_SUCCESS;
         }
     }
@@ -358,7 +358,7 @@ qp_lock_trylock(qp_lock_t lock)
     if (QP_SUCCESS == pthread_mutex_trylock(&lock->lock.mutex)) {
         lock->hold_thread = pthread_self();
         qp_atom_fetch_add(&lock->hold_counter, 1);
-        QP_LOGOUT_LOG("current counter; %u.", lock->hold_counter);
+//        QP_LOGOUT_LOG("current counter; %u.", lock->hold_counter);
         return QP_SUCCESS;
     } 
     
@@ -376,7 +376,7 @@ qp_lock_unlock(qp_lock_t lock)
     // may be unlocked by another thread
     if (lock->hold_thread == pthread_self()) {
         qp_atom_fetch_sub(&lock->hold_counter, 1);
-        QP_LOGOUT_LOG("current counter; %u.", lock->hold_counter);
+//        QP_LOGOUT_LOG("current counter; %u.", lock->hold_counter);
         
         if (0 != lock->hold_counter) {
             return QP_SUCCESS;
@@ -393,6 +393,17 @@ qp_lock_unlock(qp_lock_t lock)
     }
     
     return pthread_mutex_unlock(&lock->lock.mutex);
+}
+
+
+qp_uint_t
+qp_lock_counter(qp_lock_t lock) 
+{
+    if (!lock) {
+        return 0;
+    }
+    
+    return lock->hold_counter;
 }
 
 // MARK: rwlock

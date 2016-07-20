@@ -223,7 +223,7 @@ qp_thread_start(qp_thread_t thread, void* (*handler_ptr)(void*), void* arg)
         thread->handler.handler_ptr = handler_ptr;
         thread->handler.args_ptr = arg;
         
-        if (QP_SUCCESS != pthread_create(&(thread->tid), NULL, \
+        if (QP_SUCCESS != pthread_create(&thread->tid, NULL, \
             qp_thread_runner, thread))
         {
             thread->tid = QP_THREAD_INVALID;
@@ -245,8 +245,8 @@ qp_thread_stop(qp_thread_t thread)
         
         if (!qp_thread_is_detach(thread)) {
             pthread_join(thread->tid, NULL);
-        } else {
             
+        } else {
             if (qp_thread_is_running(thread)) {
                 return QP_ERROR;
             }

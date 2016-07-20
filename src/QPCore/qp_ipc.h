@@ -103,6 +103,14 @@ qp_lock_trylock(qp_lock_t lock);
 qp_int_t
 qp_lock_unlock(qp_lock_t lock);
 
+/**
+ * 
+ * @param lock
+ * @return 
+ */
+qp_uint_t
+qp_lock_counter(qp_lock_t lock);
+
 
 /* read/write lock */
 

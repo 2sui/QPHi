@@ -64,7 +64,7 @@ test_thread()
         return QP_SUCCESS;
     }    
     
-    if (!(tchild == qp_thread_init(tchild, false))) {
+    if (!(tchild = qp_thread_init(tchild, false))) {
         INFO("Thread init fail.");
         return QP_ERROR;
     }
@@ -127,48 +127,73 @@ test_lock()
     INFO(">>>>>>>>>>> Test for lock done.");
 }
 
+static int thread_counter = 0;
+qp_lock_t tlock = NULL;
+
+void*
+test_thread_main(void* interval) {
+    int intval = 1;
+    
+    if (NULL != interval) {
+        intval = *(int*)interval;
+    }
+    
+    if (intval < 1) {
+        intval = 1;
+    }
+    
+    pthread_t  current_tid = pthread_self();
+    
+    INFO("Thread %lu begin.", current_tid);
+    
+    for (int i = 1000; i; i--) {
+        if (0 == (i % intval)) {
+            if (QP_SUCCESS == qp_lock_lock(tlock)) {
+                if (1 == intval) {
+                    thread_counter++;
+                    INFO("[%lu] add counter to [%d] , lock counter [%u] for index [%d]", current_tid, thread_counter, qp_lock_counter(tlock), i);
+                            
+                } else {
+                    thread_counter--;
+                    INFO("[%lu] sub counter to [%d] , lock counter [%u] for index [%d]", current_tid, thread_counter, qp_lock_counter(tlock), i);
+                }
+                
+                
+                qp_lock_unlock(tlock);
+            }
+        }
+    }
+   
+    INFO("Thread %lu end.", current_tid);
+    return NULL;
+}
+
 void
 test_reslock()
 {   
     INFO(">>>>>>>>>>> Test for reslock.");
     
-    unsigned long count = 0;
-    qp_lock_t lock = NULL;
-    if (!(lock = qp_lock_init(lock, true, false))) {
+    if (!(tlock = qp_lock_init(tlock, false, false))) {
         INFO("Lock init fail.");
         return;
     }
     
-    if (QP_ERROR == qp_process_start(child)) {
-        qp_lock_destroy(lock);
-        INFO("Start process fail.");
+    int interval = 2;
+    int interval_loc = 1;
+    
+    if (QP_ERROR == qp_thread_start(tchild, test_thread_main, &interval)) {
+        qp_lock_destroy(tlock);
+        INFO("Start thread fail.");
         return;
     }
     
-    if (0 == qp_process_pid(child)) {
-        int i = 0;
-        
-        for (; i < 1000; i++) {
-            qp_lock_lock(lock);
-            INFO("Child do: %lu.", ++(*count));
-            qp_lock_unlock(lock);
-        }
-        exit(0);
-    }
+    test_thread_main(&interval_loc);
     
-    int i = 0;
-    usleep(10000);
-    for (; i < 1000; i++) {
-        qp_lock_lock(lock);
-        INFO("Parent do: %lu.", ++(*count));
-        qp_lock_unlock(lock);
-    }
+    qp_thread_stop(tchild);
     
-    qp_process_stop(child, false);
-    
-    if (QP_ERROR == qp_lock_destroy(lock)) {
-        qp_lock_unlock(lock);
-        qp_lock_destroy(lock);
+    if (QP_ERROR == qp_lock_destroy(tlock)) {
+        qp_lock_unlock(tlock);
+        qp_lock_destroy(tlock);
     }
     
     INFO(">>>>>>>>>>> Test for lock done.");
@@ -411,6 +436,15 @@ test_sem()
 int 
 main()
 {
+    if (QP_ERROR == test_thread()) {
+        return QP_ERROR;
+    }
+    test_reslock();
+    
+    test_thread();
+    
+    ////////////////////////////
+    
     if (QP_ERROR == test_shm()) {
         return QP_ERROR;
     }
