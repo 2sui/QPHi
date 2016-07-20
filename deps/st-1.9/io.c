@@ -68,6 +68,9 @@ static int _st_osfd_limit = -1;
 
 static void _st_netfd_free_aux_data(_st_netfd_t *fd);
 
+/**
+ 屏蔽 SIGPIPE 信号，根据事件源系统需要修改进程最大描述符数量限制
+ */
 int _st_io_init(void)
 {
   struct sigaction sigact;
@@ -75,6 +78,7 @@ int _st_io_init(void)
   int fdlim;
 
   /* Ignore SIGPIPE */
+  // 忽略 SIGPIPE 信号
   sigact.sa_handler = SIG_IGN;
   sigemptyset(&sigact.sa_mask);
   sigact.sa_flags = 0;
@@ -82,16 +86,22 @@ int _st_io_init(void)
     return -1;
 
   /* Set maximum number of open file descriptors */
+  // 获取进程文件描述符数量限制
   if (getrlimit(RLIMIT_NOFILE, &rlim) < 0)
     return -1;
 
+  // 获取对应的事件源系统所需要的文件描述符数量限制
   fdlim = (*_st_eventsys->fd_getlimit)();
+  // 如果所需文件描述符数量限制 >0（即当前事件系统对文件描述符数限制有明确要求时)且当前进程最大限制大于这个限制，将当前进程最大限制设为这个限制
   if (fdlim > 0 && rlim.rlim_max > (rlim_t) fdlim) {
     rlim.rlim_max = fdlim;
   }
+  // 将软限制设为硬限制
   rlim.rlim_cur = rlim.rlim_max;
+  // 使限制生效
   if (setrlimit(RLIMIT_NOFILE, &rlim) < 0)
     return -1;
+  // 保存当前描述符限制
   _st_osfd_limit = (int) rlim.rlim_max;
 
   return 0;

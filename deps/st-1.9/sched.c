@@ -141,18 +141,21 @@ int st_init(void)
   }
 
   /* We can ignore return value here */
+  // 选取事件源系统 (如果以选取则忽略)
   st_set_eventsys(ST_EVENTSYS_DEFAULT);
 
+  // 屏蔽 SIGPIPE 信号，根据事件源系统需要修改进程最大描述符数量限制
   if (_st_io_init() < 0)
     return -1;
 
+  // 初始化当前虚拟处理器
   memset(&_st_this_vp, 0, sizeof(_st_vp_t));
 
-  ST_INIT_CLIST(&_ST_RUNQ);
-  ST_INIT_CLIST(&_ST_IOQ);
-  ST_INIT_CLIST(&_ST_ZOMBIEQ);
+  ST_INIT_CLIST(&_ST_RUNQ); // 初始化运行队列
+  ST_INIT_CLIST(&_ST_IOQ);  // 初始化IO队列
+  ST_INIT_CLIST(&_ST_ZOMBIEQ);  // 初始化僵尸线程队列
 #ifdef DEBUG
-  ST_INIT_CLIST(&_ST_THREADQ);
+  ST_INIT_CLIST(&_ST_THREADQ); 
 #endif
 
   if ((*_st_eventsys->init)() < 0)
