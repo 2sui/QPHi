@@ -71,12 +71,17 @@
 /*****************************************
  * Circular linked list definitions
  */
-
+/**
+ *  双向链表
+ */
 typedef struct _st_clist {
   struct _st_clist *next;
   struct _st_clist *prev;
 } _st_clist_t;
 
+/*
+ * 双向链表操作
+ */
 /* Insert element "_e" into the list, before "_l" */
 #define ST_INSERT_BEFORE(_e,_l)	 \
     ST_BEGIN_MACRO		 \
@@ -202,7 +207,9 @@ typedef struct _st_pollq {
   int on_ioq;                 /* Is it on ioq? */
 } _st_pollq_t;
 
-
+/**
+ *  定义事件源系统
+ */
 typedef struct _st_eventsys_ops {
   const char *name;                          /* Name of this event system */
   int  val;                                  /* Type of this event system */
@@ -215,7 +222,9 @@ typedef struct _st_eventsys_ops {
   int  (*fd_getlimit)(void);                 /* Descriptor hard limit */
 } _st_eventsys_t;
 
-
+/**
+ *  虚拟process结果
+ */
 typedef struct _st_vp {
   _st_thread_t *idle_thread;  /* Idle thread for this vp */
   st_utime_t last_clock;      /* The last time we went into vp_check_clock() */
@@ -261,19 +270,19 @@ extern _st_eventsys_t *_st_eventsys;
 
 #define _ST_LAST_CLOCK                  (_st_this_vp.last_clock)
 
-#define _ST_RUNQ                        (_st_this_vp.run_q)
-#define _ST_IOQ                         (_st_this_vp.io_q)
-#define _ST_ZOMBIEQ                     (_st_this_vp.zombie_q)
+#define _ST_RUNQ                        (_st_this_vp.run_q) // 当前虚拟process运行队列
+#define _ST_IOQ                         (_st_this_vp.io_q)  // 当前前虚拟process IO 队列
+#define _ST_ZOMBIEQ                     (_st_this_vp.zombie_q) // 当前前虚拟process僵尸队列
 #ifdef DEBUG
 #define _ST_THREADQ                     (_st_this_vp.thread_q)
 #endif
 
-#define _ST_PAGE_SIZE                   (_st_this_vp.pagesize)
+#define _ST_PAGE_SIZE                   (_st_this_vp.pagesize) // 当前前虚拟process页大小
 
-#define _ST_SLEEPQ                      (_st_this_vp.sleep_q)
-#define _ST_SLEEPQ_SIZE                 (_st_this_vp.sleepq_size)
+#define _ST_SLEEPQ                      (_st_this_vp.sleep_q) // 当前前虚拟process睡眠队列
+#define _ST_SLEEPQ_SIZE                 (_st_this_vp.sleepq_size)  // 当前虚拟process睡眠队列大小
 
-#define _ST_VP_IDLE()                   (*_st_eventsys->dispatch)()
+#define _ST_VP_IDLE()                   (*_st_eventsys->dispatch)() // 当前事件系统事件分发
 
 
 /*****************************************

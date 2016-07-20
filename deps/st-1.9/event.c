@@ -432,6 +432,9 @@ ST_HIDDEN int _st_select_fd_getlimit(void)
     return FD_SETSIZE;
 }
 
+/**
+ *  定义 select 事件源系统（type为ST_EVENTSYS_SELECT）
+ */
 static _st_eventsys_t _st_select_eventsys = {
     "select",
     ST_EVENTSYS_SELECT,
@@ -584,6 +587,9 @@ ST_HIDDEN int _st_poll_fd_getlimit(void)
     return 0;
 }
 
+/**
+ *  定义 poll 事件源系统（type为ST_EVENTSYS_POLL）
+ */
 static _st_eventsys_t _st_poll_eventsys = {
     "poll",
     ST_EVENTSYS_POLL,
@@ -1011,6 +1017,9 @@ ST_HIDDEN int _st_kq_fd_getlimit(void)
     return 0;
 }
 
+/**
+ *  定义 kqueue 事件源系统（type为ST_EVENTSYS_ALT）
+ */
 static _st_eventsys_t _st_kq_eventsys = {
     "kqueue",
     ST_EVENTSYS_ALT,
@@ -1380,6 +1389,9 @@ ST_HIDDEN int _st_epoll_is_supported(void)
     return (errno != ENOSYS);
 }
 
+/**
+ *  定义 epoll 事件源系统（type为ST_EVENTSYS_ALT）
+ */
 static _st_eventsys_t _st_epoll_eventsys = {
     "epoll",
     ST_EVENTSYS_ALT,
@@ -1400,6 +1412,7 @@ static _st_eventsys_t _st_epoll_eventsys = {
 
 int st_set_eventsys(int eventsys)
 {
+    // 如果事件源已选取则返回
     if (_st_eventsys) {
         errno = EBUSY;
         return -1;
@@ -1407,6 +1420,7 @@ int st_set_eventsys(int eventsys)
 
     switch (eventsys) {
     case ST_EVENTSYS_DEFAULT:
+        //  默认情况下使用select 作为 io 事件源，如果有 poll 则使用 poll
 #ifdef USE_POLL
         _st_eventsys = &_st_poll_eventsys;
 #else
