@@ -158,6 +158,7 @@ int st_init(void)
   ST_INIT_CLIST(&_ST_THREADQ); 
 #endif
 
+  // 调用对应的事件源系统的 init 方法，如 epoll 事件源会调用 _st_epoll_init() 方法
   if ((*_st_eventsys->init)() < 0)
     return -1;
 

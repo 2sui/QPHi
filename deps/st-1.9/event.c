@@ -1038,7 +1038,7 @@ static _st_eventsys_t _st_kq_eventsys = {
 /*****************************************
  * epoll event system
  */
-
+// epoll 事件源系统初始化
 ST_HIDDEN int _st_epoll_init(void)
 {
     int fdlim;
