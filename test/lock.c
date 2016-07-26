@@ -98,10 +98,12 @@ test_lock()
         return;
     }
     
+    INFO("Current process %lu", getpid());
+    
     if (0 == qp_process_pid(child)) {
         int i = 0;
         
-        for (; i < 1000; i++) {
+        for (; i < 100; i++) {
             qp_lock_lock(lock);
             INFO("Child do: %lu.", ++(*count));
             qp_lock_unlock(lock);
@@ -111,7 +113,7 @@ test_lock()
     
     int i = 0;
     usleep(10000);
-    for (; i < 1000; i++) {
+    for (; i < 100; i++) {
         qp_lock_lock(lock);
         INFO("Parent do: %lu.", ++(*count));
         qp_lock_unlock(lock);
@@ -132,37 +134,45 @@ qp_lock_t tlock = NULL;
 
 void*
 test_thread_main(void* interval) {
-    int intval = 1;
+//    int intval = 1;
+//    
+//    if (NULL != interval) {
+//        intval = *(int*)interval;
+//    }
+//    
+//    if (intval < 1) {
+//        intval = 1;
+//    }
     
-    if (NULL != interval) {
-        intval = *(int*)interval;
-    }
-    
-    if (intval < 1) {
-        intval = 1;
+    if (1 >= *(int*)interval) {
+        return NULL;
     }
     
     pthread_t  current_tid = pthread_self();
     
     INFO("Thread %lu begin.", current_tid);
     
-    for (int i = 1000; i; i--) {
-        if (0 == (i % intval)) {
+//    for (int i = 1000; i; i--) {
+//        if (0 == (i % intval)) {
             if (QP_SUCCESS == qp_lock_lock(tlock)) {
-                if (1 == intval) {
-                    thread_counter++;
-                    INFO("[%lu] add counter to [%d] , lock counter [%u] for index [%d]", current_tid, thread_counter, qp_lock_counter(tlock), i);
-                            
-                } else {
-                    thread_counter--;
-                    INFO("[%lu] sub counter to [%d] , lock counter [%u] for index [%d]", current_tid, thread_counter, qp_lock_counter(tlock), i);
-                }
+//                if (1 == intval) {
+//                    thread_counter++;
+//                    INFO("[%lu] add counter to [%d] , lock counter [%u] for index [%d]", current_tid, thread_counter, qp_lock_counter(tlock), i);
+//                            
+//                } else {
+//                    thread_counter--;
+//                    INFO("[%lu] sub counter to [%d] , lock counter [%u] for index [%d]", current_tid, thread_counter, qp_lock_counter(tlock), i);
+//                }
                 
+                thread_counter--;
+                INFO("[%lu] add counter to [%d] , lock counter [%u] for index [%d]", current_tid, thread_counter, qp_lock_counter(tlock), *(int*)interval);
+                (*(int*)interval)--;
+                test_thread_main(interval);
                 
                 qp_lock_unlock(tlock);
             }
-        }
-    }
+//        }
+//    }
    
     INFO("Thread %lu end.", current_tid);
     return NULL;
@@ -178,8 +188,8 @@ test_reslock()
         return;
     }
     
-    int interval = 2;
-    int interval_loc = 1;
+    int interval = 100;
+    int interval_loc = 200;
     
     if (QP_ERROR == qp_thread_start(tchild, test_thread_main, &interval)) {
         qp_lock_destroy(tlock);
@@ -225,10 +235,12 @@ test_spin()
         return;
     }
     
+    INFO("Current process %lu", getpid());
+    
     if (0 == qp_process_pid(child)) {
         int i = 0;
         
-        for (; i < 1000; i++) {
+        for (; i < 100; i++) {
             qp_lock_lock(lock);
             INFO("Child do: %lu.", ++(*count));
             qp_lock_unlock(lock);
@@ -238,7 +250,7 @@ test_spin()
     
     int i = 0;
     usleep(10000);
-    for (; i < 1000; i++) {
+    for (; i < 100; i++) {
         qp_lock_lock(lock);
         INFO("Parent do: %lu.", ++(*count));
         qp_lock_unlock(lock);
@@ -349,6 +361,8 @@ test_cond()
         return;
     }
     
+    INFO("Current process %lu", getpid());
+    
     if (0 == qp_process_pid(child)) {
         int i = 0;
         
@@ -436,12 +450,12 @@ test_sem()
 int 
 main()
 {
-    if (QP_ERROR == test_thread()) {
-        return QP_ERROR;
-    }
-    test_reslock();
-    
-    test_thread();
+//    if (QP_ERROR == test_thread()) {
+//        return QP_ERROR;
+//    }
+//    test_reslock();
+//    
+//    test_thread();
     
     ////////////////////////////
     
@@ -460,9 +474,9 @@ main()
     INFO();
 //    test_rwlock();
     INFO();
-    test_cond();
+//    test_cond();
     INFO();
-    test_sem();
+//    test_sem();
     
     test_process();
     test_shm();

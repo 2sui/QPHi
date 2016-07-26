@@ -282,7 +282,8 @@ qp_lock_lock(qp_lock_t lock)
     if (0 != lock->hold_counter) {
         if (lock->hold_thread == pthread_self()) {
             qp_atom_fetch_add(&lock->hold_counter, 1);
-//            QP_LOGOUT_LOG("current counter; %u.", lock->hold_counter);
+            QP_LOGOUT_LOG("current counter %u [%lu][%lu].", lock->hold_counter, 
+                lock->hold_thread, getpid());
             return QP_SUCCESS;
         }
     }
@@ -295,6 +296,8 @@ qp_lock_lock(qp_lock_t lock)
             if (qp_atom_cmp_set(&lock->lock.spin,0,1)) {
                 lock->hold_thread = pthread_self();
                 qp_atom_fetch_add(&lock->hold_counter, 1);
+                QP_LOGOUT_LOG("current counter %u [%lu][%lu].", lock->hold_counter, 
+                    lock->hold_thread, getpid());
                 return QP_SUCCESS;
             }
             
@@ -306,10 +309,11 @@ qp_lock_lock(qp_lock_t lock)
                         qp_cpu_pause();
                     }
                     
-                    if (qp_atom_cmp_set(&lock->lock.spin, 0, 1)) 
-                    {
+                    if (qp_atom_cmp_set(&lock->lock.spin, 0, 1)) {
                         lock->hold_thread = pthread_self();
-                        qp_atom_fetch_add(&lock->hold_counter, 1);
+                        qp_atom_fetch_add(&lock->hold_counter, 1); 
+                        QP_LOGOUT_LOG("current counter %u [%lu][%lu].", lock->hold_counter, 
+                            lock->hold_thread, getpid());
                         return QP_SUCCESS;
                     }
                 }
@@ -322,7 +326,8 @@ qp_lock_lock(qp_lock_t lock)
     if (QP_SUCCESS == pthread_mutex_lock(&lock->lock.mutex)) {
         lock->hold_thread = pthread_self();
         qp_atom_fetch_add(&lock->hold_counter, 1);
-//        QP_LOGOUT_LOG("current counter; %u.", lock->hold_counter);
+        QP_LOGOUT_LOG("current counter %u [%lu][%lu].", lock->hold_counter, 
+            lock->hold_thread, getpid());
         return QP_SUCCESS;
     } 
     
@@ -339,7 +344,8 @@ qp_lock_trylock(qp_lock_t lock)
     if (0 != lock->hold_counter) {
         if (lock->hold_thread == pthread_self()) {
             qp_atom_fetch_add(&lock->hold_counter, 1);
-//            QP_LOGOUT_LOG("current counter; %u.", lock->hold_counter);
+            QP_LOGOUT_LOG("current counter %u [%lu][%lu].", lock->hold_counter, 
+                lock->hold_thread, getpid());
             return QP_SUCCESS;
         }
     }
@@ -348,17 +354,21 @@ qp_lock_trylock(qp_lock_t lock)
         if (qp_atom_cmp_set(&lock->lock.spin, 0, 1)) {
             lock->hold_thread = pthread_self();
             qp_atom_fetch_add(&lock->hold_counter, 1);
+            QP_LOGOUT_LOG("current counter %u [%lu][%lu].", lock->hold_counter, 
+                lock->hold_thread, getpid());
             return QP_SUCCESS;
             
         } else {
-            return EBUSY;
+            errno = EBUSY;
+            return QP_ERROR;
         }
     }
     
     if (QP_SUCCESS == pthread_mutex_trylock(&lock->lock.mutex)) {
         lock->hold_thread = pthread_self();
         qp_atom_fetch_add(&lock->hold_counter, 1);
-//        QP_LOGOUT_LOG("current counter; %u.", lock->hold_counter);
+        QP_LOGOUT_LOG("current counter %u [%lu][%lu].", lock->hold_counter, 
+                lock->hold_thread, getpid());
         return QP_SUCCESS;
     } 
     
@@ -376,7 +386,8 @@ qp_lock_unlock(qp_lock_t lock)
     // may be unlocked by another thread
     if (lock->hold_thread == pthread_self()) {
         qp_atom_fetch_sub(&lock->hold_counter, 1);
-//        QP_LOGOUT_LOG("current counter; %u.", lock->hold_counter);
+        QP_LOGOUT_LOG("current counter %u [%lu][%lu].", lock->hold_counter, 
+                lock->hold_thread, getpid());
         
         if (0 != lock->hold_counter) {
             return QP_SUCCESS;
@@ -389,7 +400,11 @@ qp_lock_unlock(qp_lock_t lock)
     lock->hold_thread = 0;
     
     if (qp_lock_is_spin(lock)) {
-        return qp_atom_cmp_set(&lock->lock.spin, 1, 0);
+        if (qp_atom_cmp_set(&lock->lock.spin, 1, 0)) {
+            return QP_SUCCESS;
+        }
+        
+        return QP_ERROR;
     }
     
     return pthread_mutex_unlock(&lock->lock.mutex);
