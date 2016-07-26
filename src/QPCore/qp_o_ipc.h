@@ -25,6 +25,7 @@ struct qp_ipc_lock_s {
         qp_atom_t        spin;
     }                    lock;
     pthread_t            hold_thread;
+    pid_t                hold_process;
     qp_uint_t            hold_counter;
     bool                 is_inited;
     bool                 is_alloced;
