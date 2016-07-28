@@ -282,8 +282,6 @@ qp_lock_lock(qp_lock_t lock)
     if (0 != lock->hold_counter) {
         if (lock->hold_thread == pthread_self() && lock->hold_process == getpid()) {
             qp_atom_fetch_add(&lock->hold_counter, 1);
-            QP_LOGOUT_LOG("current counter %u [%lu][%lu].", lock->hold_counter, 
-                lock->hold_thread, getpid());
             return QP_SUCCESS;
         }
     }
@@ -297,8 +295,6 @@ qp_lock_lock(qp_lock_t lock)
                 lock->hold_thread = pthread_self();
                 lock->hold_process = getpid();
                 qp_atom_fetch_add(&lock->hold_counter, 1);
-                QP_LOGOUT_LOG("current counter %u [%lu][%lu].", lock->hold_counter, 
-                    lock->hold_thread, getpid());
                 return QP_SUCCESS;
             }
             
@@ -314,8 +310,6 @@ qp_lock_lock(qp_lock_t lock)
                         lock->hold_thread = pthread_self();
                         lock->hold_process = getpid();
                         qp_atom_fetch_add(&lock->hold_counter, 1); 
-                        QP_LOGOUT_LOG("current counter %u [%lu][%lu].", lock->hold_counter, 
-                            lock->hold_thread, getpid());
                         return QP_SUCCESS;
                     }
                 }
@@ -329,8 +323,6 @@ qp_lock_lock(qp_lock_t lock)
         lock->hold_thread = pthread_self();
         lock->hold_process = getpid();
         qp_atom_fetch_add(&lock->hold_counter, 1);
-        QP_LOGOUT_LOG("current counter %u [%lu][%lu].", lock->hold_counter, 
-            lock->hold_thread, getpid());
         return QP_SUCCESS;
     } 
     
@@ -347,8 +339,6 @@ qp_lock_trylock(qp_lock_t lock)
     if (0 != lock->hold_counter) {
         if (lock->hold_thread == pthread_self() && lock->hold_process == getpid()) {
             qp_atom_fetch_add(&lock->hold_counter, 1);
-            QP_LOGOUT_LOG("current counter %u [%lu][%lu].", lock->hold_counter, 
-                lock->hold_thread, getpid());
             return QP_SUCCESS;
         }
     }
@@ -358,8 +348,6 @@ qp_lock_trylock(qp_lock_t lock)
             lock->hold_thread = pthread_self();
             lock->hold_process = getpid();
             qp_atom_fetch_add(&lock->hold_counter, 1);
-            QP_LOGOUT_LOG("current counter %u [%lu][%lu].", lock->hold_counter, 
-                lock->hold_thread, getpid());
             return QP_SUCCESS;
             
         } else {
@@ -372,8 +360,6 @@ qp_lock_trylock(qp_lock_t lock)
         lock->hold_thread = pthread_self();
         lock->hold_process = getpid();
         qp_atom_fetch_add(&lock->hold_counter, 1);
-        QP_LOGOUT_LOG("current counter %u [%lu][%lu].", lock->hold_counter, 
-                lock->hold_thread, getpid());
         return QP_SUCCESS;
     } 
     
@@ -391,8 +377,6 @@ qp_lock_unlock(qp_lock_t lock)
     // may be unlocked by another thread
     if (lock->hold_thread == pthread_self() && lock->hold_process == getpid()) {
         qp_atom_fetch_sub(&lock->hold_counter, 1);
-        QP_LOGOUT_LOG("current counter %u [%lu][%lu].", lock->hold_counter, 
-                lock->hold_thread, getpid());
         
         if (0 != lock->hold_counter) {
             return QP_SUCCESS;

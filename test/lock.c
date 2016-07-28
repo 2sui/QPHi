@@ -450,12 +450,12 @@ test_sem()
 int 
 main()
 {
-//    if (QP_ERROR == test_thread()) {
-//        return QP_ERROR;
-//    }
-//    test_reslock();
-//    
-//    test_thread();
+    if (QP_ERROR == test_thread()) {
+        return QP_ERROR;
+    }
+    test_reslock();
+    
+    test_thread();
     
     ////////////////////////////
     
