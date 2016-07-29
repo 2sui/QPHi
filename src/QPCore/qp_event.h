@@ -110,7 +110,7 @@ qp_event_is_alloced(qp_event_t evfd);
 
 /**
  * Init a event module.
- * It need fd_size to tell this function the size of event bucket, and
+ * It needs fd_size to tell this function the size of event bucket, and
  * if noblock is true the event loop will use noblock mode , and if edge is 
  * true the event loop will use ET mode.
  * init handler and destroy handler are handlers that how 
