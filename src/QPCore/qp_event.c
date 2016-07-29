@@ -217,7 +217,6 @@ qp_event_readv(qp_event_fd_t eventfd);
 void
 qp_event_clear_flag(qp_event_fd_t eventfd);
 
-
 qp_event_t
 qp_event_create(qp_event_t emodule)
 {
