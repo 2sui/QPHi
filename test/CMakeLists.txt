@@ -79,11 +79,11 @@ ADD_EXECUTABLE(${lock}
 TARGET_LINK_LIBRARIES(${lock}  pthread dl rt QPCore)
 
 # events
-#ADD_EXECUTABLE(${events}
-#    ${events_src} )
-#    ${DEP_QPHi} 
-#    ${DEP_QPHi_QP_TINY_STACK})
-#TARGET_LINK_LIBRARIES(${events}  pthread dl rt QPCore)
+ADD_EXECUTABLE(${events}
+    ${events_src} 
+    ${DEP_QPHi} 
+    ${DEP_QPHi_QP_TINY_STACK})
+TARGET_LINK_LIBRARIES(${events}  pthread dl rt QPCore)
 
 # rbtree
 #ADD_EXECUTABLE(${rbtree}
