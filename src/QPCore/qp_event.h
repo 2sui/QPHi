@@ -16,29 +16,25 @@
 extern "C" {
 #endif
     
-#ifdef  QP_OS_LINUX
-    
-#define  QP_EPOLL_ET           EPOLLET
-#define  QP_EPOLL_ONESHOT      EPOLLONESHOT
-#define  QP_EPOLL_IN           EPOLLIN               
-#define  QP_EPOLL_OUT          EPOLLOUT
-#define  QP_EPOLL_ERR          EPOLLERR              
-#define  QP_EPOLL_HUP          EPOLLHUP             
-#define  QP_EPOLL_RDHUP        EPOLLRDHUP 
-#else
+# ifdef  QP_OS_LINUX
+#  define  QP_EPOLL_ET           EPOLLET
+#  define  QP_EPOLL_ONESHOT      EPOLLONESHOT
+#  define  QP_EPOLL_IN           EPOLLIN               
+#  define  QP_EPOLL_OUT          EPOLLOUT
+#  define  QP_EPOLL_ERR          EPOLLERR              
+#  define  QP_EPOLL_HUP          EPOLLHUP             
+#  define  QP_EPOLL_RDHUP        EPOLLRDHUP 
+# else
+#  define  QP_EPOLL_ET           1
+#  define  QP_EPOLL_ONESHOT      2
+#  define  QP_EPOLL_IN           3               
+#  define  QP_EPOLL_OUT          4
+#  define  QP_EPOLL_ERR          5              
+#  define  QP_EPOLL_HUP          6             
+#  define  QP_EPOLL_RDHUP        7 
+# endif
 
-#define  QP_EPOLL_ET           1
-#define  QP_EPOLL_ONESHOT      2
-#define  QP_EPOLL_IN           3               
-#define  QP_EPOLL_OUT          4
-#define  QP_EPOLL_ERR          5              
-#define  QP_EPOLL_HUP          6             
-#define  QP_EPOLL_RDHUP        7 
-#endif
-
-#define  QP_EVENT_COMMONDATA_SIZE    256    // common buffer size
-#define  QP_EVENT_TIMER_RESOLUTION   500    // ms
-#define  QP_EVENT_TIMER_TIMEOUT      30000  // ms
+#define  QP_EVENT_READCACHE_SIZE    4096    // common buffer size
 
 
 /* buf type */
@@ -60,15 +56,8 @@ typedef union {
     struct iovec*  vector;
 } qp_event_buf_t;
 
-typedef struct qp_event_fd_s*      qp_event_fd_t;
-typedef  struct qp_event_data_s*   qp_event_data_t;
 typedef struct qp_event_s*         qp_event_t;
 
-/* init and destroy for qp_event_data_t */
-typedef  void (*qp_event_opt_handler)(qp_event_data_t);
-/* read/write handler */
-typedef qp_int_t (*qp_read_handler)(qp_event_fd_t);
-typedef qp_read_handler    qp_write_handler;
 /* idle process handler */
 typedef  void* (*qp_event_idle_handler)(void*); 
 /* process handler */
