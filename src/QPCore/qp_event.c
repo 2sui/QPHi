@@ -25,8 +25,8 @@ struct qp_event_source_s {
     qp_uchar_t*                cache;          /* read/write cache */        
     qp_int_t                   index;
     qp_int_t                   source_fd;
-    qp_int_t                   events;
-    qp_int_t                   revents;
+    qp_uint32_t                events;
+    qp_uint32_t                revents;
     qp_int_t                   cache_size;
     qp_int_t                   cache_offset;
     
@@ -180,7 +180,7 @@ qp_event_epoll_add(qp_event_t event, qp_event_source_t source)
  * @return 
  */
 qp_int_t
-qp_event_epoll_reset(qp_event_t event, qp_event_source_t source, qp_int_t flag)
+qp_event_epoll_reset(qp_event_t event, qp_event_source_t source, qp_uint32_t flag)
 {
     if (!event || !source) {
         return QP_ERROR;
@@ -507,7 +507,7 @@ qp_event_init(qp_event_t event, qp_int_t max_event_size, bool noblock, bool edge
     return NULL;
 #endif
     
-    qp_int_t   mod = QP_EPOLL_IN | QP_EPOLL_RDHUP /*| QP_EPOLL_OUT*/ \
+    qp_uint32_t   mod = QP_EPOLL_IN | QP_EPOLL_RDHUP /*| QP_EPOLL_OUT*/ \
         | (edge ? QP_EPOLL_ET : 0);
     
     if (1 > max_event_size) {
@@ -628,9 +628,11 @@ qp_event_regist_idle_handler(qp_event_t event, qp_event_idle_handler idle_cb, \
 qp_int_t
 qp_event_dispatch(qp_event_t event, qp_int_t timeout) 
 {
-    qp_read_handler  read_handler;
-    qp_write_handler write_handler;
-    qp_int_t         sys_accept_fd = QP_FD_INVALID;
+    qp_read_handler    read_handler = 0;
+    qp_write_handler   write_handler = 0;
+    qp_event_source_t  source = NULL;
+    qp_int_t           revent_num = 0;
+    qp_int_t           sys_accept_fd = QP_FD_INVALID;
     
     if (!event || !qp_fd_is_valid(&event->event_fd)) {
         return QP_ERROR;
@@ -639,9 +641,40 @@ qp_event_dispatch(qp_event_t event, qp_int_t timeout)
     event->is_run = true;
     
     while (event->is_run) {
+        revent_num = qp_event_epoll_wait(event, event->bucket, event->bucket_size,\
+            timeout);
+        /* idle or error */
+        if (1 > revent_num) {
+            if ((-1 == revent_num) && (EINTR != errno)) {
+                /* error quit */
+            }
+            
+            /* no error beacuse no event happen */
+            if (event->idle) {
+                event->idle(event->idle_arg);
+            }
+
+            continue;
+        }
         
+        for (int i = 0; i < revent_num; i++) {
+            source = (qp_event_source_t)event->bucket[i]->data.ptr;
+            source->revents = event->bucket[i]->events;
+            qp_list_push(source->listen ? &event->listen_ready : &event->ready, \
+                &source->ready_next);
+        }
+        
+        /* listen event */
+        while (!qp_list_is_empty(&event->listen_ready)) {
+            
+        }
+        
+        /* read/write event */
+        while (!qp_list_is_empty(&event->ready)) {
+        }
     }
     
+    event->is_run = false;
     return QP_SUCCESS;
 }
 
@@ -658,92 +691,11 @@ qp_event_tiktok(qp_event_t emodule, qp_int_t timeout)
     qp_int_t          accept_fd = -1;
     qp_int_t          rflag = 0;
     qp_int_t          itr = 0;
-    
-#ifndef ENABLE_TIMER
-    tnode = tnode;
-#endif
-    
-    if (!emodule || !qp_fd_is_valid(&emodule->evfd)) {
-        return QP_ERROR;
-    }
-
-    event_queue = qp_alloc(emodule->event_size * sizeof(qp_epoll_event_s));
-    
-    if (NULL == event_queue) {
-        return QP_ERROR;
-    }
-    
-    emodule->is_run = true;
-    emodule->timer_update = true;
-    
     /* event loop */
     while (emodule->is_run && qp_pool_used(&emodule->event_pool)) {
-        
-        /* clean timeout node */
-#ifdef ENABLE_TIMER
-        if (emodule->timer_update) {
-            qp_event_update_timer(emodule);
-            emodule->timer_update = false;
-            emodule->timer_progress = 0;
-            
-            while (NULL != (tnode = qp_rbtree_min(&emodule->timer, NULL))) {
-                
-                if (tnode->key > emodule->timer_begin) {
-                    break;
-                }
-                
-                eevent = qp_rbtree_data(tnode, struct qp_event_fd_s, timer_node);
-                qp_event_close(eevent);
-                qp_event_removeevent(emodule, eevent);
-            }
-        }
-#endif
          
         eevent_num = qp_epoll_wait(emodule, event_queue, emodule->event_size,\
             emodule->timer_resolution);
-
-        /* do with error */
-        if (1 > eevent_num) {
-
-            if (-1 == eevent_num) {
-                
-                /* error quit */
-                if (EINTR != errno) {
-                    break;
-                }
-            }
-
-            /* suspended by signal or no event happen */
-            emodule->timer_update = true;
-            
-            /* no error beacuse no event happen */
-            if (emodule->idle) {
-                emodule->idle(emodule->idle_arg);
-            }
-
-            continue;
-        }
-        
-        /* update timer if no timeout in epoll */
-#ifdef ENABLE_TIMER
-        if ((emodule->timer_resolution) <= emodule->timer_progress) {
-            emodule->timer_update = true;
-        }
-#endif
-         
-        /* add event */
-        for (itr = 0; itr < eevent_num; itr++) { 
-            eevent = (qp_event_fd_t)(event_queue[itr].data.ptr);
-            eevent->eflag = event_queue[itr].events;
-
-            /* add read/write event to ready list */
-            if (eevent->listen) {
-                qp_list_push(&emodule->listen_ready, &eevent->ready_next);
-                
-            } else {
-                qp_list_push(&emodule->ready, &eevent->ready_next);
-            }
-        }
         
         /* listen event */
         while (!qp_list_is_empty(&emodule->listen_ready)) {
