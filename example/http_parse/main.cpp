@@ -4,12 +4,6 @@
  * and open the template in the editor.
  */
 
-/* 
- * File:   main.cpp
- * Author: shuai
- *
- * Created on 2015年12月3日, 下午4:06
- */
 
 #include <cstdlib>
 #include <qp_http_parse.h>
