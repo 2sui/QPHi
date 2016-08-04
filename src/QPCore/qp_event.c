@@ -30,15 +30,17 @@ struct qp_event_source_s {
     
     qp_uint32_t                noblock     :1;     /* need noblock */
     qp_uint32_t                edge        :1;     /* ET mod */
-    qp_uint32_t                listen      :1;     /* listen flag */
+    
     qp_uint32_t                closed      :1;     /* need close */
+    qp_uint32_t                listen      :1;     /* listen flag */
     qp_uint32_t                shutdown    :1;     /* source is closed */
+    qp_uint32_t                urgen       :1;
     qp_uint32_t                write       :1;     /* write event */
     qp_uint32_t                read        :1;     /* read event */
     qp_uint32_t                write_again :1;     /* need write again */
     qp_uint32_t                read_again  :1;     /* need read again */
-    qp_uint32_t                stat        :2;
-    qp_uint32_t                            :23;
+    qp_uint32_t                stat        :6;
+    qp_uint32_t                            :16;
 };
 
 typedef struct qp_event_source_s*      qp_event_source_t;
@@ -46,16 +48,17 @@ typedef struct qp_event_source_s*      qp_event_source_t;
 struct  qp_event_s {
     struct qp_list_s           ready;         /* event ready list */
     struct qp_list_s           listen_ready;  /* event listen list */
-    struct qp_pool_s           event_pool;    /* mem pool */
-    struct qp_pool_s           source_cache_pool;
     struct qp_rbtree_s         timer;
     struct qp_fd_s             event_fd;          
+    struct qp_pool_s           event_pool;    /* event mem pool */
+    struct qp_pool_s           source_cache_pool; /* cache pool */
     qp_epoll_event_t           bucket;        /* ready bucket */
-    qp_int_t                   event_size;    /* event pool size */
+    qp_int_t                   eventpool_size;    /* event pool size */
+    qp_int_t                   source_cachepool_size; /* cache pool size */
     qp_int_t                   bucket_size;   /* ready bucket size */
     qp_event_idle_handler      idle;          /* idle callback */
     void*                      idle_arg;      /* idle event callback arg */
-//    qp_uchar_t                 read_cache[QP_EVENT_READCACHE_SIZE];
+    qp_uchar_t                 read_cache[QP_EVENT_READCACHE_SIZE];
     bool                       is_alloced; 
     bool                       is_run;
 };
@@ -453,102 +456,114 @@ qp_event_source_clear_flag(qp_event_source_t source)
 }
 
 qp_event_t
-qp_event_create(qp_event_t emodule)
+qp_event_create(qp_event_t event)
 {
-    if (NULL == emodule) {
-        emodule = (qp_event_t)qp_alloc(sizeof(struct qp_event_s));
+    if (NULL == event) {
+        event = (qp_event_t)qp_alloc(sizeof(struct qp_event_s));
         
-        if (NULL == emodule) {
+        if (NULL == event) {
             return NULL;
         }
         
-        memset(emodule, 0, sizeof(struct qp_event_s));
-        QP_EVENT_SET_ALLOCED(emodule);
+        memset(event, 0, sizeof(struct qp_event_s));
+        QP_EVENT_SET_ALLOCED(event);
         
     } else {
-        memset(emodule, 0, sizeof(struct qp_event_s));
+        memset(event, 0, sizeof(struct qp_event_s));
     }
     
-    if (NULL == qp_fd_init(&emodule->evfd, QP_FD_TYPE_EVENT, false)) {
-        qp_event_is_alloced(emodule) ? qp_free(emodule) : 1;
+    if (NULL == qp_fd_init(&event->event_fd, QP_FD_TYPE_EVENT, false)) {
+        qp_event_is_alloced(event) ? qp_free(event) : 1;
         return NULL;
     }
     
-    qp_list_init(&emodule->ready);
-    qp_list_init(&emodule->listen_ready);
-    qp_rbtree_init(&emodule->timer);
-    return emodule;
+    qp_list_init(&event->ready);
+    qp_list_init(&event->listen_ready);
+    qp_rbtree_init(&event->timer);
+    return event;
 }
 
 qp_event_t
-qp_event_init(qp_event_t emodule, qp_int_t bucket_size, qp_int_t resolution,
-    qp_event_opt_handler init, qp_event_opt_handler destroy, 
-    bool noblock, bool edge, void* (*idle_cb)(void *), void* idle_arg)
+qp_event_init(qp_event_t event, qp_int_t max_event_size, bool noblock, bool edge)
 {
-    qp_int_t        mod = QP_EPOLL_IN /*| QP_EPOLL_OUT*/ | QP_EPOLL_RDHUP;
-    qp_int_t        findex = 0;
-    qp_event_fd_t   eventfd = NULL;
-    
-    if (1 > bucket_size) {
-        return NULL;
-    }
-    
 #ifndef QP_OS_LINUX
     return NULL;
 #endif
     
-    emodule = qp_event_create(emodule);
+    qp_int_t   mod = QP_EPOLL_IN | QP_EPOLL_RDHUP /*| QP_EPOLL_OUT*/ \
+        | (edge ? QP_EPOLL_ET : 0);
     
-    if (NULL == emodule) {
+    if (1 > max_event_size) {
         return NULL;
     }
     
-    if (edge) {
-        mod |= QP_EPOLL_ET /*| QP_EPOLL_ONESHOT */;
+    if (NULL == (event = qp_event_create(event))) {
+        return NULL;
     }
-
-    emodule->idle = idle_cb;
-    emodule->idle_arg = idle_arg;
-    emodule->init = init;
-    emodule->destroy = destroy;
-    emodule->event_size = bucket_size;
-    emodule->timer_resolution = \
-        (resolution > 0) ? resolution : QP_EVENT_TIMER_RESOLUTION;
+    
+    event->eventpool_size = max_event_size;
+    event->source_cachepool_size = max_event_size;
+    event->bucket_size = max_event_size;
 
     /* create epoll fd */
-   if (QP_FD_INVALID == qp_epoll_create(emodule, 65535)) {
-        qp_event_destroy(emodule);
+   if (QP_FD_INVALID == qp_event_epoll_create(event, max_event_size)) {
+        qp_event_destroy(event);
         return NULL;
     }
+    event->bucket = (qp_epoll_event_t)\
+        qp_alloc(sizeof(struct qp_epoll_event_s) * event->bucket_size);
     
     /* init event pool */
-    if (NULL == qp_pool_init(&emodule->event_pool, sizeof(struct qp_event_fd_s), \
-        emodule->event_size))
+    if (!event->bucket 
+        || !qp_pool_init(&event->event_pool, sizeof(struct qp_event_source_s),\
+        event->eventpool_size)
+        || !qp_pool_init(&event->source_cache_pool, QP_EVENT_READCACHE_SIZE, \
+        event->source_cachepool_size))
     {
-        qp_event_destroy(emodule);
+        qp_event_destroy(event);
         return NULL;
     }
     
-    /* init poollist */
-    for (; findex < emodule->event_size; findex++) {   
-        eventfd = (qp_event_fd_t)qp_pool_to_array(&emodule->event_pool, findex);
-        eventfd->index = findex;
-        eventfd->efd = QP_FD_INVALID;
-        eventfd->eflag = 0;
-        eventfd->flag = mod;
-        eventfd->noblock = noblock;
-        eventfd->edge = edge && QP_EPOLL_ET;
-        qp_event_clear_flag(eventfd);
-        qp_list_init(&eventfd->ready_next);
-        memset(&eventfd->field, 0, sizeof(struct qp_event_data_s));
-        memset(&eventfd->timer_node, 0, sizeof(struct qp_rbtree_node_s));
+    for (int i = 0; i < event->eventpool_size; i++) {
+        qp_event_source_t source = (qp_event_source_t)\
+            qp_pool_to_array(&event->event_pool, i);
         
-        if (emodule->init) {
-            emodule->init(&eventfd->field);
-        }
+        source->index = i;
+        source->source_fd = QP_FD_INVALID;
+        source->events = mod;
+        source->noblock = noblock;
+        source->edge = mod & QP_EPOLL_ET;
+        qp_event_source_clear_flag(source);
+        
+        /* set cache */
+        source->cache = (qp_uchar_t*)\
+            qp_pool_to_array(&event->source_cache_pool, i);
+        qp_list_init(&source->ready_next);
+        memset(&source->timer_node, 0, sizeof(struct qp_rbtree_node_s));
+    }
+  
+    return event;
+}
+
+/**
+ * Regist a handler that will be called when no events comming.
+ * 
+ * @param event
+ * @param idle_cb
+ * @param idle_arg
+ * @return 
+ */
+qp_int_t
+qp_event_regist_idle_handler(qp_event_t event, qp_event_idle_handler idle_cb, \
+    void* idle_arg) 
+{
+    if (event && qp_fd_is_inited(&event->event_fd)) {
+        event->idle = idle_cb;
+        event->idle_arg = idle_arg;
+        return QP_SUCCESS;
     }
     
-    return emodule;
+    return QP_ERROR;
 }
 
 qp_int_t

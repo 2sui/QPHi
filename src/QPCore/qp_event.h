@@ -36,7 +36,16 @@ extern "C" {
 
 #define  QP_EVENT_READCACHE_SIZE    4096    // common buffer size
 
-
+    struct qp_list_s           ready_next;     /* event source list */
+    struct qp_rbtree_node_s    timer_node;     
+    qp_uchar_t*                cache;          /* read/write cache */        
+    qp_int_t                   index;
+    qp_int_t                   source_fd;
+    qp_int_t                   events;
+    qp_int_t                   revents;
+    qp_int_t                   cache_size;
+    qp_int_t                   cache_offset;
+    
 /* buf type */
 typedef enum  {
     QP_EVENT_BLOCK_OPT = 0,  /* do read/write with block buf */
@@ -46,9 +55,9 @@ typedef enum  {
 /* event fd stat */
 typedef enum {
     QP_EVENT_IDL = 0,
-    QP_EVENT_NEW, /* event is new */
-    QP_EVENT_PROCESS, /* event is running */
-    QP_EVENT_CLOSE   /* event is closed */
+    QP_EVENT_NEW = 1<<0, /* event is new */
+    QP_EVENT_PROCESS = 1<<1, /* event is running */
+    QP_EVENT_CLOSE = 1<<2   /* event is closed */
 } qp_event_stat_t;
 
 typedef union {

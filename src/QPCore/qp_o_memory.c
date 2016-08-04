@@ -187,8 +187,8 @@ qp_queue_merge(qp_queue_t queue, qp_queue_t newq)
 
 /**
  * Operation for rbtree.
- * If the node is root , set its parent as NULL;
- * and if the node has no child, set its left and right as sentinal.
+ * If the node is root , set its parent as NULL.
+ * If the node has no child, set its left and right as sentinal.
  */
 void
 qp_rbtree_set_red(qp_rbtree_node_t node)
