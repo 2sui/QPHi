@@ -35,16 +35,6 @@ extern "C" {
 # endif
 
 #define  QP_EVENT_READCACHE_SIZE    4096    // common buffer size
-
-    struct qp_list_s           ready_next;     /* event source list */
-    struct qp_rbtree_node_s    timer_node;     
-    qp_uchar_t*                cache;          /* read/write cache */        
-    qp_int_t                   index;
-    qp_int_t                   source_fd;
-    qp_int_t                   events;
-    qp_int_t                   revents;
-    qp_int_t                   cache_size;
-    qp_int_t                   cache_offset;
     
 /* buf type */
 typedef enum  {

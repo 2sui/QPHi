@@ -15,7 +15,9 @@ typedef  struct epoll_event    qp_epoll_event_s;
 typedef  void                  qp_epoll_event_s;
 #endif
 
-typedef  qp_epoll_event_s*       qp_epoll_event_t;
+typedef  qp_epoll_event_s*     qp_epoll_event_t;
+typedef  qp_int_t (*qp_read_handler)(qp_event_fd_t);
+typedef  qp_read_handler       qp_write_handler;
 
 struct qp_event_source_s {
     struct qp_list_s           ready_next;     /* event source list */
@@ -455,6 +457,12 @@ qp_event_source_clear_flag(qp_event_source_t source)
     source->stat = QP_EVENT_IDL;
 }
 
+/**
+ * Create an event system.
+ * 
+ * @param event
+ * @return 
+ */
 qp_event_t
 qp_event_create(qp_event_t event)
 {
@@ -483,6 +491,15 @@ qp_event_create(qp_event_t event)
     return event;
 }
 
+/**
+ * Init an event system.
+ * 
+ * @param event
+ * @param max_event_size
+ * @param noblock
+ * @param edge
+ * @return 
+ */
 qp_event_t
 qp_event_init(qp_event_t event, qp_int_t max_event_size, bool noblock, bool edge)
 {
@@ -527,22 +544,64 @@ qp_event_init(qp_event_t event, qp_int_t max_event_size, bool noblock, bool edge
     for (int i = 0; i < event->eventpool_size; i++) {
         qp_event_source_t source = (qp_event_source_t)\
             qp_pool_to_array(&event->event_pool, i);
-        
+        memset(source, 0, sizeof(struct qp_event_source_s));
         source->index = i;
         source->source_fd = QP_FD_INVALID;
         source->events = mod;
         source->noblock = noblock;
         source->edge = mod & QP_EPOLL_ET;
-        qp_event_source_clear_flag(source);
         
         /* set cache */
-        source->cache = (qp_uchar_t*)\
-            qp_pool_to_array(&event->source_cache_pool, i);
+        source->cache_size = QP_EVENT_READCACHE_SIZE;
+        source->cache = (qp_uchar_t*)qp_pool_alloc(&event->source_cache_pool, \
+            source->cache_size);
         qp_list_init(&source->ready_next);
-        memset(&source->timer_node, 0, sizeof(struct qp_rbtree_node_s));
     }
   
     return event;
+}
+
+/**
+ * Destroy an event system.
+ * 
+ * @param emodule
+ * @return 
+ */
+qp_int_t
+qp_event_destroy(qp_event_t event)
+{
+    if (event && qp_fd_is_inited(&event->event_fd) && !event->is_run) { 
+        qp_event_source_t source = NULL;
+        qp_fd_destroy(&event->event_fd);
+        
+        for (int i = 0; i < event->eventpool_size; i++) {
+            source = (qp_event_source_t)qp_pool_to_array(&event->event_pool, i);
+            
+            if (QP_FD_INVALID != source->source_fd) {
+                qp_event_source_close(source);
+            }
+            
+            if (source->cache) {
+                qp_pool_free(event->source_cache_pool, source->cache);
+            }
+        }
+        
+        if (event->bucket) {
+            qp_free(event->bucket);
+            event->bucket = NULL;
+        }
+        
+        qp_pool_destroy(&event->event_pool, true);
+        qp_pool_destroy(&event->source_cache_pool, true);
+        
+        if (qp_event_is_alloced(event)) {
+            qp_free(event);
+        }
+        
+        return QP_SUCCESS;
+    }
+    
+    return QP_ERROR;
 }
 
 /**
@@ -564,6 +623,26 @@ qp_event_regist_idle_handler(qp_event_t event, qp_event_idle_handler idle_cb, \
     }
     
     return QP_ERROR;
+}
+
+qp_int_t
+qp_event_dispatch(qp_event_t event, qp_int_t timeout) 
+{
+    qp_read_handler  read_handler;
+    qp_write_handler write_handler;
+    qp_int_t         sys_accept_fd = QP_FD_INVALID;
+    
+    if (!event || !qp_fd_is_valid(&event->event_fd)) {
+        return QP_ERROR;
+    }
+    
+    event->is_run = true;
+    
+    while (event->is_run) {
+        
+    }
+    
+    return QP_SUCCESS;
 }
 
 qp_int_t
@@ -833,38 +912,6 @@ qp_event_tiktok(qp_event_t emodule, qp_int_t timeout)
 }
 
 
-qp_int_t
-qp_event_destroy(qp_event_t emodule)
-{
-    if (emodule && qp_fd_is_inited(&emodule->evfd) && !emodule->is_run) { 
-        qp_int_t i = 0;
-        qp_event_fd_t eventfd = NULL;
-        
-        qp_fd_destroy(&emodule->evfd);
-        
-        for (; i < emodule->event_size; i++) {
-            eventfd = (qp_event_fd_t)qp_pool_to_array(&emodule->event_pool, i);
-            
-            if (QP_FD_INVALID != eventfd->efd) {
-                qp_event_close(eventfd);
-            }
-            
-            if (emodule->destroy) {
-                emodule->destroy(&eventfd->field);
-            }
-        }
-
-        qp_pool_destroy(&emodule->event_pool, true);
-        
-        if (qp_event_is_alloced(emodule)) {
-            qp_free(emodule);
-        }
-        
-        return QP_SUCCESS;
-    }
-    
-    return QP_ERROR;
-}
 
 
 qp_int_t
