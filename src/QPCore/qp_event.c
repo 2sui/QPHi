@@ -666,7 +666,8 @@ qp_event_dispatch(qp_event_t event, qp_int_t timeout)
         
         /* listen event */
         while (!qp_list_is_empty(&event->listen_ready)) {
-            
+            source = qp_list_data(qp_list_first(event->listen_ready), \
+                struct qp_event_source_t, ready_next);
         }
         
         /* read/write event */
