@@ -7,51 +7,51 @@
 #include "qp_o_pool.h"
 
 
-void
+inline void
 qp_pool_set_inited(qp_pool_t pool)
 { pool ? pool->is_inited = true : 1;}
 
-void
+inline void
 qp_pool_set_alloced(qp_pool_t pool)
 { pool ? pool->is_alloced = true : 1;}
 
-void
+inline void
 qp_pool_manager_set_inited(qp_pool_manager_t manager)
 { manager ? manager->is_inited = true : 1;}
 
-void
+inline void
 qp_pool_manager_set_alloced(qp_pool_manager_t manager)
 { manager ? manager->is_alloced = true : 1;}
 
-void
+inline void
 qp_pool_unset_inited(qp_pool_t pool)
 { pool ? pool->is_inited = false : 1;}
 
-void
+inline void
 qp_pool_unset_alloced(qp_pool_t pool)
 { pool ? pool->is_alloced = false : 1;}
 
-void
+inline void
 qp_pool_manager_unset_inited(qp_pool_manager_t manager)
 { manager ? manager->is_inited = false : 1;}
 
-void
+inline void
 qp_pool_manager_unset_alloced(qp_pool_manager_t manager)
 { manager ? manager->is_alloced = false : 1;}
 
-bool
+inline bool
 qp_pool_is_inited(qp_pool_t pool) 
 { return pool ? pool->is_inited : false;}
 
-bool
+inline bool
 qp_pool_is_alloced(qp_pool_t pool)
 { return pool ? pool->is_alloced : false;}
 
-bool
+inline bool
 qp_pool_manager_is_inited(qp_pool_manager_t manager)
 { return manager ? manager->is_inited : false;}
 
-bool
+inline bool
 qp_pool_manager_is_alloced(qp_pool_manager_t manager)
 { return manager ? manager->is_alloced : false;}
 
@@ -183,13 +183,13 @@ qp_pool_free(qp_pool_t pool, void* ptr)
     return QP_ERROR;
 }
 
-size_t
+inline size_t
 qp_pool_available(qp_pool_t pool)
 {
     return qp_pool_is_inited(pool) ? pool->nfree : 0;
 }
 
-size_t
+inline size_t
 qp_pool_used(qp_pool_t pool)
 {
     return qp_pool_is_inited(pool) ? (pool->nsize - pool->nfree) : 0;
@@ -206,13 +206,11 @@ qp_pool_to_array(qp_pool_t pool, size_t index)
     return NULL;
 }
 
-qp_pool_elm_t
+inline qp_pool_elm_t
 qp_pool_belong_to(void* ptr)
 {
     return (qp_pool_elm_t)((qp_uchar_t*)ptr - sizeof(struct qp_pool_elm_s));
 }
-
-
 
 qp_pool_manager_t
 qp_pool_manager_create(qp_pool_manager_t manager)
@@ -385,7 +383,7 @@ qp_pool_manager_free(qp_pool_manager_t manager, void* ptr, qp_pool_t npool)
     return QP_ERROR;
 }
 
-qp_pool_manager_elm_t
+inline qp_pool_manager_elm_t
 qp_pool_manager_belong_to(qp_pool_t pool)
 {
     return (qp_pool_manager_elm_t)((qp_uchar_t*)pool - \
