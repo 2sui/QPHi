@@ -65,105 +65,32 @@ typedef  qp_int_t (*qp_event_process_handler)(qp_event_data_t /* fd_data */,
     size_t /* read_cnt */, bool /*write_finish*/, size_t /* write_cnt */);
 
 
-struct  qp_event_data_s {
-    /* read buf */
-    qp_event_buf_t            readbuf; 
-    /* write buf */
-    qp_event_buf_t            writebuf;
-    /* read buf max size/block */
-    size_t                    readbuf_max; 
-    /* read buf max size/block */
-    size_t                    writebuf_max; 
-    /* it will not call do_myself callback untill read_atleast bytes are read */
-    size_t                    read_atleast; 
-    /* it will not call do_myself callback untill write_atleast bytes are writen (it will not effect for now) */
-    size_t                    write_atleast; 
-    /* use block buf or iovec buf for next step */ 
-    qp_event_opt_t            next_read_opt;    
-    /* use block buf or iovec buf for next step */  
-    qp_event_opt_t            next_write_opt; 
-    /* event process handler for user */ 
-    qp_event_process_handler  process_handler;
-    /* user data */
-    void*                     data;   /* user data */
-};
-
-
-bool
+inline bool
 qp_event_is_alloced(qp_event_t evfd);
 
-/****************************************************************************
- * It is recommended that one qp_event_t should be used by only one thread. *
- ****************************************************************************/
-
-/**
- * Init a event module.
- * It needs fd_size to tell this function the size of event bucket, and
- * if noblock is true the event loop will use noblock mode , and if edge is 
- * true the event loop will use ET mode.
- * init handler and destroy handler are handlers that how 
- * to init or destroy a qp_event_data_t for every event fd in event pool.
- * 
- * @param emodule: A new qp_event_t struct or NULL.
- * @param bucket_size: Event bucket size
- * @param resolution: Timer resolution.
- * @param init: Init handler for qp_event_data_t in event fd.
- * @param destroy: Destroy handler for qp_event_data_t in event fd.
- * @param noblock: Noblock mode.
- * @param edge: ET mode.
- * @param idle_cb: Handler runing during no event comming.
- * @param idle_arg: Argument for idle_cb.
- * @return If success return emodule pointer(if emodule is not NULL the return
- *     pointer is equal to it.), and return NULL if some error happen.
- */
 qp_event_t
-qp_event_init(qp_event_t emodule, qp_int_t bucket_size, qp_int_t resolution,
-    qp_event_opt_handler init, qp_event_opt_handler destroy, 
-    bool noblock, bool edge, void* (*idle_cb)(void *), void* idle_arg);
+qp_event_init(qp_event_t event, qp_int_t max_event_size, bool noblock, bool edge);
 
-/**
- * Start event loop.You can controll when to quit the event loop by runstat.
- * 
- * @param emodule: Valid qp_event_t.
- * @param timeout: Event timeout.
- * @return If quit nomally it return QP_SUCCESS , otherwise return QP_ERROR.
- */
 qp_int_t
 qp_event_tiktok(qp_event_t emodule, qp_int_t timeout);
 
-/**
- * Destory a mq_event handler.
- *
- * @param [emodule]  is the mq_event that will be destoryed (which has been inited).
- * @param [eventfd_destory_func]  Handler of how to destory mq_event_fd_t.
- * @return Return QP_SUCCESS if success otherwise return QP_ERROR.
-*/
 qp_int_t
-qp_event_destroy(qp_event_t emodule);
+qp_event_destroy(qp_event_t event);
 
-/**
- * Add events to this event module.
- */
-
-/**
- * Add listen fd to event.
- * 
- * Note: You need add listen fd before calling qp_event_tiktok().
- * 
- * @param emodule: Valid qp_event_t.
- * @param fd: Socket or file description.
- * @param timeout:Event timeout.
- * @param listen: Listen mode.
- * @param auto_close: Auto close by module.
- * @return Return QP_SUCCESS if succes otherwise return QP_ERROR.
- */
 qp_int_t
-qp_event_addevent(qp_event_t emodule, qp_int_t fd, qp_int_t timeout, bool listen, 
+qp_event_regist_idle_handler(qp_event_t event, qp_event_idle_handler idle_cb, \
+    void* idle_arg);
+
+qp_int_t
+qp_event_addevent(qp_event_t event, qp_int_t fd, qp_int_t timeout, bool listen, \
     bool auto_close);
 
-//inline void
-//qp_event_disable(qp_event_t emodule);
+qp_int_t
+qp_event_removeevent(qp_event_t event, qp_event_source_t source);
 
+qp_int_t
+qp_event_dispatch(qp_event_t event, qp_int_t timeout);
+        
 #ifdef __cplusplus
 }
 #endif

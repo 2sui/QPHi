@@ -27,8 +27,8 @@ struct qp_event_source_s {
     qp_int_t                   source_fd;
     qp_uint32_t                events;
     qp_uint32_t                revents;
-    qp_int_t                   cache_size;
-    qp_int_t                   cache_offset;
+    ssize_t                    cache_size;
+    ssize_t                    cache_offset;
     
     qp_uint32_t                noblock     :1;     /* need noblock */
     qp_uint32_t                edge        :1;     /* ET mod */
@@ -65,9 +65,22 @@ struct  qp_event_s {
     bool                       is_run;
 };
 
-#define QP_EVENT_SET_ALLOCED(event)   (((qp_event_t)(event))->is_alloced=true)
-#define QP_EVENT_UNSET_ALLOCED(event) (((qp_event_t)(event))->is_alloced=false)
+inline void 
+qp_event_set_alloced(qp_event_t event) {
+    event->is_alloced = true;
+}
 
+inline void 
+qp_event_unset_alloced(qp_event_t event) {
+    event->is_alloced = false
+}
+
+inline void
+qp_event_source_set_shutdown(qp_event_source_t source) 
+{
+    source->shutdown = 1;
+    source->stat = QP_EVENT_CLOSE;
+}
 
 # ifndef  QP_OS_LINUX
 qp_int_t
@@ -90,7 +103,7 @@ epoll_wait(int __epfd, epoll_event *__events, int __maxevents, int __timeout)
 
 # endif
 
-bool
+inline bool
 qp_event_is_alloced(qp_event_t event) 
 { return event ? event->is_alloced : false; }
 
@@ -283,7 +296,7 @@ qp_event_source_check_close(qp_event_source_t source)
  * @param source
  * @return 
  */
-qp_int_t
+size_t
 qp_event_source_read(qp_event_source_t source)
 {
     if (!source || (QP_FD_INVALID == source->source_fd)) {
@@ -308,7 +321,7 @@ qp_event_source_read(qp_event_source_t source)
                 if ((0 == ret) || !(EAGAIN == errno || EWOULDBLOCK == errno \
                     || EINTR == errno))
                 {
-                    source->shutdown = 1;
+                    qp_event_source_set_shutdown(source);
                     return QP_ERROR;
                 }
 
@@ -325,7 +338,7 @@ qp_event_source_read(qp_event_source_t source)
 
     /* clear flag if edge mod not enabled */
     source->read = 0;
-    return QP_SUCCESS;
+    return (size_t)source->cache_offset;
 }
 
 //qp_int_t
@@ -366,7 +379,7 @@ qp_event_source_read(qp_event_source_t source)
  * @param source
  * @return 
  */
-qp_int_t
+size_t
 qp_event_source_write(qp_event_source_t source)
 {
     if (!source || (QP_FD_INVALID == source->source_fd)) {
@@ -388,7 +401,7 @@ qp_event_source_write(qp_event_source_t source)
                 if ((0 == ret) || !(EAGAIN == errno || EWOULDBLOCK == errno \
                     || EINTR == errno))
                 {
-                    source->shutdown = 1;
+                    qp_event_source_set_shutdown(source);
                     return QP_ERROR;
                 }
                 
@@ -401,7 +414,7 @@ qp_event_source_write(qp_event_source_t source)
     }
     
     source->write = 0;
-    return QP_SUCCESS;
+    return (size_t)rest;
 }
 
 //qp_int_t
@@ -474,10 +487,11 @@ qp_event_create(qp_event_t event)
         }
         
         memset(event, 0, sizeof(struct qp_event_s));
-        QP_EVENT_SET_ALLOCED(event);
+        qp_event_set_alloced(event);
         
     } else {
         memset(event, 0, sizeof(struct qp_event_s));
+        qp_event_unset_alloced(event);
     }
     
     if (NULL == qp_fd_init(&event->event_fd, QP_FD_TYPE_EVENT, false)) {
@@ -727,7 +741,7 @@ qp_event_dispatch(qp_event_t event, qp_int_t timeout)
                 sys_accept_fd = qp_event_source_accept(source);
                 
                 if (QP_FD_INVALID == sys_accept_fd) {
-                    if (!(EAGAIN == errno || EWOULDBLOCK == errno || 
+                    if (!(EAGAIN == errno || EWOULDBLOCK == errno || \
                         EINTR == errno))
                     {
                         qp_event_removeevent(event, source);
@@ -736,8 +750,9 @@ qp_event_dispatch(qp_event_t event, qp_int_t timeout)
                     break;
                 }
                 
+                /* should be auto closed */
                 if (QP_ERROR ==  qp_event_addevent(event, sys_accept_fd, \
-                    timeout, true, false)) 
+                    timeout, false, true)) 
                 {
                     close(sys_accept_fd);
                 }
@@ -747,6 +762,31 @@ qp_event_dispatch(qp_event_t event, qp_int_t timeout)
         
         /* read/write event */
         while (!qp_list_is_empty(&event->ready)) {
+            source = qp_list_data(qp_list_first(&event->read), \
+                struct qp_event_source_s, ready_next);
+            qp_list_pop(&event->ready);
+            
+            source->shutdown |= source->revents \
+                & (QP_EPOLL_RDHUP | QP_EPOLL_HUP | QP_EPOLL_ERR);
+            source->read |= source->revents | QP_EPOLL_IN;
+            source->write |= source->revents | QP_EPOLL_OUT;
+            
+            if (!(source->shutdown | source->read | source->write)) {
+                continue;
+            }
+            
+            if (source->shutdown) {
+                qp_event_source_set_shutdown(source);
+            }
+            
+            read_handler = qp_event_source_read;
+            write_handler = qp_event_source_write;
+            
+            if (QP_ERROR == write_handler(source) \
+                || QP_ERROR == read_handler(source)) 
+            {
+                
+            }
         }
     }
     
@@ -767,24 +807,6 @@ qp_event_tiktok(qp_event_t emodule, qp_int_t timeout)
     qp_int_t          accept_fd = -1;
     qp_int_t          rflag = 0;
     qp_int_t          itr = 0;
-    /* event loop */
-        while (!qp_list_is_empty(&emodule->listen_ready)) {
-            eevent = qp_list_data(qp_list_first(&emodule->listen_ready), \
-                struct qp_event_fd_s, ready_next);
-            qp_list_pop(&emodule->listen_ready);
-            
-            do {
-                accept_fd = qp_event_accept(eevent);
-                
-                if (QP_ERROR == \
-                    qp_event_addevent(emodule, accept_fd, timeout, false, true))
-                {
-                    close(accept_fd);
-                }
-
-            } while (eevent->edge);
- 
-        }
             
         /* do read/write event */
         while (!qp_list_is_empty(&emodule->ready)) {
