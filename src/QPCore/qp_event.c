@@ -31,6 +31,7 @@ struct qp_event_source_s {
     ssize_t                    read_cache_offset;
     qp_uchar_t*                write_cache;
     ssize_t                    write_cache_size;
+    ssize_t                    write_cache_cur_offset;
     ssize_t                    write_cache_offset;
     
     qp_uint32_t                noblock     :1;     /* need noblock */
@@ -42,10 +43,8 @@ struct qp_event_source_s {
     qp_uint32_t                urgen       :1;
     qp_uint32_t                write       :1;     /* write event */
     qp_uint32_t                read        :1;     /* read event */
-    qp_uint32_t                write_again :1;     /* need write again */
-    qp_uint32_t                read_again  :1;     /* need read again */
-    qp_uint32_t                stat        :6;
-    qp_uint32_t                            :16;
+    qp_uint32_t                stat        :4;
+    qp_uint32_t                            :20;
 };
 
 typedef struct qp_event_source_s*      qp_event_source_t;
@@ -278,7 +277,7 @@ qp_event_source_close(qp_event_source_t source)
  * @return 
  */
 size_t
-qp_event_source_read(qp_event_source_t source)
+qp_event_source_read(qp_event_t event, qp_event_source_t source)
 {
     if (!source || (QP_FD_INVALID == source->source_fd) || !source->read_cache) {
         return QP_ERROR;
@@ -287,34 +286,36 @@ qp_event_source_read(qp_event_source_t source)
     size_t rest = 0;
     ssize_t ret = 0;
     source->read_cache_offset = 0;
+    rest = source->read_cache_size - source->read_cache_offset;
 
-    if (source->read) {
-
+    if (source->read && rest) {
+        
         do {
-            rest = source->read_cache_size - source->read_cache_offset;
             ret = read(source->source_fd, source->read_cache \
                 + source->read_cache_offset, rest);
-
+                
             if (1 > ret) {
-                source->read = 0;
-
                 /* closed or some error happen */
                 if ((0 == ret) || !(EAGAIN == errno || EWOULDBLOCK == errno \
                     || EINTR == errno))
                 {
                     qp_event_source_set_shutdown(source);
+                    source->read = 0;
                     return QP_ERROR;
                 }
+                break;
 
             } else {
                 source->read_cache_offset += ret;
-                
-                if (source->read_cache_offset >= source->read_cache_size) {
-                    source->read = 0;
-                    source->read_again = 1;
+                rest = source->read_cache_size - source->read_cache_offset;
+                    
+                if (!rest) {
+                    qp_event_epoll_reset(event, source, \
+                        source->write_cache_cur_offset ? QP_EPOLL_OUT : 0);
+                    break;
                 }
             }
-        } while (source->read && source->edge);
+        } while (source->edge);
     }
 
     /* clear flag if edge mod not enabled */
@@ -361,35 +362,40 @@ qp_event_source_read(qp_event_source_t source)
  * @return 
  */
 size_t
-qp_event_source_write(qp_event_source_t source)
+qp_event_source_write(qp_event_t event, qp_event_source_t source)
 {
     if (!source || (QP_FD_INVALID == source->source_fd || !source->write_cache)) {
         return QP_ERROR;
     }
     
-    size_t rest = 0;
-    ssize_t ret = 0;
+    size_t rest = source->write_cache_cur_offset;
+    ssize_t ret = source->write_cache_offset - rest;
     
-    if (source->write && (0 < source->write_cache_offset)) {
+    if (source->write && ret) {
         
         do {
-            ret = write(source->source_fd, source->write_cache + rest, \
-                source->write_cache_offset - rest);
+            ret = write(source->source_fd, source->write_cache + rest, ret);
             
             if (1 > ret) {
-                source->write = 0;
-                
                 if ((0 == ret) || !(EAGAIN == errno || EWOULDBLOCK == errno \
                     || EINTR == errno))
                 {
                     qp_event_source_set_shutdown(source);
+                    source->write = 0;
                     return QP_ERROR;
                 }
                 
-                source->write_again = 1;
+                source->write_cache_cur_offset = rest;
+                break;
                 
             } else {
                 rest += ret;
+                ret = source->write_cache_offset - rest;
+                
+                if (!ret) {
+                    source->write_cache_cur_offset = 0;
+                    break;
+                }
             }
         } while(source->write && source->edge);
     }
@@ -770,6 +776,7 @@ qp_event_dispatch_queue(qp_event_t event) {
     qp_event_source_t  source = NULL;
     qp_read_handler    read_handler = 0;
     qp_write_handler   write_handler = 0;
+    qp_int_t           ret = QP_ERROR;
     
     while (!qp_list_is_empty(&event->ready)) {
         source = qp_list_data(qp_list_first(&event->read), \
@@ -795,7 +802,28 @@ qp_event_dispatch_queue(qp_event_t event) {
         write_handler(source);
         read_handler(source);
         
-        if (source.)
+        if (!source->read_again && !source->write_again) {
+            if (event->read_process) {
+                ret = event->read_process(source->index, source->stat, \
+                    source->read_cache, source->read_cache_offset);
+            
+                if (0 > ret) {
+                    qp_event_source_set_shutdown(source);
+                
+                } else {
+                    if (0 < ret) {
+                        source->read_cache_size = QP_EVENT_READCACHE_SIZE;
+                        source->read_cache = (qp_uchar_t*)\
+                            qp_pool_manager_alloc(&event->source_cache_pool, \
+                        source->read_cache_size, NULL);
+                    }
+                }
+            }
+        
+            if (event->write_process && !source->shutdown) {
+                
+            }
+        }
     }
 }
 qp_int_t

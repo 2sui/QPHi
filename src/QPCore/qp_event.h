@@ -67,8 +67,7 @@ typedef  void* (*qp_event_idle_handler)(void*);
  * @param cache: Read cache address.
  * @param cache_size: Read cache content size.
  * @return Return QP_ERROR if the event should be shut down; return value > 0 
- *         means there are some data to be sent, and the return value will be 
- *         passed as the argurement read_ret of qp_event_write_process_handler.
+ *         means there are some data to be sent; otherwise return 0.
  */
 typedef qp_int_t (*qp_event_read_process_handler)(qp_int_t index, \
     qp_event_stat_t stat, qp_uchar_t* cache, size_t cache_size);
@@ -78,7 +77,6 @@ typedef qp_int_t (*qp_event_read_process_handler)(qp_int_t index, \
  * 
  * @param index Current event identification.
  * @param stat: Event stat. See qp_event_stat_t.
- * @param read_ret: Return value that returned last qp_event_read_process_handler.
  * @param cache: Write cache address.
  * @param cache_size: Max write cache size. The data to be sent should NOT bigger
  *         than it.
