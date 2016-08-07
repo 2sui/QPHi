@@ -304,8 +304,8 @@ qp_pool_manager_alloc(qp_pool_manager_t manager, size_t size, qp_pool_t* npool)
             
             /* if no pool available, create one */
             if (NULL == manager->current) {
-                manager->current = \
-                    (qp_pool_manager_elm_t)qp_alloc(sizeof(struct qp_pool_manager_elm_s));
+                manager->current = (qp_pool_manager_elm_t) \
+                    qp_alloc(sizeof(struct qp_pool_manager_elm_s));
                 
                 if (NULL == manager->current) {
                     return NULL;

@@ -21,14 +21,17 @@ typedef  qp_read_handler       qp_write_handler;
 
 struct qp_event_source_s {
     struct qp_list_s           ready_next;     /* event source list */
-    struct qp_rbtree_node_s    timer_node;     
-    qp_uchar_t*                cache;          /* read/write cache */        
+    struct qp_rbtree_node_s    timer_node;            
     qp_int_t                   index;
     qp_int_t                   source_fd;
     qp_uint32_t                events;
     qp_uint32_t                revents;
-    ssize_t                    cache_size;
-    ssize_t                    cache_offset;
+    qp_uchar_t*                read_cache;          /* read/write cache */ 
+    ssize_t                    read_cache_size;
+    ssize_t                    read_cache_offset;
+    qp_uchar_t*                write_cache;
+    ssize_t                    write_cache_size;
+    ssize_t                    write_cache_offset;
     
     qp_uint32_t                noblock     :1;     /* need noblock */
     qp_uint32_t                edge        :1;     /* ET mod */
@@ -53,12 +56,13 @@ struct  qp_event_s {
     struct qp_rbtree_s         timer;
     struct qp_fd_s             event_fd;          
     struct qp_pool_s           event_pool;    /* event mem pool */
-    struct qp_pool_s           source_cache_pool; /* cache pool */
+    struct qp_pool_manager_s   source_cache_pool; /* cache pool */
     qp_epoll_event_t           bucket;        /* ready bucket */
     qp_int_t                   eventpool_size;    /* event pool size */
     qp_int_t                   source_cachepool_size; /* cache pool size */
     qp_int_t                   bucket_size;   /* ready bucket size */
-    qp_event_process_handler   process;
+    qp_event_read_process_handler   read_process;
+    qp_event_write_process_handler  write_process;
     qp_event_idle_handler      idle;          /* idle callback */
     void*                      idle_arg;      /* idle event callback arg */
     qp_uchar_t                 read_cache[QP_EVENT_READCACHE_SIZE];
@@ -164,7 +168,7 @@ qp_event_epoll_wait(qp_event_t event, qp_epoll_event_t event_ready,
 qp_int_t
 qp_event_epoll_add(qp_event_t event, qp_event_source_t source)
 {
-    if (!event || !source || (0 > source->source_fd)) {
+    if (!event || !source) {
         return QP_ERROR;
     }
     
@@ -196,7 +200,7 @@ qp_event_epoll_add(qp_event_t event, qp_event_source_t source)
 qp_int_t
 qp_event_epoll_reset(qp_event_t event, qp_event_source_t source, qp_uint32_t flag)
 {
-    if (!event || !source || (0 > source->source_fd)) {
+    if (!event || !source) {
         return QP_ERROR;
     }
     
@@ -221,14 +225,12 @@ qp_event_epoll_reset(qp_event_t event, qp_event_source_t source, qp_uint32_t fla
 qp_int_t
 qp_event_epoll_del(qp_event_t event, qp_event_source_t source)
 {
-    if (!event || !source || (0 > source->source_fd)) {
+    if (!event || !source) {
         return QP_ERROR;
     }
     
     qp_epoll_event_s setter;
 # ifdef  QP_OS_LINUX
-    setter.data.ptr = source;
-    setter.events = 0;
     return epoll_ctl(event->event_fd.fd, EPOLL_CTL_DEL, source->source_fd, \
         &setter);
 # else
@@ -270,28 +272,6 @@ qp_event_source_close(qp_event_source_t source)
 }
 
 /**
- * Check an source should be closed.
- * 
- * @param source
- * @return Return QP_SUCCESS if do not need to be closed, otherwise close the 
- *         source and return QP_ERROR.
- */
-qp_int_t
-qp_event_source_check_close(qp_event_source_t source)
-{
-    if (!source) {
-        return QP_ERROR;
-    }
-    
-    if (source->shutdown) {
-        qp_event_source_close(source);
-        return QP_ERROR;
-    }
-
-    return QP_SUCCESS;
-}
-
-/**
  * Read data from a source.
  * 
  * @param source
@@ -300,20 +280,20 @@ qp_event_source_check_close(qp_event_source_t source)
 size_t
 qp_event_source_read(qp_event_source_t source)
 {
-    if (!source || (QP_FD_INVALID == source->source_fd)) {
+    if (!source || (QP_FD_INVALID == source->source_fd) || !source->read_cache) {
         return QP_ERROR;
     }
     
     size_t rest = 0;
     ssize_t ret = 0;
-    source->cache_offset = 0;
+    source->read_cache_offset = 0;
 
     if (source->read) {
 
         do {
-            rest = source->cache_size - source->cache_offset;
-            ret = read(source->source_fd, source->cache + source->cache_offset, \
-                rest);
+            rest = source->read_cache_size - source->read_cache_offset;
+            ret = read(source->source_fd, source->read_cache \
+                + source->read_cache_offset, rest);
 
             if (1 > ret) {
                 source->read = 0;
@@ -327,9 +307,9 @@ qp_event_source_read(qp_event_source_t source)
                 }
 
             } else {
-                source->cache_offset += ret;
+                source->read_cache_offset += ret;
                 
-                if (source->cache_offset >= source->cache_size) {
+                if (source->read_cache_offset >= source->read_cache_size) {
                     source->read = 0;
                     source->read_again = 1;
                 }
@@ -339,7 +319,7 @@ qp_event_source_read(qp_event_source_t source)
 
     /* clear flag if edge mod not enabled */
     source->read = 0;
-    return (size_t)source->cache_offset;
+    return (size_t)source->read_cache_offset;
 }
 
 //qp_int_t
@@ -383,18 +363,18 @@ qp_event_source_read(qp_event_source_t source)
 size_t
 qp_event_source_write(qp_event_source_t source)
 {
-    if (!source || (QP_FD_INVALID == source->source_fd)) {
+    if (!source || (QP_FD_INVALID == source->source_fd || !source->write_cache)) {
         return QP_ERROR;
     }
     
     size_t rest = 0;
     ssize_t ret = 0;
     
-    if (source->write && (0 < source->cache_offset)) {
+    if (source->write && (0 < source->write_cache_offset)) {
         
         do {
-            ret = write(source->source_fd, source->cache + rest, \
-                source->cache_offset - rest);
+            ret = write(source->source_fd, source->write_cache + rest, \
+                source->write_cache_offset - rest);
             
             if (1 > ret) {
                 source->write = 0;
@@ -464,6 +444,7 @@ qp_event_source_clear_flag(qp_event_source_t source)
     source->listen = 0;
     source->closed = 0;
     source->shutdown = 0;
+    source->urgen = 0;
     source->write = 0;
     source->write_again = 0;
     source->read = 0;
@@ -534,8 +515,8 @@ qp_event_init(qp_event_t event, qp_int_t max_event_size, bool noblock, bool edge
     }
     
     event->eventpool_size = max_event_size;
-    event->source_cachepool_size = max_event_size;
     event->bucket_size = max_event_size;
+    event->source_cachepool_size = max_event_size / 2;
 
     /* create epoll fd */
    if (QP_FD_INVALID == qp_event_epoll_create(event, max_event_size)) {
@@ -549,8 +530,8 @@ qp_event_init(qp_event_t event, qp_int_t max_event_size, bool noblock, bool edge
     if (!event->bucket 
         || !qp_pool_init(&event->event_pool, sizeof(struct qp_event_source_s),\
         event->eventpool_size)
-        || !qp_pool_init(&event->source_cache_pool, QP_EVENT_READCACHE_SIZE, \
-        event->source_cachepool_size))
+        || !qp_pool_manager_init(&event->source_cache_pool, \
+        QP_EVENT_READCACHE_SIZE, event->source_cachepool_size))
     {
         qp_event_destroy(event);
         return NULL;
@@ -565,11 +546,6 @@ qp_event_init(qp_event_t event, qp_int_t max_event_size, bool noblock, bool edge
         source->events = mod;
         source->noblock = noblock;
         source->edge = mod & QP_EPOLL_ET;
-        
-        /* set cache */
-        source->cache_size = QP_EVENT_READCACHE_SIZE;
-        source->cache = (qp_uchar_t*)qp_pool_alloc(&event->source_cache_pool, \
-            source->cache_size);
         qp_list_init(&source->ready_next);
     }
   
@@ -593,11 +569,7 @@ qp_event_destroy(qp_event_t event)
             source = (qp_event_source_t)qp_pool_to_array(&event->event_pool, i);
             
             if (QP_FD_INVALID != source->source_fd) {
-                qp_event_source_close(source);
-            }
-            
-            if (source->cache) {
-                qp_pool_free(event->source_cache_pool, source->cache);
+                qp_event_removeevent(event, source);
             }
         }
         
@@ -607,7 +579,7 @@ qp_event_destroy(qp_event_t event)
         }
         
         qp_pool_destroy(&event->event_pool, true);
-        qp_pool_destroy(&event->source_cache_pool, true);
+        qp_pool_manager_destroy(&event->source_cache_pool, true);
         
         if (qp_event_is_alloced(event)) {
             qp_free(event);
@@ -641,17 +613,37 @@ qp_event_regist_idle_handler(qp_event_t event, qp_event_idle_handler idle_cb, \
 }
 
 /**
- * Regist a hander that will be called when write/read events happen.
+ * Regist a hander that will be called when read events happen.
  * 
  * @param event
  * @param process
  * @return 
  */
 qp_int_t
-qp_event_regist_process_handler(qp_event_t event, qp_event_process_handler process) 
+qp_event_regist_read_process_handler(qp_event_t event, \
+    qp_event_read_process_handler process) 
 {
     if (event && qp_fd_is_inited(&event->event_fd)) {
-        event->process = process;
+        event->read_process = process;
+        return QP_SUCCESS;
+    }
+    
+    return QP_ERROR;
+}
+
+/**
+ * Regist a hander that will be called when write events happen.
+ * 
+ * @param event
+ * @param process
+ * @return 
+ */
+qp_int_t
+qp_event_regist_write_process_handler(qp_event_t event, \
+    qp_event_write_process_handler process)
+{
+    if (event && qp_fd_is_inited(&event->event_fd)) {
+        event->write_process = process;
         return QP_SUCCESS;
     }
     
@@ -672,7 +664,7 @@ qp_int_t
 qp_event_addevent(qp_event_t event, qp_int_t fd, qp_int_t timeout, bool listen, \
     bool auto_close)
 { 
-    qp_event_source_t revent = NULL;
+    qp_event_source_t source = NULL;
     
     if (!event) {
         return QP_ERROR;
@@ -680,25 +672,29 @@ qp_event_addevent(qp_event_t event, qp_int_t fd, qp_int_t timeout, bool listen, 
     
     if (qp_pool_available(&event->event_pool) && (fd > QP_FD_INVALID)) {
         /* get the first idle element */
-        revent = (qp_event_source_t)qp_pool_alloc(&event->event_pool, \
+        source = (qp_event_source_t)qp_pool_alloc(&event->event_pool, \
             sizeof(struct qp_event_source_s));
-        revent->source_fd = fd;
+        qp_event_source_clear_flag(source);
+        source->listen = listen;
+        source->closed = auto_close;
+        source->source_fd = fd;
 
         /* add event to pool */
-        if (QP_ERROR == qp_event_epoll_add(event, revent)) {
-            revent->source_fd = QP_FD_INVALID;
-            qp_event_removeevent(event, revent);
+        if (QP_ERROR == qp_event_epoll_add(event, source)) {
+            source->source_fd = QP_FD_INVALID;
+            qp_event_removeevent(event, source);
             return QP_ERROR;
         }
-                        
-        revent->closed = auto_close;
-        revent->listen = listen;
         
-        if (revent->listen) {
-            revent->stat = QP_EVENT_PROCESS;
+        if (source->listen) {
+            source->stat = QP_EVENT_PROCESS;
             
         } else {
-            revent->stat = QP_EVENT_NEW;
+            source->stat = QP_EVENT_NEW;
+            source->read_cache_size = QP_EVENT_READCACHE_SIZE;
+            source->read_cache = (qp_uchar_t*)\
+                qp_pool_manager_alloc(&event->source_cache_pool, \
+                source->read_cache_size, NULL);
         }
         
         return QP_SUCCESS;
@@ -715,7 +711,22 @@ qp_event_removeevent(qp_event_t event, qp_event_source_t source)
     }
      
     qp_event_epoll_del(event, source);
-    qp_event_source_clear_flag(source);
+    qp_event_source_close(source);
+    
+    if (source->read_cache) {
+        qp_pool_manager_free(event->source_cache_pool, source->read_cache, NULL);
+        source->read_cache = NULL;
+        source->read_cache_offset = 0;
+        source->read_cache_size = 0;
+    }
+            
+    if (source->write_cache) {
+        qp_pool_manager_free(event->source_cache_pool, source->write_cache, NULL);
+        source->write_cache = NULL;
+        source->write_cache_offset = 0;
+        source->write_cache_size = 0;
+    }
+    
     qp_pool_free(&event->event_pool, source);
     return QP_SUCCESS;
 }
@@ -781,12 +792,133 @@ qp_event_dispatch_queue(qp_event_t event) {
         read_handler = qp_event_source_read;
         write_handler = qp_event_source_write;
             
-        if (QP_ERROR == write_handler(source) \
-            || QP_ERROR == read_handler(source)) 
-        {
-            
-        }
+        write_handler(source);
+        read_handler(source);
+        
+        if (source.)
     }
+}
+qp_int_t
+qp_event_tiktok(qp_event_t emodule, qp_int_t timeout)
+{
+    qp_write_handler  write_handler;
+    qp_read_handler   read_handler;
+    qp_rbtree_node_t  tnode = NULL;
+    qp_event_fd_t     eevent = NULL;
+    qp_epoll_event_t  event_queue = NULL;
+    ssize_t           ret = 0;
+    qp_int_t          eevent_num = 0;
+    qp_int_t          accept_fd = -1;
+    qp_int_t          rflag = 0;
+    qp_int_t          itr = 0;
+            
+        /* do read/write event */
+        while (!qp_list_is_empty(&emodule->ready)) {
+            eevent = qp_list_data(qp_list_first(&emodule->ready), struct qp_event_fd_s,\
+                ready_next);
+            qp_list_pop(&emodule->ready);
+            
+            /* do with write/read events */
+            do {
+                /* connection closed */
+                if (QP_ERROR == qp_event_check_close(eevent)) {
+                    break;
+                }
+                
+                /* if all events have done */
+                if (!(eevent->read | eevent->write)) {
+                    break; 
+                }
+                
+                /* write event */
+                if (eevent->write) {
+                    
+                    if (eevent->field.writebuf.block 
+                        && (QP_ERROR == write_handler(eevent))) 
+                    {
+                        break;
+                    }
+                }
+                
+                /* read event */
+                if (eevent->read) {
+                    
+                    if (!eevent->field.readbuf.block) {
+                        eevent->field.readbuf.block = emodule->combuf;
+                        eevent->field.readbuf_max = QP_EVENT_COMMONDATA_SIZE;
+                    }
+                    
+                    ret = read_handler(eevent);
+                    
+                    if (eevent->field.readbuf.block == emodule->combuf) {
+                        eevent->field.readbuf.block = NULL;
+                        eevent->field.readbuf_max = 0;
+                    }
+                    
+                    if (QP_ERROR == ret) {
+                        break;
+                    }
+                }
+                
+            } while (eevent->edge);
+            
+            /* if read/write event was hupped */
+            if ((QP_FD_INVALID != eevent->efd) 
+                && (eevent->writehup || eevent->readhup)) 
+            {   
+                rflag = eevent->writehup ? QP_EPOLL_OUT : 0;
+                qp_event_reset(emodule, eevent, rflag);
+                eevent->writehup = 0;
+                eevent->write = 1;
+            }
+
+            /* stat change */
+            if (QP_FD_INVALID == eevent->efd) {
+                eevent->stat = QP_EVENT_CLOSE;    
+            }
+            
+            /* process the events */
+            if (eevent->write_finish || eevent->read_finish) {
+                
+                if (eevent->field.process_handler) {
+                    ret = eevent->field.process_handler(&eevent->field,
+                    eevent->efd, eevent->stat, eevent->read_finish, 
+                    eevent->read_done,eevent->write_finish, eevent->write_done);
+                
+                    if (QP_FD_INVALID != eevent->efd) {
+                    
+                        if (QP_SUCCESS > ret) {
+                            qp_event_close(eevent);
+                        
+                        } else {
+                        
+                            if (ret & QP_EPOLL_OUT) {
+                                qp_event_reset(emodule, eevent, QP_EPOLL_OUT);
+                                eevent->write = 1;
+                                eevent->write_done = 0;
+                            }
+                        }
+                    }
+                }
+                
+            }
+            
+            /* stat change */
+            if (QP_EVENT_NEW == eevent->stat) {
+                eevent->stat = QP_EVENT_PROCESS;
+            }
+            
+            if (QP_FD_INVALID == eevent->efd) {
+                qp_event_removeevent(emodule, eevent);
+            }
+            
+        }  // while
+        
+    }  // while
+
+    emodule->is_run = false;
+    qp_free(event_queue);
+    return QP_SUCCESS;
 }
 
 qp_int_t

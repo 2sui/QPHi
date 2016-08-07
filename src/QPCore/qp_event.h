@@ -45,9 +45,9 @@ typedef enum  {
 /* event fd stat */
 typedef enum {
     QP_EVENT_IDL = 0,
-    QP_EVENT_NEW = 1<<0, /* event is new */
+    QP_EVENT_NEW = 1<<0,     /* event is new */
     QP_EVENT_PROCESS = 1<<1, /* event is running */
-    QP_EVENT_CLOSE = 1<<2   /* event is closed */
+    QP_EVENT_CLOSE = 1<<2    /* event is closed */
 } qp_event_stat_t;
 
 typedef union {
@@ -59,20 +59,37 @@ typedef struct qp_event_s*         qp_event_t;
 
 /* idle process handler */
 typedef  void* (*qp_event_idle_handler)(void*); 
-/* process handler */
-typedef  qp_int_t (*qp_event_process_handler)(qp_event_data_t /* fd_data */, 
-    qp_int_t /*fd*/, qp_event_stat_t /* stat */, bool /*read_finish*/, 
-    size_t /* read_cnt */, bool /*write_finish*/, size_t /* write_cnt */);
+/** 
+ * Read events process handler.
+ * 
+ * @param index Current event identification.
+ * @param stat: Event stat. See qp_event_stat_t.
+ * @param cache: Read cache address.
+ * @param cache_size: Read cache content size.
+ * @return Return QP_ERROR if the event should be shut down; return value > 0 
+ *         means there are some data to be sent, and the return value will be 
+ *         passed as the argurement read_ret of qp_event_write_process_handler.
+ */
+typedef qp_int_t (*qp_event_read_process_handler)(qp_int_t index, \
+    qp_event_stat_t stat, qp_uchar_t* cache, size_t cache_size);
 
-
-inline bool
-qp_event_is_alloced(qp_event_t evfd);
+/**
+ * Write events process handler.
+ * 
+ * @param index Current event identification.
+ * @param stat: Event stat. See qp_event_stat_t.
+ * @param read_ret: Return value that returned last qp_event_read_process_handler.
+ * @param cache: Write cache address.
+ * @param cache_size: Max write cache size. The data to be sent should NOT bigger
+ *         than it.
+ * @return Return QP_ERROR if the event should be shut down; return value > 0 
+ *         means the data size that will be sent in cache.
+ */
+typedef qp_int_t (*qp_event_write_process_handler)(qp_int_t index, \
+    qp_event_stat_t stat, qp_int_t read_ret, qp_uchar_t* cache, size_t cache_size);
 
 qp_event_t
 qp_event_init(qp_event_t event, qp_int_t max_event_size, bool noblock, bool edge);
-
-qp_int_t
-qp_event_tiktok(qp_event_t emodule, qp_int_t timeout);
 
 qp_int_t
 qp_event_destroy(qp_event_t event);
