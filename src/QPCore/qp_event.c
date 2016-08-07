@@ -58,6 +58,7 @@ struct  qp_event_s {
     qp_int_t                   eventpool_size;    /* event pool size */
     qp_int_t                   source_cachepool_size; /* cache pool size */
     qp_int_t                   bucket_size;   /* ready bucket size */
+    qp_event_process_handler   process;
     qp_event_idle_handler      idle;          /* idle callback */
     void*                      idle_arg;      /* idle event callback arg */
     qp_uchar_t                 read_cache[QP_EVENT_READCACHE_SIZE];
@@ -86,19 +87,19 @@ qp_event_source_set_shutdown(qp_event_source_t source)
 qp_int_t
 epoll_create(int __size)
 {
-    return -1;
+    return QP_ERROR;
 }
 
 qp_int_t
 epoll_ctl(int __epfd, int __op, int __fd, epoll_event *__event)
 {
-    return -1;
+    return QP_ERROR;
 }
 
 qp_int_t
 epoll_wait(int __epfd, epoll_event *__events, int __maxevents, int __timeout)
 {
-    return -1;
+    return QP_ERROR;
 }
 
 # endif
@@ -639,6 +640,34 @@ qp_event_regist_idle_handler(qp_event_t event, qp_event_idle_handler idle_cb, \
     return QP_ERROR;
 }
 
+/**
+ * Regist a hander that will be called when write/read events happen.
+ * 
+ * @param event
+ * @param process
+ * @return 
+ */
+qp_int_t
+qp_event_regist_process_handler(qp_event_t event, qp_event_process_handler process) 
+{
+    if (event && qp_fd_is_inited(&event->event_fd)) {
+        event->process = process;
+        return QP_SUCCESS;
+    }
+    
+    return QP_ERROR;
+}
+
+/**
+ * Add a fd to event system.
+ * 
+ * @param event
+ * @param fd
+ * @param timeout
+ * @param listen
+ * @param auto_close
+ * @return 
+ */
 qp_int_t
 qp_event_addevent(qp_event_t event, qp_int_t fd, qp_int_t timeout, bool listen, \
     bool auto_close)
@@ -691,14 +720,80 @@ qp_event_removeevent(qp_event_t event, qp_event_source_t source)
     return QP_SUCCESS;
 }
 
+void
+qp_event_dispatch_listen_queue(qp_event_t event, qp_int_t timeout) {
+    qp_event_source_t  source = NULL;
+    qp_int_t           sys_accept_fd = QP_FD_INVALID;
+    
+    while (!qp_list_is_empty(&event->listen_ready)) {
+            source = qp_list_data(qp_list_first(&event->listen_ready), \
+                struct qp_event_source_s, ready_next);
+            qp_list_pop(&event->listen_ready);
+            
+            do {
+                sys_accept_fd = qp_event_source_accept(source);
+                
+                if (QP_FD_INVALID == sys_accept_fd) {
+                    if (!(EAGAIN == errno || EWOULDBLOCK == errno || \
+                        EINTR == errno))
+                    {
+                        qp_event_removeevent(event, source);
+                    }
+                    
+                    break;
+                }
+                
+                /* should be auto closed */
+                if (QP_ERROR ==  qp_event_addevent(event, sys_accept_fd, \
+                    timeout, false, true)) 
+                {
+                    close(sys_accept_fd);
+                }
+                
+            } while(source->edge);
+        }
+}
+
+void
+qp_event_dispatch_queue(qp_event_t event) {
+    qp_event_source_t  source = NULL;
+    qp_read_handler    read_handler = 0;
+    qp_write_handler   write_handler = 0;
+    
+    while (!qp_list_is_empty(&event->ready)) {
+        source = qp_list_data(qp_list_first(&event->read), \
+            struct qp_event_source_s, ready_next);
+        qp_list_pop(&event->ready);
+            
+        source->shutdown |= source->revents \
+            & (QP_EPOLL_RDHUP | QP_EPOLL_HUP | QP_EPOLL_ERR);
+        source->read |= source->revents | QP_EPOLL_IN;
+        source->write |= source->revents | QP_EPOLL_OUT;
+            
+        if (!(source->shutdown | source->read | source->write)) {
+            continue;
+        }
+            
+        if (source->shutdown) {
+            qp_event_source_set_shutdown(source);
+        }
+            
+        read_handler = qp_event_source_read;
+        write_handler = qp_event_source_write;
+            
+        if (QP_ERROR == write_handler(source) \
+            || QP_ERROR == read_handler(source)) 
+        {
+            
+        }
+    }
+}
+
 qp_int_t
 qp_event_dispatch(qp_event_t event, qp_int_t timeout) 
 {
-    qp_read_handler    read_handler = 0;
-    qp_write_handler   write_handler = 0;
     qp_event_source_t  source = NULL;
     qp_int_t           revent_num = 0;
-    qp_int_t           sys_accept_fd = QP_FD_INVALID;
     
     if (!event || !qp_fd_is_valid(&event->event_fd)) {
         return QP_ERROR;
@@ -732,212 +827,13 @@ qp_event_dispatch(qp_event_t event, qp_int_t timeout)
         }
         
         /* listen event */
-        while (!qp_list_is_empty(&event->listen_ready)) {
-            source = qp_list_data(qp_list_first(&event->listen_ready), \
-                struct qp_event_source_s, ready_next);
-            qp_list_pop(&event->listen_ready);
-            
-            do {
-                sys_accept_fd = qp_event_source_accept(source);
-                
-                if (QP_FD_INVALID == sys_accept_fd) {
-                    if (!(EAGAIN == errno || EWOULDBLOCK == errno || \
-                        EINTR == errno))
-                    {
-                        qp_event_removeevent(event, source);
-                    }
-                    
-                    break;
-                }
-                
-                /* should be auto closed */
-                if (QP_ERROR ==  qp_event_addevent(event, sys_accept_fd, \
-                    timeout, false, true)) 
-                {
-                    close(sys_accept_fd);
-                }
-                
-            } while(source->edge);
-        }
+        qp_event_dispatch_listen_queue(event, timeout);
         
         /* read/write event */
-        while (!qp_list_is_empty(&event->ready)) {
-            source = qp_list_data(qp_list_first(&event->read), \
-                struct qp_event_source_s, ready_next);
-            qp_list_pop(&event->ready);
-            
-            source->shutdown |= source->revents \
-                & (QP_EPOLL_RDHUP | QP_EPOLL_HUP | QP_EPOLL_ERR);
-            source->read |= source->revents | QP_EPOLL_IN;
-            source->write |= source->revents | QP_EPOLL_OUT;
-            
-            if (!(source->shutdown | source->read | source->write)) {
-                continue;
-            }
-            
-            if (source->shutdown) {
-                qp_event_source_set_shutdown(source);
-            }
-            
-            read_handler = qp_event_source_read;
-            write_handler = qp_event_source_write;
-            
-            if (QP_ERROR == write_handler(source) \
-                || QP_ERROR == read_handler(source)) 
-            {
-                
-            }
-        }
+        qp_event_dispatch_queue(event);
     }
     
     event->is_run = false;
     return QP_SUCCESS;
 }
 
-qp_int_t
-qp_event_tiktok(qp_event_t emodule, qp_int_t timeout)
-{
-    qp_write_handler  write_handler;
-    qp_read_handler   read_handler;
-    qp_rbtree_node_t  tnode = NULL;
-    qp_event_fd_t     eevent = NULL;
-    qp_epoll_event_t  event_queue = NULL;
-    ssize_t           ret = 0;
-    qp_int_t          eevent_num = 0;
-    qp_int_t          accept_fd = -1;
-    qp_int_t          rflag = 0;
-    qp_int_t          itr = 0;
-            
-        /* do read/write event */
-        while (!qp_list_is_empty(&emodule->ready)) {
-            eevent = qp_list_data(qp_list_first(&emodule->ready), struct qp_event_fd_s,\
-                ready_next);
-            qp_list_pop(&emodule->ready);
-            
-            eevent->nativeclose |= (QP_EPOLL_HUP | QP_EPOLL_ERR) & eevent->eflag;
-            eevent->peerclose |= QP_EPOLL_RDHUP & eevent->eflag;
-            eevent->write &= !eevent->peerclose;
-            eevent->read = QP_EPOLL_IN & eevent->eflag;
-
-            /* if no event */
-            if (!(eevent->read | eevent->write | eevent->nativeclose)) {
-                continue;
-            }
-            
-            qp_event_timerevent(emodule, eevent, timeout);
-            
-            write_handler = (QP_EVENT_BLOCK_OPT == eevent->field.next_write_opt)?\
-                qp_event_write : qp_event_writev;
-            read_handler = (QP_EVENT_BLOCK_OPT == eevent->field.next_read_opt) ? \
-                qp_event_read : qp_event_readv;
-
-            /* do with write/read events */
-            do {
-                /* connection closed */
-                if (QP_ERROR == qp_event_check_close(eevent)) {
-                    break;
-                }
-                
-                /* if all events have done */
-                if (!(eevent->read | eevent->write)) {
-                    break; 
-                }
-                
-                /* write event */
-                if (eevent->write) {
-                    
-                    if (eevent->field.writebuf.block 
-                        && (QP_ERROR == write_handler(eevent))) 
-                    {
-                        break;
-                    }
-                }
-                
-                /* read event */
-                if (eevent->read) {
-                    
-                    if (!eevent->field.readbuf.block) {
-                        eevent->field.readbuf.block = emodule->combuf;
-                        eevent->field.readbuf_max = QP_EVENT_COMMONDATA_SIZE;
-                    }
-                    
-                    ret = read_handler(eevent);
-                    
-                    if (eevent->field.readbuf.block == emodule->combuf) {
-                        eevent->field.readbuf.block = NULL;
-                        eevent->field.readbuf_max = 0;
-                    }
-                    
-                    if (QP_ERROR == ret) {
-                        break;
-                    }
-                }
-                
-            } while (eevent->edge);
-            
-            /* if read/write event was hupped */
-            if ((QP_FD_INVALID != eevent->efd) 
-                && (eevent->writehup || eevent->readhup)) 
-            {   
-                rflag = eevent->writehup ? QP_EPOLL_OUT : 0;
-                qp_event_reset(emodule, eevent, rflag);
-                eevent->writehup = 0;
-                eevent->write = 1;
-            }
-
-            /* stat change */
-            if (QP_FD_INVALID == eevent->efd) {
-                eevent->stat = QP_EVENT_CLOSE;    
-            }
-            
-            /* process the events */
-            if (eevent->write_finish || eevent->read_finish) {
-                
-                if (eevent->field.process_handler) {
-                    ret = eevent->field.process_handler(&eevent->field,
-                    eevent->efd, eevent->stat, eevent->read_finish, 
-                    eevent->read_done,eevent->write_finish, eevent->write_done);
-                
-                    if (QP_FD_INVALID != eevent->efd) {
-                    
-                        if (QP_SUCCESS > ret) {
-                            qp_event_close(eevent);
-                        
-                        } else {
-                        
-                            if (ret & QP_EPOLL_OUT) {
-                                qp_event_reset(emodule, eevent, QP_EPOLL_OUT);
-                                eevent->write = 1;
-                                eevent->write_done = 0;
-                            }
-                        }
-                    }
-                }
-                
-                if (eevent->read_finish) {
-                    eevent->read_done = 0;
-                    eevent->read_finish = 0;
-                }
-                
-                if (eevent->write_finish) {
-                    eevent->write_finish = 0;   
-                }
-            }
-            
-            /* stat change */
-            if (QP_EVENT_NEW == eevent->stat) {
-                eevent->stat = QP_EVENT_PROCESS;
-            }
-            
-            if (QP_FD_INVALID == eevent->efd) {
-                qp_event_removeevent(emodule, eevent);
-            }
-            
-        }  // while
-        
-    }  // while
-
-    emodule->is_run = false;
-    qp_free(event_queue);
-    return QP_SUCCESS;
-}
