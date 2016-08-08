@@ -80,8 +80,7 @@ typedef qp_int_t (*qp_event_read_process_handler)(qp_int_t index, \
  * @param cache: Write cache address.
  * @param cache_size: Max write cache size. The data to be sent should NOT bigger
  *         than it.
- * @return Return QP_ERROR if the event should be shut down; return value > 0 
- *         means the data size that will be sent in cache.
+ * @return Return value > 0 means the data size that will be sent in cache.
  */
 typedef qp_int_t (*qp_event_write_process_handler)(qp_int_t index, \
     qp_event_stat_t stat, qp_int_t read_ret, qp_uchar_t* cache, size_t cache_size);
@@ -97,11 +96,16 @@ qp_event_regist_idle_handler(qp_event_t event, qp_event_idle_handler idle_cb, \
     void* idle_arg);
 
 qp_int_t
-qp_event_addevent(qp_event_t event, qp_int_t fd, qp_int_t timeout, bool listen, \
-    bool auto_close);
+qp_event_regist_read_process_handler(qp_event_t event, \
+    qp_event_read_process_handler process);
 
 qp_int_t
-qp_event_removeevent(qp_event_t event, qp_event_source_t source);
+qp_event_regist_write_process_handler(qp_event_t event, \
+    qp_event_write_process_handler process);
+
+qp_int_t
+qp_event_addevent(qp_event_t event, qp_int_t fd, qp_int_t timeout, bool listen, \
+    bool auto_close);
 
 qp_int_t
 qp_event_dispatch(qp_event_t event, qp_int_t timeout);

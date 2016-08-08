@@ -270,6 +270,13 @@ qp_event_source_close(qp_event_source_t source)
     return QP_SUCCESS;
 }
 
+/**
+ * Set read cache for the source.
+ * 
+ * @param event
+ * @param source
+ * @return 
+ */
 qp_int_t
 qp_event_source_alloc_read_cache(qp_event_t event, qp_event_source_t source) 
 {
@@ -291,6 +298,13 @@ qp_event_source_alloc_read_cache(qp_event_t event, qp_event_source_t source)
     return QP_SUCCESS;
 }
 
+/**
+ * Free read cache for the source.
+ * 
+ * @param event
+ * @param source
+ * @return 
+ */
 qp_int_t
 qp_event_source_free_read_cache(qp_event_t event, qp_event_source_t source) 
 {
@@ -304,6 +318,13 @@ qp_event_source_free_read_cache(qp_event_t event, qp_event_source_t source)
     return QP_SUCCESS;
 }
 
+/**
+ * Set write cache for the source.
+ * 
+ * @param event
+ * @param source
+ * @return 
+ */
 qp_int_t 
 qp_event_source_alloc_write_cache(qp_event_t event, qp_event_source_t source) 
 {
@@ -326,6 +347,13 @@ qp_event_source_alloc_write_cache(qp_event_t event, qp_event_source_t source)
     return QP_SUCCESS;
 }
 
+/**
+ * Free write cache for the source.
+ * 
+ * @param event
+ * @param source
+ * @return 
+ */
 qp_int_t
 qp_event_source_free_write_cache(qp_event_t event, qp_event_source_t source)
 {
@@ -392,38 +420,6 @@ qp_event_source_read(qp_event_t event, qp_event_source_t source)
     return (size_t)source->read_cache_offset;
 }
 
-//qp_int_t
-//qp_event_source_readv(qp_event_source_t source)
-//{
-//    if (!source || (QP_FD_INVALID == source->source_fd)) {
-//        return QP_ERROR;
-//    }
-//    
-//    ssize_t ret;
-//
-//    if (eventfd->read && eventfd->field.readbuf_max 
-//        && (QP_FD_INVALID != eventfd->efd)) 
-//    {
-//        ret = readv(eventfd->efd, eventfd->field.readbuf.vector, 
-//            eventfd->field.readbuf_max);
-//        eventfd->read = 0;
-//        eventfd->read_finish = 1;
-//
-//        if (1 > ret) {
-//
-//            if ((0 == ret) 
-//                || !(EAGAIN == errno || EWOULDBLOCK == errno || EINTR == errno))
-//            {
-//                qp_event_close(eventfd);
-//                return QP_ERROR;
-//            }
-//        }
-//    }
-//    
-//
-//    return QP_SUCCESS;
-//}
-
 /**
  * Write data to a source.
  * 
@@ -472,37 +468,6 @@ qp_event_source_write(qp_event_t event, qp_event_source_t source)
     source->write = 0;
     return (size_t)rest;
 }
-
-//qp_int_t
-//qp_event_source_writev(qp_event_fd_t eventfd)
-//{
-//    if (!eventfd) {
-//        return QP_ERROR;
-//    }
-//    
-//    ssize_t ret;
-//
-//    if (eventfd->write && eventfd->field.writebuf_max 
-//        && (QP_FD_INVALID != eventfd->efd)) 
-//    {
-//        ret = writev(eventfd->efd, eventfd->field.writebuf.vector, \
-//            eventfd->field.writebuf_max);
-//        eventfd->write = 0;
-//        eventfd->write_finish = 1;
-//
-//        if (1 > ret) {
-//
-//            if ((0 == ret) 
-//                || !(EAGAIN == errno || EWOULDBLOCK == errno || EINTR == errno))
-//            {
-//                qp_event_close(eventfd);
-//                return QP_ERROR;
-//            }
-//        }
-//    }
-//    
-//    return QP_SUCCESS;
-//}
 
 /**
  * Clear flag of the source.
@@ -777,6 +742,13 @@ qp_event_addevent(qp_event_t event, qp_int_t fd, qp_int_t timeout, bool listen, 
     return QP_ERROR;
 }
 
+/**
+ * Remove event source from event system .
+ * 
+ * @param event
+ * @param source
+ * @return 
+ */
 qp_int_t
 qp_event_removeevent(qp_event_t event, qp_event_source_t source)
 {
@@ -792,6 +764,12 @@ qp_event_removeevent(qp_event_t event, qp_event_source_t source)
     return QP_SUCCESS;
 }
 
+/**
+ * Dispatch listen events to listen queue.
+ * 
+ * @param event
+ * @param timeout
+ */
 void
 qp_event_dispatch_listen_queue(qp_event_t event, qp_int_t timeout) {
     qp_event_source_t  source = NULL;
@@ -826,6 +804,11 @@ qp_event_dispatch_listen_queue(qp_event_t event, qp_int_t timeout) {
         }
 }
 
+/**
+ * Dispatch read/write events to event queue.
+ * 
+ * @param event
+ */
 void
 qp_event_dispatch_queue(qp_event_t event) {
     qp_event_source_t  source = NULL;
@@ -897,6 +880,13 @@ qp_event_dispatch_queue(qp_event_t event) {
     }
 }
 
+/**
+ * Events dispatch run loop.
+ * 
+ * @param event
+ * @param timeout
+ * @return 
+ */
 qp_int_t
 qp_event_dispatch(qp_event_t event, qp_int_t timeout) 
 {
