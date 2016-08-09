@@ -31,6 +31,7 @@ struct qp_event_source_s {
     ssize_t                    write_cache_size;
     ssize_t                    write_cache_cur_offset;
     ssize_t                    write_cache_offset;
+    qp_int_t                   timeout;
     
     qp_uint32_t                noblock     :1;     /* need noblock */
     qp_uint32_t                edge        :1;     /* ET mod */
@@ -67,25 +68,33 @@ struct  qp_event_s {
     bool                       is_run;
 };
 
-typedef  qp_int_t (*qp_read_handler)(qp_event_source_t);
+typedef  size_t (*qp_read_handler)(qp_event_t, qp_event_source_t);
 typedef  qp_read_handler       qp_write_handler;
 
 
-inline void 
-qp_event_set_alloced(qp_event_t event) {
+inline static void 
+qp_event_set_alloced(qp_event_t event) 
+{
     event->is_alloced = true;
 }
 
-inline void 
-qp_event_unset_alloced(qp_event_t event) {
+inline static void 
+qp_event_unset_alloced(qp_event_t event) 
+{
     event->is_alloced = false;
 }
 
-inline void
+inline static void
 qp_event_source_set_shutdown(qp_event_source_t source) 
 {
     source->shutdown = 1;
     source->stat = QP_EVENT_CLOSE;
+}
+
+inline static bool
+qp_event_is_alloced(qp_event_t event) 
+{ 
+    return event ? event->is_alloced : false; 
 }
 
 # ifndef  QP_OS_LINUX
@@ -108,10 +117,6 @@ epoll_wait(int __epfd, epoll_event *__events, int __maxevents, int __timeout)
 }
 
 # endif
-
-inline bool
-qp_event_is_alloced(qp_event_t event) 
-{ return event ? event->is_alloced : false; }
 
 /**
  * Create an epoll event manager.
@@ -245,7 +250,7 @@ qp_event_epoll_del(qp_event_t event, qp_event_source_t source)
  * @param source
  * @return 
  */
-inline qp_int_t
+inline static qp_int_t
 qp_event_source_accept(qp_event_source_t source)
 {
     return source ? accept(source->source_fd, NULL, NULL) : QP_ERROR;
@@ -593,6 +598,83 @@ qp_event_init(qp_event_t event, qp_int_t max_event_size, bool noblock, bool edge
 }
 
 /**
+ * Remove event source from event system .
+ * 
+ * @param event
+ * @param source
+ * @return 
+ */
+qp_int_t
+qp_event_removeevent(qp_event_t event, qp_event_source_t source)
+{
+    if (!event || !source) {
+        return QP_ERROR;
+    }
+     
+    qp_event_epoll_del(event, source);
+    qp_event_source_close(source);
+    qp_event_source_free_read_cache(event, source);
+    qp_event_source_free_write_cache(event, source);
+    qp_pool_free(&event->event_pool, source);
+    return QP_SUCCESS;
+}
+
+/**
+ * Add a fd to event system.
+ * 
+ * @param event
+ * @param fd
+ * @param timeout
+ * @param listen
+ * @param auto_close
+ * @return 
+ */
+qp_int_t
+qp_event_addevent(qp_event_t event, qp_int_t fd, qp_int_t timeout, bool listen, \
+    bool auto_close)
+{ 
+    qp_event_source_t source = NULL;
+    
+    if (!event) {
+        return QP_ERROR;
+    }
+    
+    if (qp_pool_available(&event->event_pool) && (fd > QP_FD_INVALID)) {
+        /* get the first idle element */
+        source = (qp_event_source_t)qp_pool_alloc(&event->event_pool, \
+            sizeof(struct qp_event_source_s));
+        qp_event_source_clear_flag(source);
+        source->listen = listen;
+        source->closed = auto_close;
+        source->source_fd = fd;
+        source->timeout = timeout;
+
+        /* add event to pool */
+        if (QP_ERROR == qp_event_epoll_add(event, source)) {
+            source->source_fd = QP_FD_INVALID;
+            qp_event_removeevent(event, source);
+            return QP_ERROR;
+        }
+        
+        if (source->listen) {
+            source->stat = QP_EVENT_PROCESS;
+            
+        } else {
+            source->stat = QP_EVENT_NEW;
+            if (QP_ERROR == qp_event_source_alloc_read_cache(event, source)) {
+                qp_event_removeevent(event, source);
+                source->source_fd = QP_FD_INVALID;
+                return QP_ERROR;
+            }
+        }
+        
+        return QP_SUCCESS;
+    } 
+    
+    return QP_ERROR;
+}
+
+/**
  * Destroy an event system.
  * 
  * @param emodule
@@ -607,10 +689,7 @@ qp_event_destroy(qp_event_t event)
         
         for (int i = 0; i < event->eventpool_size; i++) {
             source = (qp_event_source_t)qp_pool_to_array(&event->event_pool, i);
-            
-            if (QP_FD_INVALID != source->source_fd) {
-                qp_event_removeevent(event, source);
-            }
+            qp_event_removeevent(event, source);
         }
         
         if (event->bucket) {
@@ -691,82 +770,6 @@ qp_event_regist_write_process_handler(qp_event_t event, \
 }
 
 /**
- * Add a fd to event system.
- * 
- * @param event
- * @param fd
- * @param timeout
- * @param listen
- * @param auto_close
- * @return 
- */
-qp_int_t
-qp_event_addevent(qp_event_t event, qp_int_t fd, qp_int_t timeout, bool listen, \
-    bool auto_close)
-{ 
-    qp_event_source_t source = NULL;
-    
-    if (!event) {
-        return QP_ERROR;
-    }
-    
-    if (qp_pool_available(&event->event_pool) && (fd > QP_FD_INVALID)) {
-        /* get the first idle element */
-        source = (qp_event_source_t)qp_pool_alloc(&event->event_pool, \
-            sizeof(struct qp_event_source_s));
-        qp_event_source_clear_flag(source);
-        source->listen = listen;
-        source->closed = auto_close;
-        source->source_fd = fd;
-
-        /* add event to pool */
-        if (QP_ERROR == qp_event_epoll_add(event, source)) {
-            source->source_fd = QP_FD_INVALID;
-            qp_event_removeevent(event, source);
-            return QP_ERROR;
-        }
-        
-        if (source->listen) {
-            source->stat = QP_EVENT_PROCESS;
-            
-        } else {
-            source->stat = QP_EVENT_NEW;
-            if (QP_ERROR == qp_event_source_alloc_read_cache(event, source)) {
-                qp_event_removeevent(event, source);
-                source->source_fd = QP_FD_INVALID;
-                return QP_ERROR;
-            }
-        }
-        
-        return QP_SUCCESS;
-    } 
-    
-    return QP_ERROR;
-}
-
-/**
- * Remove event source from event system .
- * 
- * @param event
- * @param source
- * @return 
- */
-qp_int_t
-qp_event_removeevent(qp_event_t event, qp_event_source_t source)
-{
-    if (!event || !source) {
-        return QP_ERROR;
-    }
-     
-    qp_event_epoll_del(event, source);
-    qp_event_source_close(source);
-    qp_event_source_free_read_cache(event, source);
-    qp_event_source_free_write_cache(event, source);
-    qp_pool_free(&event->event_pool, source);
-    return QP_SUCCESS;
-}
-
-/**
  * Dispatch listen events to listen queue.
  * 
  * @param event
@@ -819,7 +822,7 @@ qp_event_dispatch_queue(qp_event_t event) {
     qp_int_t           ret = QP_ERROR;
     
     while (!qp_list_is_empty(&event->ready)) {
-        source = qp_list_data(qp_list_first(&event->read), \
+        source = qp_list_data(qp_list_first(&event->ready), \
             struct qp_event_source_s, ready_next);
         qp_list_pop(&event->ready);
             
@@ -839,8 +842,8 @@ qp_event_dispatch_queue(qp_event_t event) {
         read_handler = qp_event_source_read;
         write_handler = qp_event_source_write;
             
-        write_handler(source);
-        read_handler(source);
+        write_handler(event, source);
+        read_handler(event, source);
         
         /* still have data to be sent */ 
         if (!source->write_cache) {
@@ -920,8 +923,8 @@ qp_event_dispatch(qp_event_t event, qp_int_t timeout)
         
         /* dispatch events */
         for (int i = 0; i < revent_num; i++) {
-            source = (qp_event_source_t)event->bucket[i]->data.ptr;
-            source->revents = event->bucket[i]->events;
+            source = (qp_event_source_t)event->bucket[i].data.ptr;
+            source->revents = event->bucket[i].events;
             qp_list_push(source->listen ? &event->listen_ready : &event->ready, \
                 &source->ready_next);
         }
