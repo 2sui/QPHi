@@ -61,7 +61,7 @@ There are also some examples showing how to use those libraries in [`QPHi/test`]
 
 In [`QPHi/test/events.c`](./test/events.c):
 
-**read_process:**
+** read_process: **
 
 ```
 qp_int_t
@@ -76,7 +76,7 @@ read_process(qp_int_t index, qp_event_stat_t stat, qp_uchar_t* cache, size_t off
 
 ```
 
-**write_process:**
+** write_process: **
 
 ```
 qp_int_t
@@ -97,7 +97,7 @@ write_process(qp_int_t index, qp_event_stat_t stat, qp_int_t read_ret, \
 
 ```
 
-**main: **
+** main: **
 
 ```
 int
