@@ -550,6 +550,7 @@ qp_event_init(qp_event_t event, qp_int_t max_event_size, bool noblock, bool edge
     
     qp_uint32_t   mod = QP_EPOLL_IN | QP_EPOLL_RDHUP /*| QP_EPOLL_OUT*/ \
         | (edge ? QP_EPOLL_ET : 0);
+    qp_int_t  itr = 0;
     
     if (1 > max_event_size) {
         return NULL;
@@ -582,11 +583,11 @@ qp_event_init(qp_event_t event, qp_int_t max_event_size, bool noblock, bool edge
         return NULL;
     }
     
-    for (int i = 0; i < event->eventpool_size; i++) {
+    for (itr = 0; itr < event->eventpool_size; itr++) {
         qp_event_source_t source = (qp_event_source_t)\
-            qp_pool_to_array(&event->event_pool, i);
+            qp_pool_to_array(&event->event_pool, itr);
         memset(source, 0, sizeof(struct qp_event_source_s));
-        source->index = i;
+        source->index = itr;
         source->source_fd = QP_FD_INVALID;
         source->events = mod;
         source->noblock = noblock;
@@ -685,10 +686,11 @@ qp_event_destroy(qp_event_t event)
 {
     if (event && qp_fd_is_inited(&event->event_fd) && !event->is_run) { 
         qp_event_source_t source = NULL;
+        qp_int_t  itr = 0;
         qp_fd_destroy(&event->event_fd);
         
-        for (int i = 0; i < event->eventpool_size; i++) {
-            source = (qp_event_source_t)qp_pool_to_array(&event->event_pool, i);
+        for (itr = 0; itr < event->eventpool_size; itr++) {
+            source = (qp_event_source_t)qp_pool_to_array(&event->event_pool, itr);
             qp_event_removeevent(event, source);
         }
         
@@ -897,7 +899,7 @@ qp_event_dispatch(qp_event_t event, qp_int_t timeout)
 {
     qp_event_source_t  source = NULL;
     qp_int_t           revent_num = 0;
-    
+    qp_int_t           itr = 0;
     if (!event || !qp_fd_is_valid(&event->event_fd)) {
         return QP_ERROR;
     }
@@ -922,9 +924,9 @@ qp_event_dispatch(qp_event_t event, qp_int_t timeout)
         }
         
         /* dispatch events */
-        for (int i = 0; i < revent_num; i++) {
-            source = (qp_event_source_t)event->bucket[i].data.ptr;
-            source->revents = event->bucket[i].events;
+        for (itr = 0; itr < revent_num; itr++) {
+            source = (qp_event_source_t)event->bucket[itr].data.ptr;
+            source->revents = event->bucket[itr].events;
             qp_list_push(source->listen ? &event->listen_ready : &event->ready, \
                 &source->ready_next);
         }
