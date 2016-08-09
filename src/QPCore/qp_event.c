@@ -16,8 +16,6 @@ typedef  void                  qp_epoll_event_s;
 # endif
 
 typedef  qp_epoll_event_s*     qp_epoll_event_t;
-typedef  qp_int_t (*qp_read_handler)(qp_event_fd_t);
-typedef  qp_read_handler       qp_write_handler;
 
 struct qp_event_source_s {
     struct qp_list_s           ready_next;     /* event source list */
@@ -69,6 +67,10 @@ struct  qp_event_s {
     bool                       is_run;
 };
 
+typedef  qp_int_t (*qp_read_handler)(qp_event_source_t);
+typedef  qp_read_handler       qp_write_handler;
+
+
 inline void 
 qp_event_set_alloced(qp_event_t event) {
     event->is_alloced = true;
@@ -76,7 +78,7 @@ qp_event_set_alloced(qp_event_t event) {
 
 inline void 
 qp_event_unset_alloced(qp_event_t event) {
-    event->is_alloced = false
+    event->is_alloced = false;
 }
 
 inline void
@@ -312,7 +314,7 @@ qp_event_source_free_read_cache(qp_event_t event, qp_event_source_t source)
         return QP_ERROR;
     }
     
-    qp_pool_manager_free(event->source_cache_pool, source->read_cache, NULL);
+    qp_pool_manager_free(&event->source_cache_pool, source->read_cache, NULL);
     source->read_cache_size = 0;
     source->read_cache = NULL;
     return QP_SUCCESS;
@@ -361,7 +363,7 @@ qp_event_source_free_write_cache(qp_event_t event, qp_event_source_t source)
         return QP_ERROR;
     }
     
-    qp_pool_manager_free(event->source_cache_pool, source->write_cache, NULL);
+    qp_pool_manager_free(&event->source_cache_pool, source->write_cache, NULL);
     source->write_cache_size = 0;
     source->write_cache = NULL;
     return QP_SUCCESS;
@@ -562,7 +564,7 @@ qp_event_init(qp_event_t event, qp_int_t max_event_size, bool noblock, bool edge
         return NULL;
     }
     event->bucket = (qp_epoll_event_t)\
-        qp_alloc(sizeof(struct qp_epoll_event_s) * event->bucket_size);
+        qp_alloc(sizeof(qp_epoll_event_s) * event->bucket_size);
     
     /* init event pool */
     if (!event->bucket 
@@ -856,7 +858,7 @@ qp_event_dispatch_queue(qp_event_t event) {
             }
             
             if (source->write_cache && event->write_process) {
-                ret = event->write_process(source->index, source->stat, \
+                ret = event->write_process(source->index, source->stat, ret, \
                     source->write_cache, source->write_cache_offset);
                 
                 if (0 >= ret) {

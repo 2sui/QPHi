@@ -70,7 +70,7 @@ typedef  void* (*qp_event_idle_handler)(void*);
  *         means there are some data to be sent; otherwise return 0.
  */
 typedef qp_int_t (*qp_event_read_process_handler)(qp_int_t index, \
-    qp_event_stat_t stat, qp_uchar_t* cache, size_t cache_size);
+    qp_event_stat_t stat, qp_uchar_t* cache, size_t cache_offset);
 
 /**
  * Write events process handler.

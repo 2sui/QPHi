@@ -14,98 +14,56 @@
 "HTTP/1.1 200 OK\r\n"\
 "Server: qp_test\r\n"\
 "connection: close\r\n\r\n"\
-"1234567890123456789012345678901212345678901234567890123456789012"\
-"1234567890123456789012345678901212345678901234567890123456789012"\
-"1234567890123456789012345678901212345678901234567890123456789012"\
-"1234567890123456789012345678901212345678901234567890123456789012"\
-"1234567890123456789012345678901212345678901234567890123456789012"\
-"1234567890123456789012345678901212345678901234567890123456789012"\
-"1234567890123456789012345678901212345678901234567890123456789012"\
-"1234567890123456789012345678901212345678901234567890123456789012"\
-"1234567890123456789012345678901212345678901234567890123456789012"\
-"1234567890123456789012345678901212345678901234567890123456789012"\
-"1234567890123456789012345678901212345678901234567890123456789012"\
-"1234567890123456789012345678901212345678901234567890123456789012"\
-"1234567890123456789012345678901212345678901234567890123456789012"\
-"1234567890123456789012345678901212345678901234567890123456789012"\
-"1234567890123456789012345678901212345678901234567890123456789012"\
-"1234567890123456789012345678901212345678901234567890123456789012"
+"<html>"\
+"<title>QPHi Test</title>"\
+"<body>"\
+"<h1>QPHi</h1>"\
+"<p> If you see this, you are getting data from QPHi. </p>"\
+"</body>"\
+"<html>"
 
-
-static qp_pool_manager_t    manager;
 
 qp_int_t
-process_handler(qp_event_data_t data, qp_int_t fd, qp_event_stat_t stat, 
-    bool read_finish, size_t read_cnt, bool write_finish, size_t write_cnt)
+read_process(qp_int_t index, qp_event_stat_t stat, qp_uchar_t* cache, size_t offset)
 {
-    switch (stat) {
-        
-        case QP_EVENT_NEW: {
-            sprintf((char*) data->writebuf.block, "%s", HTTP_RSP);
-            data->writebuf_max = strlen(HTTP_RSP);
-            return QP_EPOLL_OUT;
-        }break;
-        
-        case QP_EVENT_PROCESS: {
-            
-            if (write_finish) {
-                return QP_ERROR;
-            }
-            
-        }break;
-        
-        default: {
-        }break;
+    if (QP_EVENT_CLOSE == stat || offset < 1) {
+        return QP_ERROR;
     }
     
-    return QP_ERROR;
+    return 1;
 }
 
-void
-init_handler(qp_event_data_t data)
+qp_int_t
+write_process(qp_int_t index, qp_event_stat_t stat, qp_int_t read_ret, \
+    qp_uchar_t* cache, size_t size)
 {
-    data->readbuf_max = 512;
-    data->readbuf.block = qp_pool_manager_alloc(manager, data->readbuf_max, NULL);
-    
-    data->writebuf_max = 512;
-    data->writebuf.block = qp_pool_manager_alloc(manager, data->writebuf_max, 
-        NULL);
-    
-    data->process_handler = process_handler;
-}
-
-void
-destroy_handler(qp_event_data_t data)
-{
-    if (data->readbuf.block) {
-        qp_pool_manager_free(manager, data->readbuf.block, NULL);
-    }
-    
-    if (data->writebuf.block) {
-        qp_pool_manager_free(manager, data->writebuf.block, NULL);
+    switch (read_ret) {
+        case 1: {
+            size_t ret = strlen(HTTP_RSP);
+            strncpy(cache, HTTP_RSP, ret);
+            return ret;
+        }
+                    
+        default:
+            return 0;
     }
 }
 
 int
 main()
 {
-    qp_event_t    emodule;
+    qp_event_t    event;
     qp_socket_t   skt;
     
-    if (!(manager = qp_pool_manager_init(NULL, 512, 2050))) {
-        fprintf(stderr, "\n Pool create fail.");
-        return -1;
-    }
-    
-    
-    if (!(skt = qp_socket_init(NULL, AF_INET, SOCK_STREAM, "0.0.0.0", 8080, true, 128)) 
-        || !(emodule = qp_event_init(NULL, 1024, 500,  
-        init_handler, destroy_handler, true, true, NULL, NULL))) 
+    if (!(skt = qp_socket_init(NULL, AF_INET, SOCK_STREAM, "0.0.0.0", 8080, true,\
+        128)) || !(event = qp_event_init(NULL, 1024, true, true) )) 
     {
         fprintf(stderr, "\n Socket or event init fail.");
         goto end;
     }
     
+    qp_event_regist_read_process_handler(event, read_process);
+    qp_event_regist_write_process_handler(event, write_process);
     qp_socket_set_reuse(skt, QP_SOCKET_SO_REUSE_ADDR, 1);
     
     if (QP_ERROR == qp_socket_listen(skt, 0)) {
@@ -113,19 +71,16 @@ main()
         goto end;
     }
     
-    if (QP_ERROR == qp_event_addevent(emodule, qp_socket_to_int(skt), 0, true, false)) {
+    if (QP_ERROR == qp_event_addevent(event, qp_socket_to_int(skt), 30, true, false)) {
         fprintf(stderr, "\n Add event fail.");
         goto end;
     }
     
-    qp_event_tiktok(emodule, 30000);
-//    qp_event_disable(emodule);
-    
+    qp_event_dispatch(event, 0);
     
     end:
     qp_socket_destroy(skt);
-    qp_event_destroy(emodule);
-    qp_pool_manager_destroy(manager, true);
+    qp_event_destroy(event);
     fprintf(stderr, "\n Quit.");
     return 0;
 }
