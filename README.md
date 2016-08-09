@@ -61,62 +61,80 @@ There are also some examples showing how to use those libraries in [`QPHi/test`]
 
 In [`QPHi/test/events.c`](./test/events.c):
 
+**read_process:**
+
 ```
-	static qp_pool_manager_t    manager;
-	
-	/*
-	   ignore some code ......
-	*/
-	
-	qp_event_t    emodule; 
-    qp_socket_t   skt;
-    
-    /* Initialize the memory pool manager with 2050 buckets and 512Bytes for each bucket */
-    if (!(manager = qp_pool_manager_init(NULL, 512, 2050)) {
-        fprintf(stderr, "\n Pool create fail.");
-        return -1;
+qp_int_t
+read_process(qp_int_t index, qp_event_stat_t stat, qp_uchar_t* cache, size_t offset)
+{
+    if (QP_EVENT_CLOSE == stat || offset < 1) {
+        return QP_ERROR;
     }
     
-    /* Initialize a tcp socket server, bind address "0.0.0.0", port 8080 
-     * and initialize the event module (allow 1024 event fd).
-     */
-    if (!(skt = qp_socket_init(NULL, AF_INET, SOCK_STREAM, "0.0.0.0", 8080, true, 128)) 
-        || !(emodule = qp_event_init(NULL, 1024, true, true, 
-        init_handler, destroy_handler, NULL, NULL))) 
+    return 1;
+}
+
+```
+
+**write_process:**
+
+```
+qp_int_t
+write_process(qp_int_t index, qp_event_stat_t stat, qp_int_t read_ret, \
+    qp_uchar_t* cache, size_t size)
+{
+    switch (read_ret) {
+        case 1: {
+            size_t ret = strlen(HTTP_RSP);
+            strncpy(cache, HTTP_RSP, ret);
+            return ret;
+        }
+                    
+        default:
+            return 0;
+    }
+}
+
+```
+
+**main: **
+
+```
+int
+main()
+{
+    qp_event_t    event;
+    qp_socket_t   skt;
+    
+    if (!(skt = qp_socket_init(NULL, AF_INET, SOCK_STREAM, "0.0.0.0", 8080, true,\
+        128)) || !(event = qp_event_init(NULL, 1024, true, true) )) 
     {
         fprintf(stderr, "\n Socket or event init fail.");
         goto end;
     }
     
-    /* set socket reusing address */
+    qp_event_regist_read_process_handler(event, read_process);
+    qp_event_regist_write_process_handler(event, write_process);
     qp_socket_set_reuse(skt, QP_SOCKET_SO_REUSE_ADDR, 1);
     
-    /* listen */
     if (QP_ERROR == qp_socket_listen(skt, 0)) {
         fprintf(stderr, "\n Listen fail.");
         goto end;
     }
     
-    /* add the listening socket to event moduel */
-    if (QP_ERROR == qp_event_addevent(emodule, qp_socket_to_int(skt), true, false)) {
+    if (QP_ERROR == qp_event_addevent(event, qp_socket_to_int(skt), 30, true, false)) {
         fprintf(stderr, "\n Add event fail.");
         goto end;
     }
     
-    /* start event loop */
-    qp_event_tiktok(emodule, 30000);
-    
-    /* stop event loop, may be in other thread. */
-    // qp_event_disable(emodule);
-    
+    qp_event_dispatch(event, 0);
     
     end:
-    /* close socket */
     qp_socket_destroy(skt);
-    /* close event module */
-    qp_event_destroy(emodule);
-    /* destroy memory pool */
-    qp_pool_manager_destroy(manager, true);
+    qp_event_destroy(event);
+    fprintf(stderr, "\n Quit.");
+    return 0;
+}
 
 ```
 
