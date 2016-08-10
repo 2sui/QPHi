@@ -27,6 +27,7 @@ qp_int_t
 read_process(qp_int_t index, qp_event_stat_t stat, qp_uchar_t* cache, size_t offset)
 {
     if (QP_EVENT_CLOSE == stat || offset < 1) {
+       QP_LOGOUT_LOG("======NEED SHUTDOWN");
         return QP_ERROR;
     }
     
@@ -76,7 +77,7 @@ main()
         goto end;
     }
     
-    qp_event_dispatch(event, 0);
+    qp_event_dispatch(event, 3000);
     
     end:
     qp_socket_destroy(skt);

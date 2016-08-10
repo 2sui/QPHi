@@ -271,6 +271,7 @@ qp_event_source_close(qp_event_source_t source)
     
     if (source->closed && (QP_FD_INVALID != source->source_fd)) {
         close(source->source_fd);
+        QP_LOGOUT_LOG("qp_event_source_close [%d]", source->source_fd);
     }
 
     source->source_fd = QP_FD_INVALID;
@@ -299,6 +300,7 @@ qp_event_source_alloc_read_cache(qp_event_t event, qp_event_source_t source)
     
     if (!source->read_cache) {
         source->read_cache_size = 0;
+        QP_LOGOUT_LOG("qp_event_source_alloc_read_cache get memory fail");
         return QP_ERROR;
     }
     
@@ -348,6 +350,7 @@ qp_event_source_alloc_write_cache(qp_event_t event, qp_event_source_t source)
     
     if (!source->write_cache) {
         source->write_cache_size = 0;
+        QP_LOGOUT_LOG("qp_event_source_alloc_write_cache get memory fail");
         return QP_ERROR;
     }
     
@@ -617,6 +620,8 @@ qp_event_removeevent(qp_event_t event, qp_event_source_t source)
     qp_event_source_free_read_cache(event, source);
     qp_event_source_free_write_cache(event, source);
     qp_pool_free(&event->event_pool, source);
+    QP_LOGOUT_LOG("qp_event_removeevent current available event [%d], used [%d]", \
+        qp_pool_available(&event->event_pool), qp_pool_used(&event->event_pool));
     return QP_SUCCESS;
 }
 
@@ -649,11 +654,17 @@ qp_event_addevent(qp_event_t event, qp_int_t fd, qp_int_t timeout, bool listen, 
         source->closed = auto_close;
         source->source_fd = fd;
         source->timeout = timeout;
+        
+        QP_LOGOUT_LOG("qp_event_addevent [%d]", source->source_fd);
+        
+        QP_LOGOUT_LOG("qp_event_addevent current available event [%d], used [%d]", \
+            qp_pool_available(&event->event_pool), qp_pool_used(&event->event_pool));
 
         /* add event to pool */
         if (QP_ERROR == qp_event_epoll_add(event, source)) {
             source->source_fd = QP_FD_INVALID;
             qp_event_removeevent(event, source);
+            QP_LOGOUT_LOG("qp_event_addevent epoll add fail");
             return QP_ERROR;
         }
         
@@ -665,6 +676,7 @@ qp_event_addevent(qp_event_t event, qp_int_t fd, qp_int_t timeout, bool listen, 
             if (QP_ERROR == qp_event_source_alloc_read_cache(event, source)) {
                 qp_event_removeevent(event, source);
                 source->source_fd = QP_FD_INVALID;
+                QP_LOGOUT_LOG("qp_event_addevent get memory fail");
                 return QP_ERROR;
             }
         }
@@ -783,32 +795,32 @@ qp_event_dispatch_listen_queue(qp_event_t event, qp_int_t timeout) {
     qp_int_t           sys_accept_fd = QP_FD_INVALID;
     
     while (!qp_list_is_empty(&event->listen_ready)) {
-            source = qp_list_data(qp_list_first(&event->listen_ready), \
-                struct qp_event_source_s, ready_next);
-            qp_list_pop(&event->listen_ready);
+        source = qp_list_data(qp_list_first(&event->listen_ready), \
+            struct qp_event_source_s, ready_next);
+        qp_list_pop(&event->listen_ready);
             
-            do {
-                sys_accept_fd = qp_event_source_accept(source);
+        do {
+            sys_accept_fd = qp_event_source_accept(source);
                 
-                if (QP_FD_INVALID == sys_accept_fd) {
-                    if (!(EAGAIN == errno || EWOULDBLOCK == errno || \
-                        EINTR == errno))
-                    {
-                        qp_event_removeevent(event, source);
-                    }
+            if (QP_FD_INVALID == sys_accept_fd) {
+                if (!(EAGAIN == errno|| EWOULDBLOCK == errno|| EINTR == errno)) {
+                    qp_event_removeevent(event, source);
+                    QP_LOGOUT_LOG("qp_event_removeevent error [%s].", strerror(errno));
+                }
                     
-                    break;
-                }
+                break;
+            }
                 
-                /* should be auto closed */
-                if (QP_ERROR ==  qp_event_addevent(event, sys_accept_fd, \
-                    timeout, false, true)) 
-                {
-                    close(sys_accept_fd);
-                }
+            /* should be auto closed */
+            if (QP_ERROR ==  qp_event_addevent(event, sys_accept_fd, timeout, \
+                false, true)) 
+            {
+                close(sys_accept_fd);
+                QP_LOGOUT_LOG("qp_event_addevent can not add event.");
+            }
                 
-            } while(source->edge);
-        }
+        } while(source->edge);
+    }
 }
 
 /**
@@ -827,7 +839,7 @@ qp_event_dispatch_queue(qp_event_t event) {
         source = qp_list_data(qp_list_first(&event->ready), \
             struct qp_event_source_s, ready_next);
         qp_list_pop(&event->ready);
-            
+           
         source->shutdown |= source->revents \
             & (QP_EPOLL_RDHUP | QP_EPOLL_HUP | QP_EPOLL_ERR);
         source->read |= source->revents | QP_EPOLL_IN;
@@ -839,6 +851,7 @@ qp_event_dispatch_queue(qp_event_t event) {
             
         if (source->shutdown) {
             qp_event_source_set_shutdown(source);
+            QP_LOGOUT_LOG("======qp_event_dispatch_queue shutdown");
         }
             
         read_handler = qp_event_source_read;
@@ -855,6 +868,7 @@ qp_event_dispatch_queue(qp_event_t event) {
                 
                 if (0 > ret) {
                     qp_event_source_set_shutdown(source);
+                    QP_LOGOUT_LOG("======qp_event_dispatch_queue shutdown");
                 }
                 
                 if (!source->shutdown && (ret > 0)) {
@@ -868,6 +882,7 @@ qp_event_dispatch_queue(qp_event_t event) {
                 
                 if (0 >= ret) {
                     qp_event_source_set_shutdown(source);
+                    QP_LOGOUT_LOG("======qp_event_dispatch_queue shutdown");
                     
                 } else {
                     if (ret > source->write_cache_size) {
@@ -909,10 +924,13 @@ qp_event_dispatch(qp_event_t event, qp_int_t timeout)
     while (event->is_run) {
         revent_num = qp_event_epoll_wait(event, event->bucket, event->bucket_size,\
             timeout);
+        
         /* idle or error */
         if (1 > revent_num) {
-            if ((-1 == revent_num) && (EINTR != errno)) {
+            if ((QP_ERROR == revent_num) && (EINTR != errno)) {
                 /* error quit */
+                QP_LOGOUT_LOG("qp_event_epoll_wait error [%s].", strerror(errno));
+                break;
             }
             
             /* no error beacuse no event happen */
