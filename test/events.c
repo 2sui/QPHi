@@ -23,7 +23,7 @@
 "<html>"
 
 
-qp_int_t
+ssize_t
 read_process(qp_int_t index, qp_event_stat_t stat, qp_uchar_t* cache, size_t offset)
 {
     if (QP_EVENT_CLOSE == stat || offset < 1) {
@@ -34,8 +34,8 @@ read_process(qp_int_t index, qp_event_stat_t stat, qp_uchar_t* cache, size_t off
     return 1;
 }
 
-qp_int_t
-write_process(qp_int_t index, qp_event_stat_t stat, qp_int_t read_ret, \
+size_t
+write_process(qp_int_t index, qp_event_stat_t stat, ssize_t read_ret, \
     qp_uchar_t* cache, size_t size)
 {
     switch (read_ret) {
