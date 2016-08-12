@@ -69,8 +69,9 @@ typedef  void* (*qp_event_idle_handler)(void*);
  * @return Return QP_ERROR if the event should be shut down; return value > 0 
  *         means there are some data to be sent; otherwise return 0.
  */
-typedef ssize_t (*qp_event_read_process_handler)(qp_int_t index, \
-    qp_event_stat_t stat, qp_uchar_t* cache, size_t cache_offset);
+typedef qp_int_t (*qp_event_read_process_handler)(qp_int_t index, \
+    qp_event_stat_t stat, qp_uchar_t* cache, \
+    size_t cache_offset);
 
 /**
  * Write events process handler.
@@ -78,12 +79,17 @@ typedef ssize_t (*qp_event_read_process_handler)(qp_int_t index, \
  * @param index Current event identification.
  * @param stat: Event stat. See qp_event_stat_t.
  * @param cache: Write cache address.
+ * @param write_bytes: Data size in cache that will be sent.(this arg should 
+ *        always be set bigger than 0 if some data needs be sent)
  * @param cache_size: Max write cache size. The data to be sent should NOT bigger
  *         than it.
- * @return Return value > 0 means the data size that will be sent in cache.
+ * @return Return QP_ERROR will close current event immediately; return 0 will 
+ *        close current event after data in cache is sent; otherwise will do 
+ *        nothing except sending data.
  */
-typedef size_t (*qp_event_write_process_handler)(qp_int_t index, \
-    qp_event_stat_t stat, ssize_t read_ret, qp_uchar_t* cache, size_t cache_size);
+typedef qp_int_t (*qp_event_write_process_handler)(qp_int_t index, \
+    qp_event_stat_t stat, qp_uchar_t* cache, \
+    size_t *write_bytes, size_t cache_size);
 
 qp_event_t
 qp_event_init(qp_event_t event, qp_int_t max_event_size, bool noblock, bool edge);

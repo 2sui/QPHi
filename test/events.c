@@ -23,31 +23,23 @@
 "<html>"
 
 
-ssize_t
+qp_int_t
 read_process(qp_int_t index, qp_event_stat_t stat, qp_uchar_t* cache, size_t offset)
 {
     if (QP_EVENT_CLOSE == stat || offset < 1) {
-       QP_LOGOUT_LOG("======NEED SHUTDOWN");
         return QP_ERROR;
     }
     
     return 1;
 }
 
-size_t
-write_process(qp_int_t index, qp_event_stat_t stat, ssize_t read_ret, \
-    qp_uchar_t* cache, size_t size)
+qp_int_t
+write_process(qp_int_t index, qp_event_stat_t stat, qp_uchar_t* cache, \
+    size_t* write_bytes, size_t size)
 {
-    switch (read_ret) {
-        case 1: {
-            size_t ret = strlen(HTTP_RSP);
-            strncpy(cache, HTTP_RSP, ret);
-            return ret;
-        }
-                    
-        default:
-            return 0;
-    }
+    *write_bytes = strlen(HTTP_RSP) > size ? size : strlen(HTTP_RSP);
+    strncpy(cache, HTTP_RSP, *write_bytes);
+    return 0; // close after writting
 }
 
 int
