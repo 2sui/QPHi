@@ -63,7 +63,9 @@ In [`QPHi/test/events.c`](./test/events.c):
 
 __read_process:__
 
+
 ```
+
 qp_int_t
 read_process(qp_int_t index, qp_event_stat_t stat, qp_uchar_t* cache, size_t offset)
 {
@@ -74,32 +76,31 @@ read_process(qp_int_t index, qp_event_stat_t stat, qp_uchar_t* cache, size_t off
     return 1;
 }
 
+
 ```
 
 __write_process:__
 
+
 ```
+
 qp_int_t
-write_process(qp_int_t index, qp_event_stat_t stat, qp_int_t read_ret, \
-    qp_uchar_t* cache, size_t size)
+write_process(qp_int_t index, qp_event_stat_t stat, qp_uchar_t* cache, \
+    size_t* write_bytes, size_t size)
 {
-    switch (read_ret) {
-        case 1: {
-            size_t ret = strlen(HTTP_RSP);
-            strncpy(cache, HTTP_RSP, ret);
-            return ret;
-        }
-                    
-        default:
-            return 0;
-    }
+    *write_bytes = strlen(HTTP_RSP) > size ? size : strlen(HTTP_RSP);
+    strncpy(cache, HTTP_RSP, *write_bytes);
+    return 0; // close after writting
 }
+
 
 ```
 
 __main:__
 
+
 ```
+
 int
 main()
 {
@@ -135,6 +136,7 @@ main()
     fprintf(stderr, "\n Quit.");
     return 0;
 }
+
 
 ```
 
