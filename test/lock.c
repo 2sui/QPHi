@@ -98,7 +98,7 @@ test_lock()
         return;
     }
     
-    INFO("Current process %lu", getpid());
+    INFO("Current process %u", getpid());
     
     if (0 == qp_process_pid(child)) {
         int i = 0;
@@ -235,7 +235,7 @@ test_spin()
         return;
     }
     
-    INFO("Current process %lu", getpid());
+    INFO("Current process %u", getpid());
     
     if (0 == qp_process_pid(child)) {
         int i = 0;
@@ -361,7 +361,7 @@ test_cond()
         return;
     }
     
-    INFO("Current process %lu", getpid());
+    INFO("Current process %u", getpid());
     
     if (0 == qp_process_pid(child)) {
         int i = 0;
@@ -446,41 +446,9 @@ test_sem()
     INFO(">>>>>>>>>>> Test for sem done.");
 }
 
-
-void 
-test_timer() {
-    
-    struct timeval start, end;
-    unsigned long i = 100000000;
-    
-    gettimeofday(&start, NULL);
-    for (unsigned long j = i; j; j--);
-    gettimeofday(&end, NULL);
-    INFO("Empty start: %lu.%lu end: %lu.%lu diff: %lu", start, end, (end.tv_sec-start.tv_sec)*1000000+(end.tv_usec-start.tv_usec));
-    
-    gettimeofday(&start, NULL);
-    for (unsigned long j = i; j; j--) {
-        time(NULL);
-    }
-    
-    gettimeofday(&end, NULL);
-    INFO("time() start: %lu.%lu end: %lu.%lu diff: %lu", start, end, (end.tv_sec-start.tv_sec)*1000000+(end.tv_usec-start.tv_usec));
-
-    gettimeofday(&start, NULL);
-    for (unsigned long j = i; j; j--) {
-        gettimeofday(&end, NULL);
-    }
-    
-    gettimeofday(&end, NULL);
-    INFO("gettimeofday start: %lu.%lu end: %lu.%lu diff: %lu", start, end, (end.tv_sec-start.tv_sec)*1000000+(end.tv_usec-start.tv_usec));
-
-}
-
 int 
 main()
 {
-    test_timer();
-    
     if (QP_ERROR == test_thread()) {
         return QP_ERROR;
     }

@@ -38,7 +38,7 @@ write_process(qp_int_t index, qp_event_stat_t stat, qp_uchar_t* cache, \
     size_t* write_bytes, size_t size)
 {
     *write_bytes = strlen(HTTP_RSP) > size ? size : strlen(HTTP_RSP);
-    strncpy(cache, HTTP_RSP, *write_bytes);
+    strncpy((char*)cache, HTTP_RSP, *write_bytes);
     return 0; // close after writting
 }
 

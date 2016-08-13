@@ -38,14 +38,14 @@ SET(BUILD_LIBS  ${PROJECT_SOURCE_DIR}/../build/libs)
 SET(BUILD_BIN  ${PROJECT_SOURCE_DIR}/../build/bin)
 
 # deps dir
-SET(DEPS_QPHI  ${PROJECT_SOURCE_DIR}/../src/QPCore)
+#SET(DEPS_QPHI  ${PROJECT_SOURCE_DIR}/../src/QPCore)
 
 # sources dir
-AUX_SOURCE_DIRECTORY(${DEPS_QPHI}  DEP_QPHi)
-AUX_SOURCE_DIRECTORY(${DEPS_QPHI}/qp_tiny_stack  DEP_QPHi_QP_TINY_STACK)
+#AUX_SOURCE_DIRECTORY(${DEPS_QPHI}  DEP_QPHi)
+#AUX_SOURCE_DIRECTORY(${DEPS_QPHI}/qp_tiny_stack  DEP_QPHi_QP_TINY_STACK)
 
 # headers dir
-INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR} ${DEPS_QPHI})
+#INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR} ${DEPS_QPHI})
 
 # set libs output path
 SET(LIBRARY_OUTPUT_PATH  ${BUILD_LIBS})
@@ -58,49 +58,49 @@ ADD_DEFINITIONS(-W -Wall -D_REENTRANT -g -D_FILE_OFFSET_BITS=64 -DQP_DEBUG)
 # exec target
 
 # pcapreader
-#ADD_EXECUTABLE(${pcapreader}
-#    ${pcapreader_src} )
+ADD_EXECUTABLE(${pcapreader}
+    ${pcapreader_src} )
 #    ${DEP_QPHi} 
 #    ${DEP_QPHi_QP_TINY_STACK})
-#TARGET_LINK_LIBRARIES(${pcapreader}  pthread dl rt QPCore)
+TARGET_LINK_LIBRARIES(${pcapreader}  pthread dl rt QPCore)
 
 # tcp_delay
-#ADD_EXECUTABLE(${tcp_delay}
-#    ${tcp_delay_src} )
+ADD_EXECUTABLE(${tcp_delay}
+    ${tcp_delay_src} )
 #    ${DEP_QPHi} 
 #    ${DEP_QPHi_QP_TINY_STACK})
-#TARGET_LINK_LIBRARIES(${tcp_delay}  pthread dl rt QPCore)
+TARGET_LINK_LIBRARIES(${tcp_delay}  pthread dl rt QPCore)
 
 # lock
 ADD_EXECUTABLE(${lock}
-    ${lock_src} 
-    ${DEP_QPHi} 
-    ${DEP_QPHi_QP_TINY_STACK})
+    ${lock_src} )
+#    ${DEP_QPHi} 
+#    ${DEP_QPHi_QP_TINY_STACK})
 TARGET_LINK_LIBRARIES(${lock}  pthread dl rt QPCore)
 
 # events
 ADD_EXECUTABLE(${events}
-    ${events_src} 
-    ${DEP_QPHi} 
-    ${DEP_QPHi_QP_TINY_STACK})
+    ${events_src} )
+#    ${DEP_QPHi} 
+#    ${DEP_QPHi_QP_TINY_STACK})
 TARGET_LINK_LIBRARIES(${events}  pthread dl rt QPCore)
 
 # rbtree
 #ADD_EXECUTABLE(${rbtree}
-#    ${rbtree_src} 
+#    ${rbtree_src} )
 #    ${DEP_QPHi} 
 #    ${DEP_QPHi_QP_TINY_STACK})
 #TARGET_LINK_LIBRARIES(${rbtree}  pthread dl rt)
 
 # directfile
-#ADD_EXECUTABLE(${directFile}
-#    ${directFile_src} )
+ADD_EXECUTABLE(${directFile}
+    ${directFile_src} )
  #   ${DEP_QPHi} 
  #   ${DEP_QPHi_QP_TINY_STACK})
-#TARGET_LINK_LIBRARIES(${directFile}  pthread dl rt QPCore)
+TARGET_LINK_LIBRARIES(${directFile}  pthread dl rt QPCore)
 
-#ADD_EXECUTABLE(${libevent}
-#    ${libevent_src} )
+ADD_EXECUTABLE(${libevent}
+    ${libevent_src} )
  #   ${DEP_QPHi} 
  #   ${DEP_QPHi_QP_TINY_STACK})
-#TARGET_LINK_LIBRARIES(${libevent}  pthread dl rt event)
+TARGET_LINK_LIBRARIES(${libevent}  pthread dl rt event)
