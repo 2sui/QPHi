@@ -25,33 +25,42 @@ struct  qp_socket_s {
     bool                          is_alloced;  /* is alloced */
 };
 
-void
+static inline void
 qp_socket_set_alloced(qp_socket_t skt)
-{ skt ? skt->is_alloced = true : 1;}
+{ 
+    skt ? skt->is_alloced = true : 1;
+}
 
-void
+static inline void
 qp_socket_set_listen(qp_socket_t skt)
-{ skt ? skt->is_listen = true : 1;}
+{ 
+    skt ? skt->is_listen = true : 1;
+}
 
-void
+static inline void
 qp_socket_unset_alloced(qp_socket_t skt)
-{ skt ? skt->is_alloced = false : 1;}
+{ 
+    skt ? skt->is_alloced = false : 1;
+}
 
-void
+static inline void
 qp_socket_unset_listen(qp_socket_t skt)
-{ skt ? skt->is_listen = false : 1;}
+{ 
+    skt ? skt->is_listen = false : 1;
+}
 
-
-bool
+static inline bool
 qp_socket_is_alloced(qp_socket_t skt) 
-{ return skt ? skt->is_alloced : false; }
+{ 
+    return skt ? skt->is_alloced : false; 
+}
 
-bool
+static inline bool
 qp_socket_is_listen(qp_socket_t skt) 
-{ return skt ? skt->is_listen : false; }
+{ 
+    return skt ? skt->is_listen : false; 
+}
 
-
-// MARK: private functions.
 
 qp_socket_t
 qp_socket_assign_inet(qp_socket_t skt, const qp_char_t* name, qp_ushort_t port);
@@ -101,7 +110,8 @@ qp_socket_create(qp_socket_t skt) {
 
 qp_socket_t
 qp_socket_init(qp_socket_t skt, qp_int_t domain, qp_int_t type, 
-    const qp_char_t* name, qp_ushort_t port, bool as_server, qp_int_t server_backlog)
+    const qp_char_t* name, qp_ushort_t port, \
+    bool as_server, qp_int_t server_backlog)
 {
     /* check args */
     switch(domain) {

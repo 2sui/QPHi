@@ -7,68 +7,6 @@
 #include "qp_o_ipc.h"
 
 
-bool
-qp_lock_is_inited(qp_lock_t lock)
-{ return lock ? lock->is_inited : false; }
-
-bool
-qp_rwlock_is_inited(qp_rwlock_t rwlock)
-{ return rwlock ? rwlock->is_inited : false; }
-
-bool
-qp_cond_is_inited(qp_cond_t cond)
-{ return cond ? cond->is_inited : false; }
-
-bool
-qp_sem_is_inited(qp_sem_t sem)
-{ return sem ? sem->is_inited : false; }
-
-bool
-qp_shm_is_inited(qp_shm_t shm)
-{ return shm ? shm->is_inited : false; }
-
-bool
-qp_lock_is_alloced(qp_lock_t lock)
-{ return lock ? lock->is_alloced : false; }
-
-bool
-qp_rwlock_is_alloced(qp_rwlock_t rwlock)
-{ return rwlock ? rwlock->is_alloced : false; }
-
-bool
-qp_cond_is_alloced(qp_cond_t cond)
-{ return cond ? cond->is_alloced : false; }
-
-bool
-qp_sem_is_alloced(qp_sem_t sem)
-{ return sem ? sem->is_alloced : false; }
-
-bool
-qp_shm_is_alloced(qp_shm_t shm)
-{ return shm ? shm->is_alloced : false; }
-
-bool
-qp_lock_is_shared(qp_lock_t lock)
-{ return lock ? lock->is_shared : false; }
-
-bool
-qp_rwlock_is_shared(qp_rwlock_t rwlock)
-{ return rwlock ? rwlock->is_shared : false; }
-
-bool
-qp_cond_is_shared(qp_cond_t cond)
-{ return cond ? cond->is_shared : false; }
-
-bool
-qp_sem_is_shared(qp_sem_t sem)
-{ return sem ? sem->is_shared : false; }
-
-bool
-qp_lock_is_spin(qp_lock_t lock)
-{ return lock ? lock->is_spin : false; }
-
-// MARK: lock
-
 /*
  * * Copy from nginx. *
  * 
@@ -135,39 +73,6 @@ qp_lock_is_spin(qp_lock_t lock)
  *   Solaris:  PTHREAD_MUTEX_NORMAL.
  *   MacOSX:   PTHREAD_MUTEX_NORMAL.
  */
-
-
-void
-qp_lock_set_inited(qp_lock_t lock)
-{ lock ? lock->is_inited = true : 1;}
-
-void
-qp_lock_set_alloced(qp_lock_t lock)
-{ lock ? lock->is_alloced = true : 1;}
-
-void
-qp_lock_set_shared(qp_lock_t lock)
-{ lock ? lock->is_shared = true : 1;}
-
-void
-qp_lock_unset_inited(qp_lock_t lock)
-{ lock ? lock->is_inited = false : 1;}
-
-void
-qp_lock_unset_alloced(qp_lock_t lock)
-{ lock ? lock->is_alloced = false : 1;}
-
-void
-qp_lock_unset_shared(qp_lock_t lock)
-{ lock ? lock->is_shared = false : 1;}
-
-void
-qp_lock_set_spin(qp_lock_t lock)
-{ lock ? lock->is_spin = true : 1;}
-
-void
-qp_lock_unset_spin(qp_lock_t lock)
-{ lock ? lock->is_spin = false : 1;}
 
 
 /**
@@ -280,7 +185,9 @@ qp_lock_lock(qp_lock_t lock)
     }
     
     if (0 != lock->hold_counter) {
-        if (lock->hold_thread == pthread_self() && lock->hold_process == getpid()) {
+        if (lock->hold_thread == pthread_self() \
+            && lock->hold_process == getpid()) 
+        {
             qp_atom_fetch_add(&lock->hold_counter, 1);
             return QP_SUCCESS;
         }
@@ -290,7 +197,6 @@ qp_lock_lock(qp_lock_t lock)
         qp_uint_t  n = 1024, i, j;
         
         for ( ;; ) {
-            
             if (qp_atom_cmp_set(&lock->lock.spin,0,1)) {
                 lock->hold_thread = pthread_self();
                 lock->hold_process = getpid();
@@ -298,7 +204,7 @@ qp_lock_lock(qp_lock_t lock)
                 return QP_SUCCESS;
             }
             
-            if (qp_cpu_num > 1) {
+            if (qp_cpu_num() > 1) {
                 
                 for (i = 1; i < n; i <<= 1) {
                     
@@ -337,7 +243,9 @@ qp_lock_trylock(qp_lock_t lock)
     }
     
     if (0 != lock->hold_counter) {
-        if (lock->hold_thread == pthread_self() && lock->hold_process == getpid()) {
+        if (lock->hold_thread == pthread_self() \
+            && lock->hold_process == getpid()) 
+        {
             qp_atom_fetch_add(&lock->hold_counter, 1);
             return QP_SUCCESS;
         }
@@ -375,7 +283,9 @@ qp_lock_unlock(qp_lock_t lock)
     }
     
     // may be unlocked by another thread
-    if (lock->hold_thread == pthread_self() && lock->hold_process == getpid()) {
+    if (lock->hold_thread == pthread_self() \
+        && lock->hold_process == getpid()) 
+    {
         qp_atom_fetch_sub(&lock->hold_counter, 1);
         
         if (0 != lock->hold_counter) {
@@ -410,32 +320,6 @@ qp_lock_counter(qp_lock_t lock)
     
     return lock->hold_counter;
 }
-
-// MARK: rwlock
-
-void
-qp_rwlock_set_inited(qp_rwlock_t rwlock)
-{ rwlock ? rwlock->is_inited = true : 1;}
-
-void
-qp_rwlock_set_alloced(qp_rwlock_t rwlock)
-{ rwlock ? rwlock->is_alloced = true : 1;}
-
-void
-qp_rwlock_set_shared(qp_rwlock_t rwlock)
-{ rwlock ? rwlock->is_shared = true : 1;}
-
-void
-qp_rwlock_unset_inited(qp_rwlock_t rwlock)
-{ rwlock ? rwlock->is_inited = false : 1;}
-
-void
-qp_rwlock_unset_alloced(qp_rwlock_t rwlock)
-{ rwlock ? rwlock->is_alloced = false : 1;}
-
-void
-qp_rwlock_unset_shared(qp_rwlock_t rwlock)
-{ rwlock ? rwlock->is_shared = false : 1;}
 
 
 qp_rwlock_t
@@ -555,32 +439,6 @@ qp_rwlock_unlock(qp_rwlock_t rwlock)
 {
     return rwlock ? pthread_rwlock_unlock(&rwlock->rwlock) : QP_ERROR;
 }
-
-
-// MARK: cond
-void
-qp_cond_set_inited(qp_cond_t cond)
-{ cond ? cond->is_inited = true : 1;}
-
-void
-qp_cond_set_alloced(qp_cond_t cond)
-{ cond ? cond->is_alloced = true : 1;}
-
-void
-qp_cond_set_shared(qp_cond_t cond)
-{ cond ? cond->is_shared = true : 1;}
-
-void
-qp_cond_unset_inited(qp_cond_t cond)
-{ cond ? cond->is_inited = false : 1;}
-
-void
-qp_cond_unset_alloced(qp_cond_t cond)
-{ cond ? cond->is_alloced = false : 1;}
-
-void
-qp_cond_unset_shared(qp_cond_t cond)
-{ cond ? cond->is_shared = false : 1;}
 
 
 qp_cond_t
@@ -722,32 +580,6 @@ qp_cond_wait(qp_cond_t cond, void (*wait_for)(void*), void* arg)
     return qp_lock_unlock(&cond->cond_lock);
 }
 
-// MARK: sem
-
-void
-qp_sem_set_inited(qp_sem_t sem)
-{ sem ? sem->is_inited = true : 1;}
-
-void
-qp_sem_set_alloced(qp_sem_t sem)
-{ sem ? sem->is_alloced = true : 1;}
-
-void
-qp_sem_set_shared(qp_sem_t sem)
-{ sem ? sem->is_shared = true : 1;}
-
-void
-qp_sem_unset_inited(qp_sem_t sem)
-{ sem ? sem->is_inited = false : 1;}
-
-void
-qp_sem_unset_alloced(qp_sem_t sem)
-{ sem ? sem->is_alloced = false : 1;}
-
-void
-qp_sem_unset_shared(qp_sem_t sem)
-{ sem ? sem->is_shared = false : 1;}
-
 
 qp_sem_t
 qp_sem_create(qp_sem_t sem, bool shared)
@@ -824,24 +656,6 @@ qp_sem_wait(qp_sem_t sem)
 {
     return sem ? sem_wait(&sem->sem) : QP_ERROR;
 }
-
-// MARK: shm
-
-void
-qp_shm_set_inited(qp_shm_t shm)
-{ shm ? shm->is_inited = true : 1;}
-
-void
-qp_shm_set_alloced(qp_shm_t shm)
-{ shm ? shm->is_alloced = true : 1;}
-
-void
-qp_shm_unset_inited(qp_shm_t shm)
-{ shm ? shm->is_inited = false : 1;}
-
-void
-qp_shm_unset_alloced(qp_shm_t shm)
-{ shm ? shm->is_alloced = false : 1;}
 
 
 qp_shm_t

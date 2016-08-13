@@ -86,194 +86,262 @@ typedef struct qp_rbtree_s*         qp_rbtree_t;
  * Operation for list (or stack).
  */ 
 
-/**
- * Init list.
- */
-extern void 
-qp_list_init(qp_list_t list);
+static inline void 
+qp_list_init(qp_list_t list)
+{ 
+    list->next = list;
+}
 
-/**
- * Return true if list is empty.
- */
-extern bool
-qp_list_is_empty(qp_list_t list);
+static inline bool
+qp_list_is_empty(qp_list_t list)
+{ 
+    return list == list->next;
+}
 
-/**
- * Push x to l.
- */
-extern void
-qp_list_push(qp_list_t list, qp_list_t node);
+static inline void
+qp_list_push(qp_list_t list, qp_list_t node)
+{
+    node->next = list->next;
+    list->next = node;
+}
 
-/**
- * Pop element from l.
- */
-extern void
-qp_list_pop(qp_list_t list);
+static inline void
+qp_list_pop(qp_list_t list)
+{ 
+    list->next = list->next->next;
+}
 
-/**
- * Get the list head.
- */
-extern qp_list_t
-qp_list_head(qp_list_t list);
+static inline qp_list_t
+qp_list_head(qp_list_t list)
+{ 
+    return list;
+}
 
-/**
- * Get top element of list.
- */
-extern qp_list_t 
-qp_list_first(qp_list_t list);
-
+static inline qp_list_t 
+qp_list_first(qp_list_t list)
+{ 
+    return qp_list_is_empty(list) ? NULL : list->next;
+}
+ 
 #define  qp_list_next            qp_list_first
-
 #define  qp_list_remove_after    qp_list_pop
-
 #define  qp_list_insert_after    qp_list_push
-    
+#define  qp_list_data(l, type, link)  ((qp_uchar_t*)(l) - offsetof(type, link))
+
 
 /**
- * Get structure which element l in.
- */
-#define qp_list_data(l, type, link) ({ \
-    (type *) ((qp_uchar_t *) l - offsetof(type, link)); })
+ * Operation for queue.
+ */ 
 
-/*
- * Init queue.
-*/
-extern void
-qp_queue_init(qp_queue_t queue);
+static inline void
+qp_queue_init(qp_queue_t queue)
+{
+    queue->prev = queue;
+    queue->next = queue;
+}
 
-/*
- * Return true if queue is empty.
-*/
-extern bool
-qp_queue_is_empty(qp_queue_t queue);
+static inline bool
+qp_queue_is_empty(qp_queue_t queue)
+{ 
+    return queue == queue->prev;
+}
 
-/*
- * Insert element before first element of queue.
-*/
-extern void
-qp_queue_insert_after_head(qp_queue_t queue, qp_queue_t node);
+static inline void
+qp_queue_insert_after_head(qp_queue_t queue, qp_queue_t node)
+{
+    node->next = queue->next;
+    node->next->prev = node;
+    node->prev = queue;
+    queue->next = node;
+}
 
-/*
- * Insert element after some element.
-*/
 #define qp_queue_insert_after   qp_queue_insert_after_head
 
-/*
- * Insert element after last element of queue.
-*/
-extern void
-qp_queue_insert_after_tail(qp_queue_t queue, qp_queue_t node);
+static inline void
+qp_queue_insert_after_tail(qp_queue_t queue, qp_queue_t node)
+{
+    node->prev = queue->prev;
+    node->prev->next = node;
+    node->next = queue;
+    queue->prev = node;
+}
 
-/*
- * Get first element of queue.
-*/
-extern qp_queue_t
-qp_queue_first(qp_queue_t queue);
+static inline qp_queue_t
+qp_queue_first(qp_queue_t queue)
+{ 
+    return qp_queue_is_empty(queue) ? NULL : queue->next;
+}
 
-/*
- * Ge last element of queue.
-*/
-extern qp_queue_t
-qp_queue_last(qp_queue_t queue);
-        
+static inline qp_queue_t
+qp_queue_last(qp_queue_t queue)
+{ 
+    return qp_queue_is_empty(queue) ? NULL : queue->prev;
+}
+  
+static inline qp_queue_t
+qp_queue_head(qp_queue_t queue)
+{ 
+    return queue;
+}
 
-/*
- * Get queue head.
-*/
-extern qp_queue_t
-qp_queue_head(qp_queue_t queue);
+static inline qp_queue_t
+qp_queue_next(qp_queue_t node)
+{ 
+    return node->next;
+}
 
-/*
- * Get next element of q.
-*/
-extern qp_queue_t
-qp_queue_next(qp_queue_t node);
+static inline qp_queue_t
+qp_queue_prev(qp_queue_t node)
+{ 
+    return node->prev;
+}
 
-/*
- * Get preview element of q.
-*/
-extern qp_queue_t
-qp_queue_prev(qp_queue_t node);
+static inline void
+qp_queue_remove(qp_queue_t node)
+{
+    node->next->prev = node->prev;
+    node->prev->next = node->next;
+}
 
+static inline void
+qp_queue_split(qp_queue_t queue, qp_queue_t node, qp_queue_t newq)
+{
+    newq->prev = queue->prev;
+    newq->prev->next = newq;
+    newq->next = node;
+    queue->prev = node->prev;
+    queue->prev->next = queue;
+    node->prev = newq;
+}
 
-/*
- * Remove element from queue.
-*/
-extern void
-qp_queue_remove(qp_queue_t node);
+static inline void
+qp_queue_merge(qp_queue_t queue, qp_queue_t newq)
+{
+    queue->prev->next = newq->next;
+    newq->next->prev = queue->prev;
+    queue->prev = newq->prev;
+    queue->prev->next = queue;
+}
 
-
-/*
- * Split queue h from element q to new queue n.
-*/
-extern void
-qp_queue_split(qp_queue_t queue, qp_queue_t node, qp_queue_t newq);
-
-/*
- * Merge queue n to queue h (and after h).
-*/
-extern void
-qp_queue_merge(qp_queue_t queue, qp_queue_t newq);
-
-/*
- * Get structure which element q in.
-*/
-#define qp_queue_data(q, type, link) ({ \
-    (type *) ((qp_uchar_t *) q - offsetof(type, link)); })
+#define qp_queue_data(q, type, link)  ((qp_uchar_t*)(q) - offsetof(type, link))
 
 
 /**
  * Operation for rbtree.
  */
 
-/**
- * Init [rbtree].
- */
-
 #define  QP_RBTREE_RED    1
 #define  QP_RBTREE_BLACK  0
 
-extern void
-qp_rbtree_init(qp_rbtree_t rbtree);
+static inline void
+qp_rbtree_set_red(qp_rbtree_node_t node)
+{ 
+    node->color = QP_RBTREE_RED;
+}
+
+static inline void
+qp_rbtree_set_black(qp_rbtree_node_t node)
+{ 
+    node->color = QP_RBTREE_BLACK;
+}
+
+static inline bool
+qp_rbtree_is_red(qp_rbtree_node_t node)
+{ 
+    return node->color == QP_RBTREE_RED;
+}
+
+static inline bool
+qp_rbtree_is_black(qp_rbtree_node_t node)
+{ 
+    return node->color == QP_RBTREE_BLACK;
+}
+
+static inline qp_rbtree_node_t
+qp_rbtree_parent(qp_rbtree_node_t node)
+{ 
+    return node->parent;
+}
+
+static inline qp_rbtree_node_t
+qp_rbtree_grandpa(qp_rbtree_node_t node)
+{ 
+    return qp_rbtree_parent(qp_rbtree_parent(node));
+}
+
+static inline bool
+qp_rbtree_is_left(qp_rbtree_node_t node)
+{ 
+    return (node == qp_rbtree_parent(node)->left);
+}
+
+static inline bool
+qp_rbtree_is_right(qp_rbtree_node_t node)
+{ 
+    return (node == qp_rbtree_parent(node)->right);
+}
+
+static inline qp_rbtree_node_t
+qp_rbtree_uncle(qp_rbtree_node_t node)
+{ 
+    return qp_rbtree_is_left(qp_rbtree_parent(node)) ? \
+        qp_rbtree_grandpa(node)->right : \
+        qp_rbtree_grandpa(node)->left;
+}
+
+static inline qp_rbtree_node_t
+qp_rbtree_brother(qp_rbtree_node_t node)
+{
+    return qp_rbtree_is_left(node) ? \
+        qp_rbtree_parent(node)->right : \
+        qp_rbtree_parent(node)->left;
+}
+
+static inline qp_rbtree_node_t
+qp_rbtree_nil(qp_rbtree_t rbtree)
+{ 
+    return &rbtree->sentinel;
+}
+
+static inline bool
+qp_rbtree_is_empty(qp_rbtree_t rbtree)
+{ 
+    return rbtree->root == qp_rbtree_nil(rbtree);
+}
+
+#define qp_rbtree_data(t, type, link) ({\
+    (type*)((qp_uchar_t*) (t) - offsetof((type), (link)));})
+
+/* init rbtree */
+static inline void
+qp_rbtree_init(qp_rbtree_t rbtree)
+{
+    rbtree->sentinel.left = qp_rbtree_nil(rbtree);
+    rbtree->sentinel.right = qp_rbtree_nil(rbtree);
+    rbtree->sentinel.parent = qp_rbtree_nil(rbtree);
+    qp_rbtree_set_black(qp_rbtree_nil(rbtree));
+    rbtree->root = qp_rbtree_nil(rbtree);
+}
 
 /* insert [node] into [rbtree], return inserted node pointer */
-extern qp_rbtree_node_t 
+qp_rbtree_node_t 
 qp_rbtree_insert(qp_rbtree_t rbtree, qp_rbtree_node_t node);
 
 /* delete [node] from [rbtree], return deleted node pointer */
-extern qp_rbtree_node_t
+qp_rbtree_node_t
 qp_rbtree_delete(qp_rbtree_t rbtree, qp_rbtree_node_t node);
 
 /* find node with [key] in [rbtree] */
-extern qp_rbtree_node_t
+qp_rbtree_node_t
 qp_rbtree_find(qp_rbtree_t rbtree, qp_uint32_t key);
 
 /* min node in [rbtree] (from [node]) */
-extern qp_rbtree_node_t
+qp_rbtree_node_t
 qp_rbtree_min(qp_rbtree_t rbtree, qp_rbtree_node_t node);
 
 /* max node in [rbtree] (from [node]) */
-extern qp_rbtree_node_t
+qp_rbtree_node_t
 qp_rbtree_max(qp_rbtree_t rbtree, qp_rbtree_node_t node);
-
-extern bool
-qp_rbtree_is_red(qp_rbtree_node_t node);
-
-extern bool
-qp_rbtree_is_black(qp_rbtree_node_t node);
-
-extern bool
-qp_rbtree_is_left(qp_rbtree_node_t node);
-
-extern bool
-qp_rbtree_is_right(qp_rbtree_node_t node);
-
-extern bool
-qp_rbtree_is_empty(qp_rbtree_t rbtree);
-
-#define qp_rbtree_data(t, type, link) ({ \
-    (type *) ((qp_uchar_t *) t - offsetof(type, link)); })
-
 
 #ifdef __cplusplus
 }

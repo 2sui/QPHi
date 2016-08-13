@@ -8,51 +8,6 @@
 #include "qp_o_memory.h"
 
 
-void
-qp_fd_set_inited(qp_fd_t fd)
-{ fd ? fd->is_inited = true: 1;}
-
-void
-qp_fd_set_alloced(qp_fd_t fd)
-{ fd ? fd->is_alloced = true : 1;}
-
-void
-qp_fd_set_noblock(qp_fd_t fd)
-{ fd ? fd->is_noblock = true : 1;}
-
-void
-qp_fd_unset_inited(qp_fd_t fd)
-{ fd ? fd->is_inited = false : 1;}
-
-void
-qp_fd_unset_alloced(qp_fd_t fd)
-{ fd ? fd->is_alloced = false : 1;}
-
-void
-qp_fd_unset_noblock(qp_fd_t fd)
-{ fd ? fd->is_noblock = false : 1;}
-
-bool
-qp_fd_is_inited(qp_fd_t fd) 
-{ return fd ? fd->is_inited : false; }
-
-bool
-qp_fd_is_alloced(qp_fd_t fd) 
-{ return fd ? fd->is_alloced : false; }
-
-bool
-qp_fd_is_noblock(qp_fd_t fd) 
-{ return fd ? fd->is_noblock : false; }
-
-bool
-qp_fd_is_aio(qp_fd_t fd)
-{ return fd ? (NULL != fd->aio) : false; }
-
-bool
-qp_fd_is_valid(qp_fd_t fd) 
-{ return fd ? (QP_FD_INVALID != fd->fd) : false;}
-
-
 qp_fd_t
 qp_fd_create(qp_fd_t fd)
 {
@@ -233,8 +188,7 @@ qp_fd_writen(qp_fd_t fd, const void *vptr, size_t nbytes)
 
         if (1 > ret) {
 
-            if ((ret < 0) \
-               && ((EINTR == errno) || (EAGAIN == errno) \
+            if ((ret < 0) && ((EINTR == errno) || (EAGAIN == errno) \
                || (EWOULDBLOCK == errno))) 
             {
                 ret = 0; /* write again */
@@ -266,9 +220,8 @@ qp_fd_readn(qp_fd_t fd, void *vptr, size_t nbytes)
 
         if (1 > ret) {
 
-            if ((0 > ret) \
-                && ((EINTR == errno) || (EAGAIN == errno) \
-                    || (EWOULDBLOCK == errno))) 
+            if ((0 > ret) && ((EINTR == errno) || (EAGAIN == errno) \
+                || (EWOULDBLOCK == errno))) 
             {
                 ret = 0; /* read again */
 
@@ -304,7 +257,6 @@ qp_fd_readv(qp_fd_t fd, const struct iovec *iov, qp_int_t iovcnt)
     
     return readv(fd->fd, iov, iovcnt);
 }
-
 
 qp_int_t
 qp_fd_aio_sync(qp_fd_t fd)

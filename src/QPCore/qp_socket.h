@@ -50,13 +50,6 @@ typedef enum qp_socket_type_e      qp_socket_type_t;
 typedef struct qp_socket_s*        qp_socket_t;
 
 
-bool
-qp_socket_is_alloced(qp_socket_t skt);
-
-bool
-qp_socket_is_listen(qp_socket_t skt);
-
-
 /**
  * Create a socket. 
  * If skt is NULL, it will allocate one for it and free the memory when calling 
@@ -75,7 +68,8 @@ qp_socket_is_listen(qp_socket_t skt);
  */
 qp_socket_t
 qp_socket_init(qp_socket_t skt, qp_int_t domain, qp_int_t type, 
-    const qp_char_t* name, qp_ushort_t port, bool as_server, qp_int_t server_backlog);
+    const qp_char_t* name, qp_ushort_t port, \
+    bool as_server, qp_int_t server_backlog);
 
 /**
  * Destroy a socket.

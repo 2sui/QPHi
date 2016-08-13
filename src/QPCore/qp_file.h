@@ -47,13 +47,6 @@ extern "C" {
 
 typedef struct qp_file_s*     qp_file_t;
 
-
-bool
-qp_file_is_alloced(qp_file_t file);
-
-bool
-qp_file_is_directIO(qp_file_t file);
-
 /**
  * Create a file (if file is NULL), and init it.If mod is 0 it works just like 
  * as usual; if mod is QP_FILE_DIRECTIO or QP_FILE_AIO(not support for now), 

@@ -37,20 +37,71 @@ typedef enum   qp_fd_type_e     qp_fd_type_t;
 typedef struct qp_fd_s*         qp_fd_t;
 
 
-bool
-qp_fd_is_inited(qp_fd_t fd);
+static inline bool
+qp_fd_is_inited(qp_fd_t fd)
+{
+    return fd ? fd->is_inited : false;
+}
 
-bool
-qp_fd_is_alloced(qp_fd_t fd) ;
+static inline bool
+qp_fd_is_alloced(qp_fd_t fd)
+{
+    return fd ? fd->is_alloced : false;
+}
 
-bool
-qp_fd_is_noblock(qp_fd_t fd);
+static inline bool
+qp_fd_is_noblock(qp_fd_t fd)
+{
+   return fd ? fd->is_noblock : false; 
+}
 
-bool
-qp_fd_is_aio(qp_fd_t fd);
+static inline bool
+qp_fd_is_aio(qp_fd_t fd)
+{
+    return fd ? (NULL != fd->aio) : false;
+}
 
-bool
-qp_fd_is_valid(qp_fd_t fd);
+static inline bool
+qp_fd_is_valid(qp_fd_t fd)
+{
+    return fd ? (QP_FD_INVALID != fd->fd) : false;
+}
+
+static inline void
+qp_fd_set_inited(qp_fd_t fd)
+{ 
+    fd ? fd->is_inited = true: 1;
+}
+
+static inline void
+qp_fd_set_alloced(qp_fd_t fd)
+{ 
+    fd ? fd->is_alloced = true : 1;
+}
+
+static inline void
+qp_fd_set_noblock(qp_fd_t fd)
+{ 
+    fd ? fd->is_noblock = true : 1;
+}
+
+static inline void
+qp_fd_unset_inited(qp_fd_t fd)
+{ 
+    fd ? fd->is_inited = false : 1;
+}
+
+static inline void
+qp_fd_unset_alloced(qp_fd_t fd)
+{ 
+    fd ? fd->is_alloced = false : 1;
+}
+
+static inline void
+qp_fd_unset_noblock(qp_fd_t fd)
+{ 
+    fd ? fd->is_noblock = false : 1;
+}
 
 /**
  * Init a qp_fd_t struct with specific type.If the fd is NULL it will allocate 

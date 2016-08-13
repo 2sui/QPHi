@@ -30,37 +30,42 @@ struct qp_file_s {
     bool                     is_alloced;   /* is this struct allocated */
 };
 
-#define  QP_FILE_SET_ALLOCED(file)     (((qp_file_t)(file))->is_alloced=true)
-#define  QP_FILE_SET_DIRECTIO(file)    (((qp_file_t)(file))->is_directIO=true)
 
-#define  QP_FILE_UNSET_ALLOCED(file)   (((qp_file_t)(file))->is_alloced=false)
-#define  QP_FILE_UNSET_DIRECTIO(file)  (((qp_file_t)(file))->is_directIO=false)
-
-
-void
+static inline void
 qp_file_set_alloced(qp_file_t file)
-{ file ? file->is_alloced = true : 1;}
+{ 
+    file ? file->is_alloced = true : 1;
+}
 
-void
+static inline void
 qp_file_set_directIO(qp_file_t file)
-{ file ? file->is_directIO = true : 1;}
+{ 
+    file ? file->is_directIO = true : 1;
+}
 
-void
+static inline void
 qp_file_unset_alloced(qp_file_t file)
-{ file ? file->is_alloced = false : 1;}
+{ 
+    file ? file->is_alloced = false : 1;
+}
 
-void
+static inline void
 qp_file_unset_directIO(qp_file_t file)
-{ file ? file->is_directIO = false : 1;}
+{ 
+    file ? file->is_directIO = false : 1;
+}
 
-
-bool
+static inline bool
 qp_file_is_alloced(qp_file_t file) 
-{ return file ? file->is_alloced : false; }
+{ 
+    return file ? file->is_alloced : false; 
+}
 
-bool
+static inline bool
 qp_file_is_directIO(qp_file_t file) 
-{ return file ? file->is_directIO : false; }
+{ 
+    return file ? file->is_directIO : false; 
+}
 
 /**
  * Get file stat.
@@ -89,7 +94,7 @@ qp_file_create(qp_file_t file, qp_int_t mod)
         }
 
         memset(file, 0, sizeof(struct qp_file_s));
-        QP_FILE_SET_ALLOCED(file);
+        qp_file_set_alloced(file);
 
     } else {
         memset(file, 0, sizeof(struct qp_file_s));

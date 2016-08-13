@@ -7,55 +7,6 @@
 #include "qp_o_pool.h"
 
 
-inline void
-qp_pool_set_inited(qp_pool_t pool)
-{ pool ? pool->is_inited = true : 1;}
-
-inline void
-qp_pool_set_alloced(qp_pool_t pool)
-{ pool ? pool->is_alloced = true : 1;}
-
-inline void
-qp_pool_manager_set_inited(qp_pool_manager_t manager)
-{ manager ? manager->is_inited = true : 1;}
-
-inline void
-qp_pool_manager_set_alloced(qp_pool_manager_t manager)
-{ manager ? manager->is_alloced = true : 1;}
-
-inline void
-qp_pool_unset_inited(qp_pool_t pool)
-{ pool ? pool->is_inited = false : 1;}
-
-inline void
-qp_pool_unset_alloced(qp_pool_t pool)
-{ pool ? pool->is_alloced = false : 1;}
-
-inline void
-qp_pool_manager_unset_inited(qp_pool_manager_t manager)
-{ manager ? manager->is_inited = false : 1;}
-
-inline void
-qp_pool_manager_unset_alloced(qp_pool_manager_t manager)
-{ manager ? manager->is_alloced = false : 1;}
-
-inline bool
-qp_pool_is_inited(qp_pool_t pool) 
-{ return pool ? pool->is_inited : false;}
-
-inline bool
-qp_pool_is_alloced(qp_pool_t pool)
-{ return pool ? pool->is_alloced : false;}
-
-inline bool
-qp_pool_manager_is_inited(qp_pool_manager_t manager)
-{ return manager ? manager->is_inited : false;}
-
-inline bool
-qp_pool_manager_is_alloced(qp_pool_manager_t manager)
-{ return manager ? manager->is_alloced : false;}
-
-
 qp_pool_t
 qp_pool_create(qp_pool_t pool)
 {
@@ -153,7 +104,7 @@ qp_pool_alloc(qp_pool_t pool, size_t size)
             return NULL;
         }
 
-        elements = qp_list_data(node, struct qp_pool_elm_s, next);
+        elements = (qp_pool_elm_t)qp_list_data(node, struct qp_pool_elm_s, next);
 //        qp_list_push(&pool->used, &elements->next);
         qp_list_pop(&pool->idle);
         pool->nfree--;
@@ -258,7 +209,7 @@ qp_pool_manager_destroy(qp_pool_manager_t manager, bool force)
         size_t counter = 0;
 #endif 
         while (!qp_queue_is_empty(&manager->pool_queue)) {
-            pool = qp_queue_data(qp_queue_first(&manager->pool_queue), \
+            pool = (qp_pool_manager_elm_t)qp_queue_data(qp_queue_first(&manager->pool_queue), \
                 struct qp_pool_manager_elm_s, queue);
             qp_queue_remove(&pool->queue);
             qp_pool_destroy(&pool->pool, force);
@@ -290,8 +241,8 @@ qp_pool_manager_alloc(qp_pool_manager_t manager, size_t size, qp_pool_t* npool)
             
             /* find available pool */
             while (node && (node != &manager->pool_queue)) {
-                manager->current = qp_queue_data(node, struct qp_pool_manager_elm_s, \
-                    queue);
+                manager->current = (qp_pool_manager_elm_t)qp_queue_data(node, \
+                    struct qp_pool_manager_elm_s, queue);
         
                 /* have room in this pool, use it */
                 if (qp_pool_available(&manager->current->pool)) {

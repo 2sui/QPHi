@@ -70,26 +70,26 @@ typedef  size_t (*qp_read_handler)(qp_event_t, qp_event_source_t);
 typedef  qp_read_handler       qp_write_handler;
 
 
-inline static void 
+static inline void 
 qp_event_set_alloced(qp_event_t event) 
 {
     event->is_alloced = true;
 }
 
-inline static void 
+static inline void 
 qp_event_unset_alloced(qp_event_t event) 
 {
     event->is_alloced = false;
 }
 
-inline static void
+static inline void
 qp_event_source_set_shutdown(qp_event_source_t source) 
 {
     source->shutdown = 1;
     source->stat = QP_EVENT_CLOSE;
 }
 
-inline static bool
+static inline bool
 qp_event_is_alloced(qp_event_t event) 
 { 
     return event ? event->is_alloced : false; 
@@ -247,7 +247,7 @@ qp_event_epoll_del(qp_event_t event, qp_event_source_t source)
  * @param source
  * @return 
  */
-inline static qp_int_t
+static inline qp_int_t
 qp_event_source_accept(qp_event_source_t source)
 {
     return source ? accept(source->source_fd, NULL, NULL) : QP_ERROR;
@@ -784,7 +784,7 @@ qp_event_dispatch_listen_queue(qp_event_t event, qp_int_t timeout) {
     qp_int_t           sys_accept_fd = QP_FD_INVALID;
     
     while (!qp_list_is_empty(&event->listen_ready)) {
-        source = qp_list_data(qp_list_first(&event->listen_ready), \
+        source = (qp_event_source_t)qp_list_data(qp_list_first(&event->listen_ready), \
             struct qp_event_source_s, ready_next);
         qp_list_pop(&event->listen_ready);
             
@@ -823,7 +823,7 @@ qp_event_dispatch_queue(qp_event_t event) {
     qp_int_t           ret = 0;
     
     while (!qp_list_is_empty(&event->ready)) {
-        source = qp_list_data(qp_list_first(&event->ready), \
+        source = (qp_event_source_t)qp_list_data(qp_list_first(&event->ready), \
             struct qp_event_source_s, ready_next);
         qp_list_pop(&event->ready);
            

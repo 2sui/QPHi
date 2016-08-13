@@ -21,19 +21,6 @@ typedef struct qp_pool_manager_s*        qp_pool_manager_t;
 typedef struct qp_pool_manager_elm_s*    qp_pool_manager_elm_t;
 
 
-bool
-qp_pool_is_inited(qp_pool_t pool);
-
-bool
-qp_pool_is_alloced(qp_pool_t pool);
-
-bool
-qp_pool_mamager_is_inited(qp_pool_manager_t manager);
-
-bool
-qp_pool_manager_is_shared(qp_pool_manager_t manager);
-
-
 /**
  * Create a memory pool.
  */
@@ -138,4 +125,3 @@ qp_pool_manager_used(qp_pool_manager_t manager);
 #endif
 
 #endif /* QP_POOL_H */
-
