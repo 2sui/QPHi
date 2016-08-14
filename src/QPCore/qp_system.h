@@ -17,19 +17,19 @@
 extern "C" {
 #endif
     
-#define  QP_FILENO_MAX    65535
-#define  QP_LIB_LOAD      1
-#define  QP_LIB_UNLOAD    0
-#define  QP_LIMIT_GET     0
-#define  QP_LIMIT_SET     1
+# define  QP_FILENO_MAX    65535
+# define  QP_LIB_LOAD      1
+# define  QP_LIB_UNLOAD    0
+# define  QP_LIMIT_GET     0
+# define  QP_LIMIT_SET     1
 
 typedef  struct qp_library_s*        qp_library_t;
 
-#ifdef __USE_LARGEFILE64
+# ifdef __USE_LARGEFILE64
 typedef  struct rlimit64    qp_limit_t;
-#else
+# else
 typedef  struct rlimit      qp_limit_t;
-#endif
+# endif
 
 
 /*

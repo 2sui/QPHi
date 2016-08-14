@@ -17,6 +17,9 @@ extern "C" {
 #endif
     
 # ifdef  QP_OS_LINUX
+#  ifndef  EPOLLEXCLUSIVE
+#   define  EPOLLEXCLUSIVE      0
+#  endif
 #  define  QP_EPOLL_ET           EPOLLET
 #  define  QP_EPOLL_ONESHOT      EPOLLONESHOT
 #  define  QP_EPOLL_IN           EPOLLIN               
@@ -24,7 +27,9 @@ extern "C" {
 #  define  QP_EPOLL_ERR          EPOLLERR              
 #  define  QP_EPOLL_HUP          EPOLLHUP             
 #  define  QP_EPOLL_RDHUP        EPOLLRDHUP 
+#  define  QP_EPOLL_EXCLUSIVE    EPOLLEXCLUSIVE
 # else
+#  define  QP_EPOLL_EXCLUSIVE    0
 #  define  QP_EPOLL_ET           1
 #  define  QP_EPOLL_ONESHOT      2
 #  define  QP_EPOLL_IN           3               
@@ -34,7 +39,7 @@ extern "C" {
 #  define  QP_EPOLL_RDHUP        7 
 # endif
 
-#define  QP_EVENT_READCACHE_SIZE    4096    // common buffer size
+# define  QP_EVENT_READCACHE_SIZE    4096    // common buffer size
     
 /* buf type */
 typedef enum  {

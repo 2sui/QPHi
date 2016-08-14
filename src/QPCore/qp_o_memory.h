@@ -17,16 +17,16 @@ extern "C" {
 #endif
     
 /* PAGE size */
-#ifndef QP_PAGE_SIZE
-#define QP_PAGE_SIZE   getpagesize()
-#endif
+# ifndef QP_PAGE_SIZE
+# define QP_PAGE_SIZE   getpagesize()
+# endif
 
 /*
  * Allocate memory, return 16Byte-alignment memory on 64bit system or
  * return 8Byte-alignment memory on 32bit system.
  */
-#define qp_alloc    malloc
-#define qp_free     free
+# define qp_alloc    malloc
+# define qp_free     free
 
 /*
  * Linux has memalign() or posix_memalign()
@@ -39,18 +39,18 @@ extern "C" {
  * Allocate {size} byte memory with {alignment}.
  * Return memory addr if success otherwise return NULL.
  */
-#if defined(QP_OS_LINUX)  || defined(QP_OS_BSD4) || defined(QP_OS_SOLARIS)
+# if defined(QP_OS_LINUX)  || defined(QP_OS_BSD4) || defined(QP_OS_SOLARIS)
 void*
 qp_alloc_align(size_t alignment, size_t size);
-#else
-#define qp_alloc_align(alignment, size)    malloc(size)
-#endif
+# else
+# define qp_alloc_align(alignment, size)    malloc(size)
+# endif
 
 /* Alignment memory ptr */
-#define  qp_align_ptr(p,a) \
+# define  qp_align_ptr(p,a) \
          (qp_char_t*)( ((uintptr_t)(p)+((uintptr_t)a-1)) & ~((uintptr_t)a-1) )
 /* Alignment data */
-#define  qp_align(d,a)  (((d)+(a-1)) & ~((a) - 1))
+# define  qp_align(d,a)  (((d)+(a-1)) & ~((a) - 1))
 
 
 struct qp_list_s {
@@ -123,10 +123,10 @@ qp_list_first(qp_list_t list)
     return qp_list_is_empty(list) ? NULL : list->next;
 }
  
-#define  qp_list_next            qp_list_first
-#define  qp_list_remove_after    qp_list_pop
-#define  qp_list_insert_after    qp_list_push
-#define  qp_list_data(l, type, link)  ((qp_uchar_t*)(l) - offsetof(type, link))
+# define  qp_list_next            qp_list_first
+# define  qp_list_remove_after    qp_list_pop
+# define  qp_list_insert_after    qp_list_push
+# define  qp_list_data(l, type, link)  ((qp_uchar_t*)(l) - offsetof(type, link))
 
 
 /**
@@ -155,7 +155,7 @@ qp_queue_insert_after_head(qp_queue_t queue, qp_queue_t node)
     queue->next = node;
 }
 
-#define qp_queue_insert_after   qp_queue_insert_after_head
+# define qp_queue_insert_after   qp_queue_insert_after_head
 
 static inline void
 qp_queue_insert_after_tail(qp_queue_t queue, qp_queue_t node)
@@ -223,15 +223,15 @@ qp_queue_merge(qp_queue_t queue, qp_queue_t newq)
     queue->prev->next = queue;
 }
 
-#define qp_queue_data(q, type, link)  ((qp_uchar_t*)(q) - offsetof(type, link))
+# define qp_queue_data(q, type, link)  ((qp_uchar_t*)(q) - offsetof(type, link))
 
 
 /**
  * Operation for rbtree.
  */
 
-#define  QP_RBTREE_RED    1
-#define  QP_RBTREE_BLACK  0
+# define  QP_RBTREE_RED    1
+# define  QP_RBTREE_BLACK  0
 
 static inline void
 qp_rbtree_set_red(qp_rbtree_node_t node)
@@ -309,7 +309,7 @@ qp_rbtree_is_empty(qp_rbtree_t rbtree)
     return rbtree->root == qp_rbtree_nil(rbtree);
 }
 
-#define qp_rbtree_data(t, type, link) ({\
+# define qp_rbtree_data(t, type, link) ({\
     (type*)((qp_uchar_t*) (t) - offsetof((type), (link)));})
 
 /* init rbtree */

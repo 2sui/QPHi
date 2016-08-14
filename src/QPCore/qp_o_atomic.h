@@ -15,7 +15,7 @@ typedef qp_ulong_t       qp_atom_uint_i;
 typedef qp_atom_uint_i            qp_atom_uint_t;
 typedef qp_atom_uint_t            qp_atom_t;
 
-#if defined(__INTEL_COMPILER)||(__GNUC__ > 4)||((__GNUC__ == 4)&&(__GNUC_MINOR__ >= 1))
+# if defined(__INTEL_COMPILER)||(__GNUC__ > 4)||((__GNUC__ == 4)&&(__GNUC_MINOR__ >= 1))
 
 /* GCC 4.1 builtin atomic operations */
 static inline qp_atom_t qp_atom_fetch_add(qp_atom_t* atom_ptr, qp_atom_t add) 
@@ -46,16 +46,16 @@ static inline bool qp_atom_cmp_set(qp_atom_t* atom_ptr, \
 
 # define  qp_atom_barrier  __sync_synchronize
 
-# if defined(__i386__)|| defined(__i386)|| defined(__amd64__)|| defined(__amd64 )
+#  if defined(__i386__)|| defined(__i386)|| defined(__amd64__)|| defined(__amd64 )
 static inline void  qp_cpu_pause() 
 {  
     __asm__("pause");
 }
-# else
+#  else
 #  define  qp_cpu_pause()
-# endif
+#  endif
 
-#else
+# else
 
 static inline qp_atom_t
 qp_atom_fetch_add(qp_atom_t* atom_ptr, qp_atom_t add)
@@ -85,17 +85,17 @@ qp_atom_cmp_set(qp_atom_t* atom_ptr, qp_atom_t oldv, \
     return 0;
 }
 
-#define qp_cpu_pause()
-#define qp_atom_barrier()
+# define qp_cpu_pause()
+# define qp_atom_barrier()
 
-#endif
-
-
-#if (_POSIX_PRIORITY_SCHEDULING)
-#  define qp_sched_yield  sched_yield
-# else
-#  define qp_sched_yield()  usleep(1)
 # endif
+
+
+#  if (_POSIX_PRIORITY_SCHEDULING)
+#  define qp_sched_yield  sched_yield
+#  else
+#  define qp_sched_yield()  usleep(1)
+#  endif
 
 static inline qp_atom_t  qp_atom_add(qp_atom_t* atom_ptr) 
 {

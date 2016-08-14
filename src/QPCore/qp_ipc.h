@@ -16,7 +16,7 @@
 extern "C" {
 #endif
     
-#define QP_IPC_INVALID    QP_ERROR
+# define QP_IPC_INVALID    QP_ERROR
     
 typedef struct qp_ipc_lock_s*      qp_lock_t;
 typedef struct qp_ipc_rwlock_s*    qp_rwlock_t;

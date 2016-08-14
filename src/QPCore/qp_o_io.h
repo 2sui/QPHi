@@ -15,7 +15,7 @@
 extern "C" {
 #endif
     
-#define  QP_FD_INVALID        QP_ERROR
+# define  QP_FD_INVALID        QP_ERROR
     
 enum qp_fd_type_e {
     QP_FD_TYPE_UNKNOW = 0,

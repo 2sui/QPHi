@@ -13,12 +13,12 @@
 void*
 qp_alloc_align(size_t alignment, size_t size)
 {
-#if defined(QP_OS_LINUX)  || defined(QP_OS_BSD4)
+# if defined(QP_OS_LINUX)  || defined(QP_OS_BSD4)
     void *memptr = NULL;
     return (0 == posix_memalign(&memptr, alignment, size)) ? memptr : NULL;
-#else
+# else
     return memalign(alignment, size);
-#endif
+# endif
 }
 
 #endif

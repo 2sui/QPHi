@@ -19,8 +19,8 @@
 extern "C" {
 #endif
 
-#define  QP_FILE_PATH_LEN_MAX    1024 /* need rewrite */
-#define  QP_FILE_DIRECTIO_CACHE  (1024*4) /* 4K */
+# define  QP_FILE_PATH_LEN_MAX    1024 /* need rewrite */
+# define  QP_FILE_DIRECTIO_CACHE  (1024*4) /* 4K */
 
 /*
  * qp_file_t can work just like unix file I/O (beacuse it is unix file I/O), 
@@ -28,22 +28,22 @@ extern "C" {
  * in standard I/O) and direct I/O.
 */
 
-#define QP_FILE_NORMAL         0    
-#define QP_FILE_DIRECTIO       (1<<0) 
-#define QP_FILE_AIO            (1<<1) // not avaliable for now
+# define QP_FILE_NORMAL         0    
+# define QP_FILE_DIRECTIO       (1<<0) 
+# define QP_FILE_AIO            (1<<1) // not avaliable for now
 
-#define QP_FILE_IS_UNLOCKED    0
-#define QP_FILE_IS_LOCKED      1
+# define QP_FILE_IS_UNLOCKED    0
+# define QP_FILE_IS_LOCKED      1
 
-#ifdef   QP_OS_POSIX
-#define  QP_FILE_LK_RD         F_RDLCK
-#define  QP_FILE_LK_WR         F_WRLCK
-#define  QP_FILE_UNLK          F_UNLCK
-#else
-#define  QP_FILE_LK_RD         LOCK_SH|LOCK_NB
-#define  QP_FILE_LK_WR         LOCK_EX|LOCK_NB
-#define  QP_FILE_UNLK          LOCK_UN
-#endif 
+# ifdef   QP_OS_POSIX
+# define  QP_FILE_LK_RD         F_RDLCK
+# define  QP_FILE_LK_WR         F_WRLCK
+# define  QP_FILE_UNLK          F_UNLCK
+# else
+# define  QP_FILE_LK_RD         LOCK_SH|LOCK_NB
+# define  QP_FILE_LK_WR         LOCK_EX|LOCK_NB
+# define  QP_FILE_UNLK          LOCK_UN
+# endif 
 
 typedef struct qp_file_s*     qp_file_t;
 

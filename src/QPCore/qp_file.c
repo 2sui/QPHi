@@ -438,21 +438,21 @@ qp_file_reglock(qp_file_t file, qp_int_t type,
     }
 #ifdef QP_OS_POSIX
 
-#ifdef __USE_LARGEFILE64
+# ifdef __USE_LARGEFILE64
     struct flock64  lock;
-#else
+# else
     sturct flock      flock;
-#endif
+# endif
     lock.l_type = (qp_short_t)type;
     lock.l_start = offset;
     lock.l_whence = (qp_short_t)whence;
     lock.l_len = len;
 
-#ifdef __USE_LARGEFILE64
+# ifdef __USE_LARGEFILE64
     return fcntl(file->file.fd, F_SETLK64, &lock);
-#else
+# else
     return fcntl(file->file.fd, F_SETLK, &lock);
-#endif
+# endif
 
 #else
     return flock(file->file.fd, type);
@@ -468,21 +468,21 @@ qp_file_locktest(qp_file_t file, qp_int_t type,
     }
 #ifdef QP_OS_POSIX
 
-#ifdef __USE_LARGEFILE64
+# ifdef __USE_LARGEFILE64
     struct flock64  lock;
-#else
+# else
     sturct flock      flock;
-#endif
+# endif
     lock.l_type = (qp_short_t)type;
     lock.l_start = offset;
     lock.l_whence = (qp_short_t)whence;
     lock.l_len = len;
 
-#ifdef __USE_LARGEFILE64
+# ifdef __USE_LARGEFILE64
     if (0 > fcntl(file->file.fd, F_GETLK64, &lock))
-#else
+# else
     if (0 > fcntl(file->file.fd, F_GETLK, &lock))
-#endif
+# endif
     {
         return QP_ERROR;
     }

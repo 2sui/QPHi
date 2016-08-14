@@ -16,9 +16,9 @@
 extern "C" {
 #endif
     
-#define QP_THREAD_INVALID        QP_ERROR
-#define QP_PROCESS_INVALID       QP_ERROR
-#define QP_PROCESS_STACK_SIZE    (8*1024*1024) /* system default */
+# define QP_THREAD_INVALID        QP_ERROR
+# define QP_PROCESS_INVALID       QP_ERROR
+# define QP_PROCESS_STACK_SIZE    (8*1024*1024) /* system default */
 
 enum qp_process_type_e {
     QP_PROCESS_TYPE_UNKNOW,

@@ -16,11 +16,11 @@
 extern "C" {
 #endif
     
-#define  QP_SOCKET_DEFAULT_LISTENBACKLOG    128
-#define  QP_SOCKET_DEFAULT_UNET_PATH        "/tmp/"
+# define  QP_SOCKET_DEFAULT_LISTENBACKLOG    128
+# define  QP_SOCKET_DEFAULT_UNET_PATH        "/tmp/"
 
 
-#define  QP_SOCKET_UNSUPPORT        QP_ERROR
+# define  QP_SOCKET_UNSUPPORT        QP_ERROR
     
 enum qp_socket_shut_e {
     QP_SOCKET_SHUT_CLOSE = QP_ERROR,
@@ -206,8 +206,8 @@ qp_socket_recv(qp_socket_t skt, void* vptr, size_t nbytes, qp_int_t flag);
 
 
 /* option */
-#define QP_SOCKET_SO_REUSE_ADDR    SO_REUSEADDR
-#define QP_SOCKET_SO_REUSE_PORT    SO_REUSEPORT
+# define QP_SOCKET_SO_REUSE_ADDR    SO_REUSEADDR
+# define QP_SOCKET_SO_REUSE_PORT    SO_REUSEPORT
 
 /* SO_REUSEADDR / SO_REUSEPORT */
 qp_int_t
