@@ -1,23 +1,38 @@
-
-
-/**
-  * Copyright (C) 2sui.
-  *
-  * File I/O operations : basic I/O, direct I/O (main use), AIO.
-  * 
-  * The buffer read function is disabled for now. 
-  */
+/*
+ * The MIT License
+ *
+ * Copyright © 2016 2sui.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
 
 
 #ifndef QP_FILE_H
 #define QP_FILE_H
 
-
-#include "qp_o_typedef.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+
+#include "core/qp_defines.h"
+
 
 # define  QP_FILE_PATH_LEN_MAX    1024 /* need rewrite */
 # define  QP_FILE_DIRECTIO_CACHE  (1024*4) /* 4K */
@@ -45,7 +60,9 @@ extern "C" {
 # define  QP_FILE_UNLK          LOCK_UN
 # endif 
 
+    
 typedef struct qp_file_s*     qp_file_t;
+
 
 /**
  * Create a file (if file is NULL), and init it.If mod is 0 it works just like 
@@ -60,6 +77,7 @@ typedef struct qp_file_s*     qp_file_t;
 qp_file_t
 qp_file_init(qp_file_t file, qp_int_t mod, size_t bufsize);
 
+
 /**
  * Destory an inited file(which is called by qp_file_init or qp_file_create).
  * 
@@ -68,6 +86,7 @@ qp_file_init(qp_file_t file, qp_int_t mod, size_t bufsize);
  */
 qp_int_t
 qp_file_destroy(qp_file_t file);
+
 
 /**
  * Open a file . The oflag and mod are just same with open().
@@ -81,6 +100,7 @@ qp_file_destroy(qp_file_t file);
 qp_int_t
 qp_file_open(qp_file_t file, const qp_char_t* path, qp_int_t oflag, qp_int_t mod);
 
+
 /**
  * Close a opened file.
  * 
@@ -89,6 +109,7 @@ qp_file_open(qp_file_t file, const qp_char_t* path, qp_int_t oflag, qp_int_t mod
  */
 qp_int_t
 qp_file_close(qp_file_t file);
+
 
 /**
  * Flush data in buffer to disk.
@@ -101,6 +122,7 @@ qp_file_close(qp_file_t file);
 ssize_t
 qp_file_flush(qp_file_t file, bool full);
 
+
 /**
  * Get data from disk to buffer.
  * 
@@ -110,6 +132,7 @@ qp_file_flush(qp_file_t file, bool full);
  */
 ssize_t
 qp_file_track(qp_file_t file);
+
 
 /**
  * If direct IO enabled, qp_file_write_directbuf will get write_direct buffer 
@@ -122,6 +145,7 @@ qp_file_track(qp_file_t file);
 size_t
 qp_file_get_writebuf(qp_file_t file, qp_uchar_t** buf);
 
+
 /**
  * If direct IO enabled, qp_file_read_directbuf will get write_direct buffer 
  * pointor to buf and return buf size.
@@ -132,6 +156,7 @@ qp_file_get_writebuf(qp_file_t file, qp_uchar_t** buf);
  */
 size_t
 qp_file_get_readbuf(qp_file_t file, qp_uchar_t** buf);
+
 
 /**
  * Write to file. If directIO or aio is enabled , you should use 
@@ -147,6 +172,7 @@ qp_file_get_readbuf(qp_file_t file, qp_uchar_t** buf);
 ssize_t
 qp_file_write(qp_file_t file, const void* data, size_t len, size_t file_offset);
 
+
 /**
  * Read from file.If directIO or aio is enabled , you should use 
  * qp_file_get_rdbuf to get the inner write buffer, beacuse vptr will be ignored
@@ -161,6 +187,7 @@ qp_file_write(qp_file_t file, const void* data, size_t len, size_t file_offset);
 ssize_t
 qp_file_read(qp_file_t file, void* data, size_t len, size_t file_offset);
 
+
 /**
  * Direct Write to disk (Use qp_file_t`s buffer, which is got by calling 
  *     qp_file_get_writebuf()).
@@ -171,6 +198,7 @@ qp_file_read(qp_file_t file, void* data, size_t len, size_t file_offset);
  */
 ssize_t
 qp_file_direct_write(qp_file_t file, size_t len);
+
 
 /**
  * Direct Read to disk (Use qp_file_t`s buffer, which is got by calling 
@@ -183,6 +211,7 @@ qp_file_direct_write(qp_file_t file, size_t len);
 ssize_t
 qp_file_direct_read(qp_file_t file, size_t len);
 
+
 /**
  * Regist file lock on file with type (read or write).Lock the part from 
  * whence + offset with len bytes. 
@@ -190,8 +219,9 @@ qp_file_direct_read(qp_file_t file, size_t len);
  * @return If success return QP_SUCCESS, otherwise return QP_ERROR.
  */
 qp_int_t
-qp_file_reglock(qp_file_t file, qp_int_t type, off_t offset, qp_int_t whence, \
-    off_t len);
+qp_file_reglock(qp_file_t file, qp_int_t type, off_t offset, \
+    qp_int_t whence, off_t len);
+
 
 /**
  * Test file lock. 
@@ -200,8 +230,9 @@ qp_file_reglock(qp_file_t file, qp_int_t type, off_t offset, qp_int_t whence, \
  *     QP_FILE_IS_LOCKED, otherwise return QP_FILE_IS_UNLOCKED.
  */
 qp_int_t
-qp_file_locktest(qp_file_t file, qp_int_t type, off_t offset, qp_int_t whence, \
-    off_t len);
+qp_file_locktest(qp_file_t file, qp_int_t type, off_t offset, \
+    qp_int_t whence, off_t len);
+
 
 /**
  * read lock 
@@ -211,6 +242,7 @@ qp_file_locktest(qp_file_t file, qp_int_t type, off_t offset, qp_int_t whence, \
 qp_int_t
 qp_file_rdlock(qp_file_t file, off_t offset, qp_int_t whence, off_t len);
 
+
 /**
  *  write lock 
  * 
@@ -218,6 +250,7 @@ qp_file_rdlock(qp_file_t file, off_t offset, qp_int_t whence, off_t len);
  */
 qp_int_t
 qp_file_wrlock(qp_file_t file, off_t offset, qp_int_t whence, off_t len);
+
 
 /** 
  * unlock 
@@ -227,12 +260,14 @@ qp_file_wrlock(qp_file_t file, off_t offset, qp_int_t whence, off_t len);
 qp_int_t
 qp_file_unlock(qp_file_t file, off_t offset, qp_int_t whence, off_t len);
 
+
 /**
  *  test read lock 
  * @return If file is locked return false, otherwise return true.
  */
 bool
 qp_file_test_rdlock(qp_file_t file, off_t offset, qp_int_t whence, off_t len);
+
 
 /** 
  * test write lock
@@ -242,30 +277,37 @@ qp_file_test_rdlock(qp_file_t file, off_t offset, qp_int_t whence, off_t len);
 bool
 qp_file_test_wrlock(qp_file_t file, off_t offset, qp_int_t whence, off_t len);
 
+
 qp_int_t
-qp_file_fd_reglock(qp_int_t fd, qp_int_t type, off_t offset, qp_int_t whence, \
-    off_t len);
+qp_file_fd_reglock(qp_int_t fd, qp_int_t type, off_t offset, \
+    qp_int_t whence, off_t len);
+
 
 /* same with qp_file_locktest but use [int] fd */
 qp_int_t
-qp_file_fd_locktest(qp_int_t fd, qp_int_t type, off_t offset, qp_int_t whence, \
-    off_t len);
+qp_file_fd_locktest(qp_int_t fd, qp_int_t type, off_t offset, \
+    qp_int_t whence, off_t len);
+
         
 /* read lock */
 qp_int_t
 qp_file_fd_rdlock(qp_int_t fd, off_t offset, qp_int_t whence, off_t len);
 
+
 /* write lock */
 qp_int_t
 qp_file_fd_wrlock(qp_int_t fd, off_t offset, qp_int_t whence, off_t len);
+
 
 /* unlock */
 qp_int_t
 qp_file_fd_unlock(qp_int_t fd, off_t offset, qp_int_t whence, off_t len);
 
+
 /* test read lock */
 bool
 qp_file_fd_test_rdlock(qp_int_t fd, off_t offset, qp_int_t whence, off_t len);
+
 
 /* test write lock */
 bool
@@ -275,4 +317,4 @@ qp_file_fd_test_wrlock(qp_int_t fd, off_t offset, qp_int_t whence, off_t len);
 }
 #endif
 
-#endif 
+#endif /* QP_FILE_H */

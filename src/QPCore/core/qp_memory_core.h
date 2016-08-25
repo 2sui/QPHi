@@ -1,21 +1,39 @@
+/*
+ * The MIT License
+ *
+ * Copyright © 2016 2sui.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
 
-/**
-  * Copyright (C) 2sui.
-  *
-  * Basic memory operations.
-  */
 
-
-#ifndef QP_O_MEMORY
-#define QP_O_MEMORY
-
-
-#include "qp_o_typedef.h"
+#ifndef QP_MEMORY_CORE_H
+#define QP_MEMORY_CORE_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
     
+#include "qp_defines.h"
+    
+
 /* PAGE size */
 # ifndef QP_PAGE_SIZE
 # define QP_PAGE_SIZE   getpagesize()
@@ -47,8 +65,13 @@ qp_alloc_align(size_t alignment, size_t size);
 # endif
 
 /* Alignment memory ptr */
-# define  qp_align_ptr(p,a) \
-         (qp_char_t*)( ((uintptr_t)(p)+((uintptr_t)a-1)) & ~((uintptr_t)a-1) )
+//# define  qp_align_ptr(p,a) \
+//         (qp_char_t*)(((uintptr_t)(p)+((uintptr_t)(a)-1)) & ~((uintptr_t)(a)-1))
+static inline qp_char_t*
+qp_align_ptr(uintptr_t p,uintptr_t a) 
+{
+    return (p + (a-1)) & ~(a-1);
+}
 /* Alignment data */
 # define  qp_align(d,a)  (((d)+(a-1)) & ~((a) - 1))
 
@@ -57,10 +80,12 @@ struct qp_list_s {
     struct qp_list_s*           next;
 };
 
+
 struct qp_queue_s {
     struct qp_queue_s*          prev;
     struct qp_queue_s*          next;
 };
+
 
 struct qp_rbtree_node_s {
     struct qp_rbtree_node_s*    left;
@@ -71,10 +96,12 @@ struct qp_rbtree_node_s {
     qp_uint32_t                 color;
 };
 
+
 struct qp_rbtree_s {
     struct qp_rbtree_node_s*    root;
     struct qp_rbtree_node_s     sentinel;
 };
+
 
 typedef struct qp_list_s*           qp_list_t;
 typedef struct qp_queue_s*          qp_queue_t;
@@ -92,11 +119,13 @@ qp_list_init(qp_list_t list)
     list->next = list;
 }
 
+
 static inline bool
 qp_list_is_empty(qp_list_t list)
 { 
     return list == list->next;
 }
+
 
 static inline void
 qp_list_push(qp_list_t list, qp_list_t node)
@@ -105,11 +134,13 @@ qp_list_push(qp_list_t list, qp_list_t node)
     list->next = node;
 }
 
+
 static inline void
 qp_list_pop(qp_list_t list)
 { 
     list->next = list->next->next;
 }
+
 
 static inline qp_list_t
 qp_list_head(qp_list_t list)
@@ -117,12 +148,14 @@ qp_list_head(qp_list_t list)
     return list;
 }
 
+
 static inline qp_list_t 
 qp_list_first(qp_list_t list)
 { 
     return qp_list_is_empty(list) ? NULL : list->next;
 }
  
+
 # define  qp_list_next            qp_list_first
 # define  qp_list_remove_after    qp_list_pop
 # define  qp_list_insert_after    qp_list_push
@@ -140,11 +173,13 @@ qp_queue_init(qp_queue_t queue)
     queue->next = queue;
 }
 
+
 static inline bool
 qp_queue_is_empty(qp_queue_t queue)
 { 
     return queue == queue->prev;
 }
+
 
 static inline void
 qp_queue_insert_after_head(qp_queue_t queue, qp_queue_t node)
@@ -155,7 +190,9 @@ qp_queue_insert_after_head(qp_queue_t queue, qp_queue_t node)
     queue->next = node;
 }
 
+
 # define qp_queue_insert_after   qp_queue_insert_after_head
+
 
 static inline void
 qp_queue_insert_after_tail(qp_queue_t queue, qp_queue_t node)
@@ -166,17 +203,20 @@ qp_queue_insert_after_tail(qp_queue_t queue, qp_queue_t node)
     queue->prev = node;
 }
 
+
 static inline qp_queue_t
 qp_queue_first(qp_queue_t queue)
 { 
     return qp_queue_is_empty(queue) ? NULL : queue->next;
 }
 
+
 static inline qp_queue_t
 qp_queue_last(qp_queue_t queue)
 { 
     return qp_queue_is_empty(queue) ? NULL : queue->prev;
 }
+
   
 static inline qp_queue_t
 qp_queue_head(qp_queue_t queue)
@@ -184,11 +224,13 @@ qp_queue_head(qp_queue_t queue)
     return queue;
 }
 
+
 static inline qp_queue_t
 qp_queue_next(qp_queue_t node)
 { 
     return node->next;
 }
+
 
 static inline qp_queue_t
 qp_queue_prev(qp_queue_t node)
@@ -196,12 +238,14 @@ qp_queue_prev(qp_queue_t node)
     return node->prev;
 }
 
+
 static inline void
 qp_queue_remove(qp_queue_t node)
 {
     node->next->prev = node->prev;
     node->prev->next = node->next;
 }
+
 
 static inline void
 qp_queue_split(qp_queue_t queue, qp_queue_t node, qp_queue_t newq)
@@ -214,6 +258,7 @@ qp_queue_split(qp_queue_t queue, qp_queue_t node, qp_queue_t newq)
     node->prev = newq;
 }
 
+
 static inline void
 qp_queue_merge(qp_queue_t queue, qp_queue_t newq)
 {
@@ -222,6 +267,7 @@ qp_queue_merge(qp_queue_t queue, qp_queue_t newq)
     queue->prev = newq->prev;
     queue->prev->next = queue;
 }
+
 
 # define qp_queue_data(q, type, link)  ((qp_uchar_t*)(q) - offsetof(type, link))
 
@@ -233,11 +279,13 @@ qp_queue_merge(qp_queue_t queue, qp_queue_t newq)
 # define  QP_RBTREE_RED    1
 # define  QP_RBTREE_BLACK  0
 
+
 static inline void
 qp_rbtree_set_red(qp_rbtree_node_t node)
 { 
     node->color = QP_RBTREE_RED;
 }
+
 
 static inline void
 qp_rbtree_set_black(qp_rbtree_node_t node)
@@ -245,11 +293,13 @@ qp_rbtree_set_black(qp_rbtree_node_t node)
     node->color = QP_RBTREE_BLACK;
 }
 
+
 static inline bool
 qp_rbtree_is_red(qp_rbtree_node_t node)
 { 
     return node->color == QP_RBTREE_RED;
 }
+
 
 static inline bool
 qp_rbtree_is_black(qp_rbtree_node_t node)
@@ -257,11 +307,13 @@ qp_rbtree_is_black(qp_rbtree_node_t node)
     return node->color == QP_RBTREE_BLACK;
 }
 
+
 static inline qp_rbtree_node_t
 qp_rbtree_parent(qp_rbtree_node_t node)
 { 
     return node->parent;
 }
+
 
 static inline qp_rbtree_node_t
 qp_rbtree_grandpa(qp_rbtree_node_t node)
@@ -269,17 +321,20 @@ qp_rbtree_grandpa(qp_rbtree_node_t node)
     return qp_rbtree_parent(qp_rbtree_parent(node));
 }
 
+
 static inline bool
 qp_rbtree_is_left(qp_rbtree_node_t node)
 { 
     return (node == qp_rbtree_parent(node)->left);
 }
 
+
 static inline bool
 qp_rbtree_is_right(qp_rbtree_node_t node)
 { 
     return (node == qp_rbtree_parent(node)->right);
 }
+
 
 static inline qp_rbtree_node_t
 qp_rbtree_uncle(qp_rbtree_node_t node)
@@ -289,6 +344,7 @@ qp_rbtree_uncle(qp_rbtree_node_t node)
         qp_rbtree_grandpa(node)->left;
 }
 
+
 static inline qp_rbtree_node_t
 qp_rbtree_brother(qp_rbtree_node_t node)
 {
@@ -297,11 +353,13 @@ qp_rbtree_brother(qp_rbtree_node_t node)
         qp_rbtree_parent(node)->left;
 }
 
+
 static inline qp_rbtree_node_t
 qp_rbtree_nil(qp_rbtree_t rbtree)
 { 
     return &rbtree->sentinel;
 }
+
 
 static inline bool
 qp_rbtree_is_empty(qp_rbtree_t rbtree)
@@ -309,8 +367,10 @@ qp_rbtree_is_empty(qp_rbtree_t rbtree)
     return rbtree->root == qp_rbtree_nil(rbtree);
 }
 
+
 # define qp_rbtree_data(t, type, link) ({\
     (type*)((qp_uchar_t*) (t) - offsetof((type), (link)));})
+
 
 /* init rbtree */
 static inline void
@@ -323,21 +383,26 @@ qp_rbtree_init(qp_rbtree_t rbtree)
     rbtree->root = qp_rbtree_nil(rbtree);
 }
 
+
 /* insert [node] into [rbtree], return inserted node pointer */
 qp_rbtree_node_t 
 qp_rbtree_insert(qp_rbtree_t rbtree, qp_rbtree_node_t node);
+
 
 /* delete [node] from [rbtree], return deleted node pointer */
 qp_rbtree_node_t
 qp_rbtree_delete(qp_rbtree_t rbtree, qp_rbtree_node_t node);
 
+
 /* find node with [key] in [rbtree] */
 qp_rbtree_node_t
 qp_rbtree_find(qp_rbtree_t rbtree, qp_uint32_t key);
 
+
 /* min node in [rbtree] (from [node]) */
 qp_rbtree_node_t
 qp_rbtree_min(qp_rbtree_t rbtree, qp_rbtree_node_t node);
+
 
 /* max node in [rbtree] (from [node]) */
 qp_rbtree_node_t
@@ -347,4 +412,4 @@ qp_rbtree_max(qp_rbtree_t rbtree, qp_rbtree_node_t node);
 }
 #endif
 
-#endif 
+#endif /* QP_MEMORY_CORE_H */

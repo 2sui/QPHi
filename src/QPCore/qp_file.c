@@ -1,12 +1,32 @@
+/*
+ * The MIT License
+ *
+ * Copyright © 2016 2sui.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
 
-/**
-  * Copyright (C) 2sui.
-  */
 
 
 #include "qp_file.h"
-#include "qp_o_memory.h"
-#include "qp_o_io.h"
+#include "core/qp_memory_core.h"
+#include "core/qp_io_core.h"
 
 
 struct qp_file_s {
@@ -43,11 +63,13 @@ qp_file_set_directIO(qp_file_t file)
     file ? file->is_directIO = true : 1;
 }
 
+
 static inline void
 qp_file_unset_alloced(qp_file_t file)
 { 
     file ? file->is_alloced = false : 1;
 }
+
 
 static inline void
 qp_file_unset_directIO(qp_file_t file)
@@ -55,17 +77,20 @@ qp_file_unset_directIO(qp_file_t file)
     file ? file->is_directIO = false : 1;
 }
 
+
 static inline bool
 qp_file_is_alloced(qp_file_t file) 
 { 
     return file ? file->is_alloced : false; 
 }
 
+
 static inline bool
 qp_file_is_directIO(qp_file_t file) 
 { 
     return file ? file->is_directIO : false; 
 }
+
 
 /**
  * Get file stat.
@@ -82,6 +107,7 @@ qp_file_stat(qp_file_t file) {
     
     return fstat(file->file.fd, &file->stat);
 }
+
 
 qp_file_t
 qp_file_create(qp_file_t file, qp_int_t mod)
@@ -113,6 +139,7 @@ qp_file_create(qp_file_t file, qp_int_t mod)
     file->open_flag = O_RDONLY;
     return file;
 }
+
 
 qp_file_t
 qp_file_init(qp_file_t file, qp_int_t mod, size_t bufsize)
@@ -160,6 +187,7 @@ qp_file_init(qp_file_t file, qp_int_t mod, size_t bufsize)
     return file;
 }
 
+
 qp_int_t
 qp_file_destroy(qp_file_t file)
 {
@@ -188,6 +216,7 @@ qp_file_destroy(qp_file_t file)
     
     return QP_ERROR;
 }
+
 
 qp_int_t
 qp_file_open(qp_file_t file, const qp_char_t* path, qp_int_t oflag, qp_int_t mod)
@@ -230,6 +259,7 @@ qp_file_open(qp_file_t file, const qp_char_t* path, qp_int_t oflag, qp_int_t mod
     return QP_SUCCESS;
 }
 
+
 qp_int_t
 qp_file_close(qp_file_t file)
 {
@@ -249,6 +279,7 @@ qp_file_close(qp_file_t file)
 
     return QP_ERROR;
 }
+
 
 ssize_t
 qp_file_flush(qp_file_t file, bool full)
@@ -280,6 +311,7 @@ qp_file_flush(qp_file_t file, bool full)
     return ret;
 }
 
+
 ssize_t 
 qp_file_track(qp_file_t file) 
 {
@@ -302,6 +334,7 @@ qp_file_track(qp_file_t file)
     return ret;
 }
 
+
 size_t
 qp_file_get_writebuf(qp_file_t file, qp_uchar_t** buf) 
 {
@@ -313,6 +346,7 @@ qp_file_get_writebuf(qp_file_t file, qp_uchar_t** buf)
     return  file->wrbuf_size;
 }
 
+
 size_t
 qp_file_get_readbuf(qp_file_t file, qp_uchar_t** buf) 
 {
@@ -323,6 +357,7 @@ qp_file_get_readbuf(qp_file_t file, qp_uchar_t** buf)
     *buf = file->rdbuf;
     return  file->rdbuf_size;
 }
+
 
 ssize_t
 qp_file_write(qp_file_t file, const void* data, size_t len, size_t file_offset)
@@ -370,6 +405,7 @@ qp_file_write(qp_file_t file, const void* data, size_t len, size_t file_offset)
         return done;
     }
 }
+
 
 ssize_t
 qp_file_read(qp_file_t file, void* data, size_t len, size_t file_offset)
@@ -419,6 +455,7 @@ qp_file_read(qp_file_t file, void* data, size_t len, size_t file_offset)
     }
 }
 
+
 ssize_t
 qp_file_direct_write(qp_file_t file, size_t len)
 {
@@ -429,9 +466,10 @@ qp_file_direct_write(qp_file_t file, size_t len)
     return qp_fd_write(&file->file, file->wrbuf, len);
 }
 
+
 qp_int_t
-qp_file_reglock(qp_file_t file, qp_int_t type, 
-    off_t offset, qp_int_t whence, off_t len)
+qp_file_reglock(qp_file_t file, qp_int_t type, off_t offset, \
+    qp_int_t whence, off_t len)
 {
     if (!file) {
         return QP_ERROR;
@@ -459,9 +497,10 @@ qp_file_reglock(qp_file_t file, qp_int_t type,
 #endif
 }
 
+
 qp_int_t
-qp_file_locktest(qp_file_t file, qp_int_t type, 
-    off_t offset, qp_int_t whence, off_t len)
+qp_file_locktest(qp_file_t file, qp_int_t type, off_t offset, \
+    qp_int_t whence, off_t len)
 {
     if (!file) {
         return QP_ERROR;
@@ -510,32 +549,47 @@ qp_file_locktest(qp_file_t file, qp_int_t type,
 #endif
 }
 
+
 /* read lock */
 qp_int_t
 qp_file_rdlock(qp_file_t file, off_t offset, qp_int_t whence, off_t len)
-{ return qp_file_reglock(file, QP_FILE_LK_RD, offset, whence, len); }
+{ 
+    return qp_file_reglock(file, QP_FILE_LK_RD, offset, whence, len); 
+}
+
 
 /* write lock */
 qp_int_t
 qp_file_wrlock(qp_file_t file, off_t offset, qp_int_t whence, off_t len)
-{ return qp_file_reglock(file, QP_FILE_LK_WR, offset, whence, len); }
+{ 
+    return qp_file_reglock(file, QP_FILE_LK_WR, offset, whence, len); 
+}
+
 
 /* unlock */
 qp_int_t
 qp_file_unlock(qp_file_t file, off_t offset, qp_int_t whence, off_t len)
-{ return qp_file_reglock(file, QP_FILE_UNLK, offset, whence, len); }
+{ 
+    return qp_file_reglock(file, QP_FILE_UNLK, offset, whence, len); 
+}
+
 
 /* test read lock */
 bool
 qp_file_test_rdlock(qp_file_t file, off_t offset, qp_int_t whence, off_t len)
-{ return (QP_FILE_IS_UNLOCKED == \
-    qp_file_locktest(file, QP_FILE_LK_RD, offset, whence, len)); }
+{ 
+    return (QP_FILE_IS_UNLOCKED == \
+    qp_file_locktest(file, QP_FILE_LK_RD, offset, whence, len)); 
+}
+
 
 /* test write lock */
 bool
 qp_file_test_wrlock(qp_file_t file, off_t offset, qp_int_t whence, off_t len)
-{ return (QP_FILE_IS_UNLOCKED == \
-    qp_file_locktest(file, QP_FILE_LK_WR, offset, whence, len)); }
+{ 
+    return (QP_FILE_IS_UNLOCKED == \
+    qp_file_locktest(file, QP_FILE_LK_WR, offset, whence, len)); 
+}
 
 
 qp_int_t
@@ -548,6 +602,7 @@ qp_file_fd_reglock(qp_int_t fd, qp_int_t type, off_t offset, qp_int_t whence, \
     file.file.fd = fd;
     return qp_file_reglock(&file, type, offset, whence, len);
 }
+
 
 qp_int_t
 qp_file_fd_locktest(qp_int_t fd, qp_int_t type, off_t offset, qp_int_t whence, \
@@ -563,26 +618,40 @@ qp_file_fd_locktest(qp_int_t fd, qp_int_t type, off_t offset, qp_int_t whence, \
 /* read lock */
 qp_int_t
 qp_file_fd_rdlock(qp_int_t fd, off_t offset, qp_int_t whence, off_t len)
-{ return qp_file_fd_reglock(fd, QP_FILE_LK_RD, offset, whence, len); }
+{ 
+    return qp_file_fd_reglock(fd, QP_FILE_LK_RD, offset, whence, len);
+}
+
 
 /* write lock */
 qp_int_t
 qp_file_fd_wrlock(qp_int_t fd, off_t offset, qp_int_t whence, off_t len)
-{ return qp_file_fd_reglock(fd, QP_FILE_LK_WR, offset, whence, len); }
+{ 
+    return qp_file_fd_reglock(fd, QP_FILE_LK_WR, offset, whence, len);
+}
+
 
 /* unlock */
 qp_int_t
 qp_file_fd_unlock(qp_int_t fd, off_t offset, qp_int_t whence, off_t len)
-{ return qp_file_fd_reglock(fd, QP_FILE_UNLK, offset, whence, len); }
+{ 
+    return qp_file_fd_reglock(fd, QP_FILE_UNLK, offset, whence, len); 
+}
+
 
 /* test read lock */
 bool
 qp_file_fd_test_rdlock(qp_int_t fd, off_t offset, qp_int_t whence, off_t len)
-{ return (QP_FILE_IS_UNLOCKED == \
-    qp_file_fd_locktest(fd, QP_FILE_LK_RD, offset, whence, len)); }
+{
+    return (QP_FILE_IS_UNLOCKED == \
+    qp_file_fd_locktest(fd, QP_FILE_LK_RD, offset, whence, len)); 
+}
+
 
 /* test write lock */
 bool
 qp_file_fd_test_wrlock(qp_int_t fd, off_t offset, qp_int_t whence, off_t len)
-{ return (QP_FILE_IS_UNLOCKED == \
-    qp_file_fd_locktest(fd, QP_FILE_LK_WR, offset, whence, len)); }
+{ 
+    return (QP_FILE_IS_UNLOCKED == \
+    qp_file_fd_locktest(fd, QP_FILE_LK_WR, offset, whence, len)); 
+}

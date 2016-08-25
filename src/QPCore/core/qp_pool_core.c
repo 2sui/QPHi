@@ -1,10 +1,29 @@
+/*
+ * The MIT License
+ *
+ * Copyright © 2016 2sui.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
 
-/**
-  * Copyright (C) 2sui.
-  */
 
-
-#include "qp_o_pool.h"
+#include "qp_pool_core.h"
 
 
 qp_pool_t
@@ -29,6 +48,7 @@ qp_pool_create(qp_pool_t pool)
     qp_pool_set_inited(pool);
     return pool;
 }
+
 
 qp_pool_t
 qp_pool_init(qp_pool_t pool, size_t elmsize, size_t count)
@@ -62,6 +82,7 @@ qp_pool_init(qp_pool_t pool, size_t elmsize, size_t count)
     return pool;
 }
 
+
 qp_int_t 
 qp_pool_destroy(qp_pool_t pool, bool force)
 {
@@ -91,6 +112,7 @@ qp_pool_destroy(qp_pool_t pool, bool force)
     return QP_ERROR;
 }
 
+
 void* 
 qp_pool_alloc(qp_pool_t pool, size_t size)
 {
@@ -114,6 +136,7 @@ qp_pool_alloc(qp_pool_t pool, size_t size)
     return NULL;
 }
 
+
 qp_int_t
 qp_pool_free(qp_pool_t pool, void* ptr)
 {
@@ -134,6 +157,7 @@ qp_pool_free(qp_pool_t pool, void* ptr)
     return QP_ERROR;
 }
 
+
 inline size_t
 qp_pool_available(qp_pool_t pool)
 {
@@ -146,6 +170,7 @@ qp_pool_used(qp_pool_t pool)
     return qp_pool_is_inited(pool) ? (pool->nsize - pool->nfree) : 0;
 }
 
+
 void*
 qp_pool_to_array(qp_pool_t pool, size_t index)
 {
@@ -157,11 +182,13 @@ qp_pool_to_array(qp_pool_t pool, size_t index)
     return NULL;
 }
 
+
 inline qp_pool_elm_t
 qp_pool_belong_to(void* ptr)
 {
     return (qp_pool_elm_t)((qp_uchar_t*)ptr - sizeof(struct qp_pool_elm_s));
 }
+
 
 qp_pool_manager_t
 qp_pool_manager_create(qp_pool_manager_t manager)
@@ -185,6 +212,7 @@ qp_pool_manager_create(qp_pool_manager_t manager)
     return manager;
 }
 
+
 qp_pool_manager_t
 qp_pool_manager_init(qp_pool_manager_t manager, size_t elmsize, size_t count)
 {
@@ -198,6 +226,7 @@ qp_pool_manager_init(qp_pool_manager_t manager, size_t elmsize, size_t count)
     manager->ecount = count;
     return manager;
 }
+
 
 qp_int_t
 qp_pool_manager_destroy(qp_pool_manager_t manager, bool force)
@@ -225,6 +254,7 @@ qp_pool_manager_destroy(qp_pool_manager_t manager, bool force)
     
     return QP_ERROR;
 }
+
 
 void*
 qp_pool_manager_alloc(qp_pool_manager_t manager, size_t size, qp_pool_t* npool)
@@ -295,6 +325,7 @@ qp_pool_manager_alloc(qp_pool_manager_t manager, size_t size, qp_pool_t* npool)
     return NULL;
 }
 
+
 qp_int_t
 qp_pool_manager_free(qp_pool_manager_t manager, void* ptr, qp_pool_t npool)
 {
@@ -333,6 +364,7 @@ qp_pool_manager_free(qp_pool_manager_t manager, void* ptr, qp_pool_t npool)
     
     return QP_ERROR;
 }
+
 
 inline qp_pool_manager_elm_t
 qp_pool_manager_belong_to(qp_pool_t pool)

@@ -1,23 +1,40 @@
-
-/**
- * Copyright (C) 2sui.
+/*
+ * The MIT License
  *
- * Basic IPC and control operations.We use POSIX ipc instead of SYSTEM V.
-*/
+ * Copyright © 2016 2sui.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
 
 
-#ifndef QP_O_IPC_H
-#define QP_O_IPC_H
-
-
-#include "qp_ipc.h"
-#include "qp_o_atomic.h"
-#include "qp_o_memory.h"
-
+#ifndef QP_IPC_CORE_H
+#define QP_IPC_CORE_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+
+#include "../qp_ipc.h"
+#include "qp_atomic.h"
+#include "qp_memory_core.h"
+
     
 struct qp_ipc_lock_s {
     union {
@@ -341,4 +358,5 @@ qp_shm_unset_alloced(qp_shm_t shm)
 }
 #endif
 
-#endif 
+#endif /* QP_IPC_CORE_H */
+

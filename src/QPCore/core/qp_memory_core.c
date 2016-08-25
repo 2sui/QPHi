@@ -1,14 +1,34 @@
+/*
+ * The MIT License
+ *
+ * Copyright © 2016 2sui.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
 
-/**
-  * Copyright (C) 2sui.
-  */
 
-
-#include "qp_o_atomic.h"
-#include "qp_o_memory.h"
+#include "qp_atomic.h"
+#include "qp_memory_core.h"
 
 
 #if defined(QP_OS_LINUX)  || defined(QP_OS_BSD4) || defined(QP_OS_SOLARIS)
+
 
 void*
 qp_alloc_align(size_t alignment, size_t size)
@@ -23,12 +43,7 @@ qp_alloc_align(size_t alignment, size_t size)
 
 #endif
 
-/**
- * Operation for rbtree.
- * If the node is root , set its parent as NULL.
- * If the node has no child, set its left and right as sentinal.
- */
-/* left rotate */
+
 void
 qp_rbtree_left_rotate(qp_rbtree_t rbtree, qp_rbtree_node_t node)
 {
@@ -57,6 +72,7 @@ qp_rbtree_left_rotate(qp_rbtree_t rbtree, qp_rbtree_node_t node)
     
     right->left = node;
 }
+
 
 /* right rotate */
 void
@@ -92,6 +108,7 @@ qp_rbtree_right_rotate(qp_rbtree_t rbtree, qp_rbtree_node_t node)
     /* change the left subtree`s right subtree */
     left->right = node;
 }
+
 
 /* insert fix */
 void
@@ -143,6 +160,7 @@ qp_rbtree_insert_fix(qp_rbtree_t rbtree, qp_rbtree_node_t node)
     
     qp_rbtree_set_black(rbtree->root);
 }
+
 
 /* delete fix */
 void
@@ -227,6 +245,7 @@ qp_rbtree_delete_fix(qp_rbtree_t rbtree, qp_rbtree_node_t node)
     qp_rbtree_set_black(node);
 }
 
+
 /* insert node into rbtree */
 qp_rbtree_node_t
 qp_rbtree_insert(qp_rbtree_t rbtree, qp_rbtree_node_t node)
@@ -288,6 +307,7 @@ qp_rbtree_insert(qp_rbtree_t rbtree, qp_rbtree_node_t node)
     return node;
 }
 
+
 /* delete node from rbtree */
 qp_rbtree_node_t
 qp_rbtree_delete(qp_rbtree_t rbtree, qp_rbtree_node_t node)
@@ -346,6 +366,7 @@ qp_rbtree_delete(qp_rbtree_t rbtree, qp_rbtree_node_t node)
     return subst;
 }
 
+
 /* find node with key in rbtree */
 qp_rbtree_node_t
 qp_rbtree_find(qp_rbtree_t rbtree, qp_uint32_t key)
@@ -365,6 +386,7 @@ qp_rbtree_find(qp_rbtree_t rbtree, qp_uint32_t key)
     return (qp_rbtree_nil(rbtree) == node) ? NULL : node;
 }
 
+
 /* min node from [node] */
 qp_rbtree_node_t
 qp_rbtree_min(qp_rbtree_t rbtree, qp_rbtree_node_t node)
@@ -381,6 +403,7 @@ qp_rbtree_min(qp_rbtree_t rbtree, qp_rbtree_node_t node)
     
     return node;
 }
+
 
 /* max node from [node] */
 qp_rbtree_node_t

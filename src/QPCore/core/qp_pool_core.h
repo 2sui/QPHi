@@ -1,28 +1,45 @@
+/*
+ * The MIT License
+ *
+ * Copyright © 2016 2sui.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
 
-/**
-  * Copyright (C) 2sui.
-  *
-  * Memory pool.
-  */
 
-
-#ifndef QP_O_POOL_H
-#define QP_O_POOL_H
-
-
-#include "qp_pool.h"
-#include "qp_o_memory.h"
-
+#ifndef QP_POOL_CORE_H
+#define QP_POOL_CORE_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 
+#include "../qp_pool.h"
+#include "qp_memory_core.h"
+
+
 struct qp_pool_elm_s {
     struct qp_list_s        next;
     struct qp_pool_s*       root;
 };
+
 
 struct qp_pool_s {
     size_t                  nsize;     /* max element number */
@@ -59,11 +76,13 @@ qp_pool_set_inited(qp_pool_t pool)
     pool ? pool->is_inited = true : 1;
 }
 
+
 static inline void
 qp_pool_set_alloced(qp_pool_t pool)
 { 
     pool ? pool->is_alloced = true : 1;
 }
+
 
 static inline void
 qp_pool_manager_set_inited(qp_pool_manager_t manager)
@@ -71,11 +90,13 @@ qp_pool_manager_set_inited(qp_pool_manager_t manager)
     manager ? manager->is_inited = true : 1;
 }
 
+
 static inline void
 qp_pool_manager_set_alloced(qp_pool_manager_t manager)
 { 
     manager ? manager->is_alloced = true : 1;
 }
+
 
 static inline void
 qp_pool_unset_inited(qp_pool_t pool)
@@ -83,11 +104,13 @@ qp_pool_unset_inited(qp_pool_t pool)
     pool ? pool->is_inited = false : 1;
 }
 
+
 static inline void
 qp_pool_unset_alloced(qp_pool_t pool)
 { 
     pool ? pool->is_alloced = false : 1;
 }
+
 
 static inline void
 qp_pool_manager_unset_inited(qp_pool_manager_t manager)
@@ -95,11 +118,13 @@ qp_pool_manager_unset_inited(qp_pool_manager_t manager)
     manager ? manager->is_inited = false : 1;
 }
 
+
 static inline void
 qp_pool_manager_unset_alloced(qp_pool_manager_t manager)
 { 
     manager ? manager->is_alloced = false : 1;
 }
+
 
 static inline bool
 qp_pool_is_inited(qp_pool_t pool) 
@@ -107,17 +132,20 @@ qp_pool_is_inited(qp_pool_t pool)
     return pool ? pool->is_inited : false;
 }
 
+
 static inline bool
 qp_pool_is_alloced(qp_pool_t pool)
 { 
     return pool ? pool->is_alloced : false;
 }
 
+
 static inline bool
 qp_pool_manager_is_inited(qp_pool_manager_t manager)
 { 
     return manager ? manager->is_inited : false;
 }
+
 
 static inline bool
 qp_pool_manager_is_alloced(qp_pool_manager_t manager)
@@ -129,4 +157,4 @@ qp_pool_manager_is_alloced(qp_pool_manager_t manager)
 }
 #endif
 
-#endif /* QP_POOL_H */
+#endif /* QP_POOL_CORE_H */

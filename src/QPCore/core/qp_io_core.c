@@ -1,11 +1,30 @@
+/*
+ * The MIT License
+ *
+ * Copyright © 2016 2sui.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
 
-/**
-  * Copyright (C) 2sui.
-  */
 
-
-#include "qp_o_io.h"
-#include "qp_o_memory.h"
+#include "qp_io_core.h"
+#include "qp_memory_core.h"
 
 
 qp_fd_t
@@ -31,6 +50,7 @@ qp_fd_create(qp_fd_t fd)
     return fd;
 }
 
+
 qp_fd_t
 qp_fd_init(qp_fd_t fd, qp_fd_type_t type, bool aio)
 {
@@ -47,6 +67,7 @@ qp_fd_init(qp_fd_t fd, qp_fd_type_t type, bool aio)
     fd->type = type;
     return fd;
 }
+
 
 qp_int_t
 qp_fd_destroy(qp_fd_t fd)
@@ -73,6 +94,7 @@ qp_fd_destroy(qp_fd_t fd)
     return QP_ERROR;
 }
 
+
 qp_int_t
 qp_fd_setNoBlock(qp_fd_t fd)
 {
@@ -95,6 +117,7 @@ qp_fd_setNoBlock(qp_fd_t fd)
 
     return ret;
 }
+
 
 qp_int_t
 qp_fd_setBlock(qp_fd_t fd)
@@ -120,6 +143,7 @@ qp_fd_setBlock(qp_fd_t fd)
     return ret;
 }
 
+
 qp_int_t
 qp_fd_set_fd(qp_fd_t fd, qp_int_t ifd) {
     if (qp_fd_is_inited(fd)) {
@@ -130,16 +154,19 @@ qp_fd_set_fd(qp_fd_t fd, qp_int_t ifd) {
     return QP_ERROR;
 }
 
+
 qp_int_t
 qp_fd_get_fd(qp_fd_t fd) {
     return qp_fd_is_inited(fd) ? fd->fd : QP_ERROR;
 }
+
 
 qp_fd_type_t
 qp_fd_type(qp_fd_t fd)
 {
     return qp_fd_is_inited(fd) ? fd->type : QP_FD_TYPE_UNKNOW;
 }
+
 
 qp_int_t
 qp_fd_close(qp_fd_t fd)
@@ -153,6 +180,7 @@ qp_fd_close(qp_fd_t fd)
     return QP_ERROR;
 }
 
+
 ssize_t
 qp_fd_write(qp_fd_t fd, const void* vptr, size_t nbytes)
 {
@@ -163,6 +191,7 @@ qp_fd_write(qp_fd_t fd, const void* vptr, size_t nbytes)
     return write(fd->fd, vptr, nbytes);
 }
 
+
 ssize_t
 qp_fd_read(qp_fd_t fd, void* vptr, size_t nbytes)
 {
@@ -172,6 +201,7 @@ qp_fd_read(qp_fd_t fd, void* vptr, size_t nbytes)
     
     return read(fd->fd, vptr, nbytes);
 }
+
 
 size_t
 qp_fd_writen(qp_fd_t fd, const void *vptr, size_t nbytes)
@@ -204,6 +234,7 @@ qp_fd_writen(qp_fd_t fd, const void *vptr, size_t nbytes)
 
     return ndone;
 }
+
 
 size_t
 qp_fd_readn(qp_fd_t fd, void *vptr, size_t nbytes)
@@ -238,6 +269,7 @@ qp_fd_readn(qp_fd_t fd, void *vptr, size_t nbytes)
     return ndone;
 }
 
+
 ssize_t
 qp_fd_writev(qp_fd_t fd, const struct iovec *iov, qp_int_t iovcnt)
 {
@@ -248,6 +280,7 @@ qp_fd_writev(qp_fd_t fd, const struct iovec *iov, qp_int_t iovcnt)
     return writev(fd->fd, iov, iovcnt);
 }
 
+
 ssize_t
 qp_fd_readv(qp_fd_t fd, const struct iovec *iov, qp_int_t iovcnt)
 {
@@ -257,6 +290,7 @@ qp_fd_readv(qp_fd_t fd, const struct iovec *iov, qp_int_t iovcnt)
     
     return readv(fd->fd, iov, iovcnt);
 }
+
 
 qp_int_t
 qp_fd_aio_sync(qp_fd_t fd)
@@ -273,6 +307,7 @@ qp_fd_aio_sync(qp_fd_t fd)
     return QP_ERROR;
 }
 
+
 qp_int_t
 qp_fd_aio_stat(qp_fd_t fd)
 {
@@ -287,6 +322,7 @@ qp_fd_aio_stat(qp_fd_t fd)
     
     return QP_ERROR;
 }
+
 
 ssize_t
 qp_fd_aio_write(qp_fd_t fd, const void* vptr, size_t nbytes, size_t offset)
@@ -305,6 +341,7 @@ qp_fd_aio_write(qp_fd_t fd, const void* vptr, size_t nbytes, size_t offset)
     fd->aio->aio_offset = offset;
     return aio_write(fd->aio);
 }
+
 
 ssize_t
 qp_fd_aio_read(qp_fd_t fd, void* vptr, size_t nbytes, size_t offset)

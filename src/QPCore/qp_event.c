@@ -1,12 +1,31 @@
-
-/**
-  * Copyright (C) 2sui.
-  */
+/*
+ * The MIT License
+ *
+ * Copyright © 2016 2sui.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
 
 
 #include "qp_event.h"
-#include "qp_o_io.h"
-#include "qp_o_pool.h"
+#include "core/qp_io_core.h"
+#include "core/qp_pool_core.h"
 
 
 #ifdef QP_OS_LINUX
@@ -15,7 +34,9 @@ typedef  struct epoll_event    qp_epoll_event_s;
 typedef  void                  qp_epoll_event_s;
 #endif
 
+
 typedef  qp_epoll_event_s*     qp_epoll_event_t;
+
 
 struct qp_event_source_s {
     struct qp_list_s           ready_next;          /* event source list */
@@ -45,7 +66,9 @@ struct qp_event_source_s {
     bool                       edge;      /* ET mod */
 };
 
+
 typedef struct qp_event_source_s*      qp_event_source_t;
+
 
 struct  qp_event_s {
     struct qp_pool_manager_s   source_cache_pool; /* cache pool */
@@ -66,6 +89,7 @@ struct  qp_event_s {
     bool                       is_run;
 };
 
+
 typedef  size_t (*qp_read_handler)(qp_event_t, qp_event_source_t);
 typedef  qp_read_handler       qp_write_handler;
 
@@ -76,11 +100,13 @@ qp_event_set_alloced(qp_event_t event)
     event->is_alloced = true;
 }
 
+
 static inline void 
 qp_event_unset_alloced(qp_event_t event) 
 {
     event->is_alloced = false;
 }
+
 
 static inline void
 qp_event_source_set_shutdown(qp_event_source_t source) 
@@ -89,11 +115,13 @@ qp_event_source_set_shutdown(qp_event_source_t source)
     source->stat = QP_EVENT_CLOSE;
 }
 
+
 static inline bool
 qp_event_is_alloced(qp_event_t event) 
 { 
     return event ? event->is_alloced : false; 
 }
+
 
 #ifndef  QP_OS_LINUX
 qp_int_t
@@ -102,11 +130,13 @@ epoll_create(int __size)
     return QP_ERROR;
 }
 
+
 qp_int_t
 epoll_ctl(int __epfd, int __op, int __fd, epoll_event *__event)
 {
     return QP_ERROR;
 }
+
 
 qp_int_t
 epoll_wait(int __epfd, epoll_event *__events, int __maxevents, int __timeout)
@@ -115,6 +145,7 @@ epoll_wait(int __epfd, epoll_event *__events, int __maxevents, int __timeout)
 }
 
 #endif
+
 
 /**
  * Create an epoll event manager.
@@ -137,6 +168,7 @@ qp_event_epoll_create(qp_event_t event, qp_int_t size)
 #endif
     return event->event_fd.fd;
 }
+
 
 /**
  * Waiting for comming events.
@@ -161,6 +193,7 @@ qp_event_epoll_wait(qp_event_t event, qp_epoll_event_t bucket, \
     return QP_ERROR;
 #endif
 }
+
 
 /**
  * Add an event source to event system.
@@ -192,6 +225,7 @@ qp_event_epoll_add(qp_event_t event, qp_event_source_t source)
 #endif
 }
 
+
 /**
  * Reset an event source with flag.
  * 
@@ -218,6 +252,7 @@ qp_event_epoll_reset(qp_event_t event, qp_event_source_t source, qp_uint32_t fla
 #endif
 }
 
+
 /**
  * Delete and event source from event system.
  *  
@@ -241,6 +276,7 @@ qp_event_epoll_del(qp_event_t event, qp_event_source_t source)
 #endif
 }
 
+
 /**
  * Accept from a listen source.
  * 
@@ -252,6 +288,7 @@ qp_event_source_accept(qp_event_source_t source)
 {
     return source ? accept(source->source_fd, NULL, NULL) : QP_ERROR;
 }
+
 
 /**
  * Close an event source.
@@ -273,6 +310,7 @@ qp_event_source_close(qp_event_source_t source)
     source->source_fd = QP_FD_INVALID;
     return QP_SUCCESS;
 }
+
 
 /**
  * Set read cache for the source.
@@ -301,6 +339,7 @@ qp_event_source_alloc_read_cache(qp_event_t event, qp_event_source_t source)
     return QP_SUCCESS;
 }
 
+
 /**
  * Free read cache for the source.
  * 
@@ -320,6 +359,7 @@ qp_event_source_free_read_cache(qp_event_t event, qp_event_source_t source)
     source->read_cache = NULL;
     return QP_SUCCESS;
 }
+
 
 /**
  * Set write cache for the source.
@@ -349,6 +389,7 @@ qp_event_source_alloc_write_cache(qp_event_t event, qp_event_source_t source)
     return QP_SUCCESS;
 }
 
+
 /**
  * Free write cache for the source.
  * 
@@ -368,6 +409,7 @@ qp_event_source_free_write_cache(qp_event_t event, qp_event_source_t source)
     source->write_cache = NULL;
     return QP_SUCCESS;
 }
+
 
 /**
  * Read data from a source.
@@ -428,6 +470,7 @@ qp_event_source_read(qp_event_t event, qp_event_source_t source)
     return (size_t)source->read_cache_offset;
 }
 
+
 /**
  * Write data to a source.
  * 
@@ -481,6 +524,7 @@ qp_event_source_write(qp_event_t event, qp_event_source_t source)
     return (size_t)rest;
 }
 
+
 /**
  * Clear flag of the source.
  * 
@@ -502,6 +546,7 @@ qp_event_source_clear_flag(qp_event_source_t source)
     source->write_close = 0;
     source->stat = QP_EVENT_IDL;
 }
+
 
 /**
  * Create an event system.
@@ -537,6 +582,7 @@ qp_event_create(qp_event_t event)
     qp_rbtree_init(&event->timer);
     return event;
 }
+
 
 /**
  * Init an event system.
@@ -604,6 +650,7 @@ qp_event_init(qp_event_t event, qp_int_t max_event_size, bool noblock, bool edge
     return event;
 }
 
+
 /**
  * Remove event source from event system .
  * 
@@ -625,6 +672,7 @@ qp_event_removeevent(qp_event_t event, qp_event_source_t source)
     qp_pool_free(&event->event_pool, source); 
     return QP_SUCCESS;
 }
+
 
 /**
  * Add a fd to event system.
@@ -676,6 +724,7 @@ qp_event_addevent(qp_event_t event, qp_int_t fd, qp_int_t timeout, bool listen, 
     return QP_ERROR;
 }
 
+
 /**
  * Destroy an event system.
  * 
@@ -713,6 +762,7 @@ qp_event_destroy(qp_event_t event)
     return QP_ERROR;
 }
 
+
 /**
  * Regist a handler that will be called when no events comming.
  * 
@@ -734,6 +784,7 @@ qp_event_regist_idle_handler(qp_event_t event, qp_event_idle_handler idle_cb, \
     return QP_ERROR;
 }
 
+
 /**
  * Regist a hander that will be called when read events happen.
  * 
@@ -753,6 +804,7 @@ qp_event_regist_read_process_handler(qp_event_t event, \
     return QP_ERROR;
 }
 
+
 /**
  * Regist a hander that will be called when write events happen.
  * 
@@ -771,6 +823,7 @@ qp_event_regist_write_process_handler(qp_event_t event, \
     
     return QP_ERROR;
 }
+
 
 /**
  * Dispatch listen events to listen queue.
@@ -809,6 +862,7 @@ qp_event_dispatch_listen_queue(qp_event_t event, qp_int_t timeout) {
         } while(source->edge);
     }
 }
+
 
 /**
  * Dispatch read/write events to event queue.
@@ -906,6 +960,7 @@ qp_event_dispatch_queue(qp_event_t event) {
         }
     }
 }
+
 
 /**
  * Events dispatch run loop.
