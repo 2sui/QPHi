@@ -65,9 +65,9 @@ qp_alloc_align(size_t alignment, size_t size);
 # endif
 
 /* Alignment memory ptr */
-//# define  qp_align_ptr(p,a) \
+//# define  qp_align_ptr(p,a) 
 //         (qp_char_t*)(((uintptr_t)(p)+((uintptr_t)(a)-1)) & ~((uintptr_t)(a)-1))
-static inline qp_char_t*
+static inline uintptr_t
 qp_align_ptr(uintptr_t p,uintptr_t a) 
 {
     return (p + (a-1)) & ~(a-1);

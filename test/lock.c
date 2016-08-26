@@ -5,8 +5,8 @@
  */
 
 
-#include <qp_ipc.h>
-#include <qp_processes.h>
+#include <qphi/qp_ipc.h>
+#include <qphi/qp_process.h>
 
 static qp_shm_t       shm = NULL;
 static qp_process_t   child = NULL;

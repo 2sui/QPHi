@@ -1,26 +1,45 @@
-
-/**
-  * Copyright (C) 2sui.
-  *
-  * Basic socket operations.
-  */
+/*
+ * The MIT License
+ *
+ * Copyright © 2016 2sui.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
 
 
 #ifndef QP_SOCKET_H
 #define QP_SOCKET_H
 
-
-#include "qp_o_typedef.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+
+#include "core/qp_defines.h"
+
     
 # define  QP_SOCKET_DEFAULT_LISTENBACKLOG    128
 # define  QP_SOCKET_DEFAULT_UNET_PATH        "/tmp/"
-
-
-# define  QP_SOCKET_UNSUPPORT        QP_ERROR
+    
+    
+# define  QP_SOCKET_UNSUPPORT                QP_ERROR
+    
     
 enum qp_socket_shut_e {
     QP_SOCKET_SHUT_CLOSE = QP_ERROR,
@@ -28,6 +47,7 @@ enum qp_socket_shut_e {
     QP_SOCKET_SHUT_WR = SHUT_WR,
     QP_SOCKET_SHUT_RDWR = SHUT_RDWR
 };
+
 
 enum qp_socket_domain_e {
     QP_SOCKET_DOMAIN_UNSUPPORT = QP_SOCKET_UNSUPPORT,
@@ -37,12 +57,14 @@ enum qp_socket_domain_e {
     QP_SOCKET_DOMAIN_PACKET = AF_PACKET
 };
 
+
 enum qp_socket_type_e {
     QP_SOCKET_TYPE_UNSUPPORT = QP_SOCKET_UNSUPPORT,
     QP_SOCKET_TYPE_STREAM = SOCK_STREAM,
     QP_SOCKET_TYPE_DGRAM = SOCK_DGRAM,
     QP_SOCKET_TYPE_RAW = SOCK_RAW
 };
+
 
 typedef enum qp_socket_domain_e    qp_socket_domain_t;
 typedef enum qp_socket_shut_e      qp_socket_shut_t;
@@ -67,9 +89,10 @@ typedef struct qp_socket_s*        qp_socket_t;
  * @return If success return pointer of skt, otherwise return NULL.
  */
 qp_socket_t
-qp_socket_init(qp_socket_t skt, qp_int_t domain, qp_int_t type, 
+qp_socket_init(qp_socket_t skt, qp_int_t domain, qp_int_t type, \
     const qp_char_t* name, qp_ushort_t port, \
     bool as_server, qp_int_t server_backlog);
+
 
 /**
  * Destroy a socket.
@@ -80,6 +103,7 @@ qp_socket_init(qp_socket_t skt, qp_int_t domain, qp_int_t type,
 qp_int_t
 qp_socket_destroy(qp_socket_t skt);
 
+
 /**
  * Get the [int] fd.
  * @param skt
@@ -87,6 +111,7 @@ qp_socket_destroy(qp_socket_t skt);
  */
 qp_int_t
 qp_socket_to_int(qp_socket_t skt);
+
 
 /**
  * Clsoe an opened socket.
@@ -98,6 +123,7 @@ qp_socket_to_int(qp_socket_t skt);
 qp_int_t
 qp_socket_close(qp_socket_t skt, qp_socket_shut_t shut);
 
+
 /**
  * Listen from created socket. [mod] is only work for unix socket for set the 
  * privilege of listening socket.
@@ -108,6 +134,7 @@ qp_socket_close(qp_socket_t skt, qp_socket_shut_t shut);
  */
 qp_int_t
 qp_socket_listen(qp_socket_t skt, qp_int_t mod);
+
 
 /**
  * Accept client sockets. If sktClient is NULL it will allocate one
@@ -121,6 +148,7 @@ qp_socket_listen(qp_socket_t skt, qp_int_t mod);
 qp_socket_t
 qp_socket_accept(qp_socket_t skt, qp_socket_t sktClient);
 
+
 /**
  * Connect to host.
  * 
@@ -129,6 +157,7 @@ qp_socket_accept(qp_socket_t skt, qp_socket_t sktClient);
  */
 qp_int_t
 qp_socket_connect(qp_socket_t skt);
+
 
 /**
  * Set socket opt just like setsockopt.
@@ -144,6 +173,7 @@ qp_int_t
 qp_socket_setsockopt(qp_socket_t skt, qp_int_t level, qp_int_t optname, \
     const void* optval, socklen_t optlen);
 
+
 /**
  * Send n bytes to socket.It will not break by signal.
  * 
@@ -155,6 +185,7 @@ qp_socket_setsockopt(qp_socket_t skt, qp_int_t level, qp_int_t optname, \
  */
 size_t
 qp_socket_sendn(qp_socket_t skt, const void* vptr, size_t nbytes);
+
 
 /**
  * Recv n bytes from socket.
@@ -168,6 +199,7 @@ qp_socket_sendn(qp_socket_t skt, const void* vptr, size_t nbytes);
 size_t
 qp_socket_recvn(qp_socket_t skt, void* vptr, size_t nbytes);
 
+
 /**
  * Just like sendv().
  * 
@@ -179,6 +211,7 @@ qp_socket_recvn(qp_socket_t skt, void* vptr, size_t nbytes);
  */
 ssize_t
 qp_socket_sendv(qp_socket_t skt, const struct iovec* iov, qp_int_t iovcnt);
+
 
 /**
  * Just like recvv().
@@ -198,11 +231,13 @@ qp_socket_recvv(qp_socket_t skt, const struct iovec* iov, qp_int_t iovcnt);
 ssize_t
 qp_socket_send(qp_socket_t skt, const void* vptr, size_t nbytes, qp_int_t flag);
 
+
 /*
  * Just like recv().
 */
 ssize_t
 qp_socket_recv(qp_socket_t skt, void* vptr, size_t nbytes, qp_int_t flag);
+
 
 
 /* option */
@@ -213,21 +248,23 @@ qp_socket_recv(qp_socket_t skt, void* vptr, size_t nbytes, qp_int_t flag);
 qp_int_t
 qp_socket_set_reuse(qp_socket_t skt, qp_int_t reuse, qp_int_t enable);
 
+
 /* TCP_NOPUSH or TCP_CORK */
 qp_int_t
 qp_socket_set_nopush(qp_socket_t skt, qp_int_t enable);
+
 
 /* TCP_NODELAY */
 qp_int_t
 qp_socket_set_nodelay(qp_socket_t skt, qp_int_t enable);
 
+
 /* TCP_QUICKACK */
 qp_int_t
 qp_socket_set_quickack(qp_socket_t skt, qp_int_t enable);
-
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif 
+#endif /* QP_SOCKET_H */

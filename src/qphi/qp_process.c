@@ -1,11 +1,30 @@
+/*
+ * The MIT License
+ *
+ * Copyright © 2016 2sui.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
 
-/**
-  * Copyright (C) 2sui.
-  */
 
-
-#include "qp_processes.h"
-#include "qp_o_memory.h"
+#include "qp_process.h"
+#include "core/qp_memory_core.h"
 
 
 struct  qp_thread_handler_s {
@@ -13,6 +32,7 @@ struct  qp_thread_handler_s {
     void*                         args_ptr;
     void*                         ret;
 };
+
 
 struct qp_process_handler_s { 
     size_t                        stack_size;
@@ -23,6 +43,7 @@ struct qp_process_handler_s {
     qp_int_t                      ret;
 };
 
+
 struct  qp_thread_s {
     pthread_t                     tid;
     struct qp_thread_handler_s    handler;
@@ -31,6 +52,7 @@ struct  qp_thread_s {
     bool                          is_detach;
     bool                          is_running;
 };
+
 
 struct qp_process_s {
     pid_t                         pid;
@@ -49,11 +71,13 @@ qp_thread_set_inited(qp_thread_t thread)
     thread ? thread->is_inited = true : 1;
 }
 
+
 static inline void
 qp_thread_set_alloced(qp_thread_t thread)
 { 
     thread ? thread->is_alloced = true : 1;
 }
+
 
 static inline void
 qp_thread_set_detach(qp_thread_t thread)
@@ -61,11 +85,13 @@ qp_thread_set_detach(qp_thread_t thread)
     thread ? thread->is_detach = true : 1;
 }
 
+
 static inline void
 qp_thread_set_running(qp_thread_t thread)
 { 
     thread ? thread->is_running = true : 1;
 }
+
 
 static inline void
 qp_process_set_inited(qp_process_t process)
@@ -73,11 +99,13 @@ qp_process_set_inited(qp_process_t process)
     process ? process->is_inited = true : 1;
 }
 
+
 static inline void
 qp_process_set_alloced(qp_process_t process)
 { 
     process ? process->is_alloced = true : 1;
 }
+
 
 static inline void
 qp_process_set_running(qp_process_t process)
@@ -85,11 +113,13 @@ qp_process_set_running(qp_process_t process)
     process ? process->is_running = true : 1;
 }
 
+
 static inline void
 qp_thread_unset_inited(qp_thread_t thread)
 { 
     thread ? thread->is_inited = false : 1;
 }
+
 
 static inline void
 qp_thread_unset_alloced(qp_thread_t thread)
@@ -97,11 +127,13 @@ qp_thread_unset_alloced(qp_thread_t thread)
     thread ? thread->is_alloced = false : 1;
 }
 
+
 static inline void
 qp_thread_unset_detach(qp_thread_t thread)
 { 
     thread ? thread->is_detach = false : 1;
 }
+
 
 static inline void
 qp_thread_unset_running(qp_thread_t thread)
@@ -109,11 +141,13 @@ qp_thread_unset_running(qp_thread_t thread)
     thread ? thread->is_running = false : 1;
 }
 
+
 static inline void
 qp_process_unset_inited(qp_process_t process)
 { 
     process ? process->is_inited = false : 1;
 }
+
 
 static inline void
 qp_process_unset_alloced(qp_process_t process)
@@ -121,11 +155,13 @@ qp_process_unset_alloced(qp_process_t process)
     process ? process->is_alloced = false : 1;
 }
 
+
 static inline void
 qp_process_unset_running(qp_process_t process)
 { 
     process ? process->is_running = false : 1;
 }
+
 
 static inline bool
 qp_thread_is_alloced(qp_thread_t thread) 
@@ -133,11 +169,13 @@ qp_thread_is_alloced(qp_thread_t thread)
     return thread ? thread->is_alloced : false;
 }
 
+
 static inline bool
 qp_thread_is_inited(qp_thread_t thread) 
 { 
     return thread ? thread->is_inited : false;
 }
+
 
 static inline bool
 qp_thread_is_detach(qp_thread_t thread) 
@@ -145,11 +183,13 @@ qp_thread_is_detach(qp_thread_t thread)
     return thread ? thread->is_detach : false;
 }
 
+
 static inline bool
 qp_thread_is_running(qp_thread_t thread) 
 { 
     return thread ? thread->is_running : 1;
 }
+
 
 static inline bool
 qp_process_is_alloced(qp_process_t process) 
@@ -157,11 +197,13 @@ qp_process_is_alloced(qp_process_t process)
     return process ? process->is_alloced : false;
 }
 
+
 static inline bool
 qp_process_is_inited(qp_process_t process)
 { 
     return process ? process->is_inited : false;
 }
+
 
 static inline bool
 qp_process_is_running(qp_process_t process)
@@ -192,6 +234,7 @@ qp_thread_create(qp_thread_t thread)
     return thread;
 }
 
+
 qp_thread_t
 qp_thread_init(qp_thread_t  thread, bool detach)
 {
@@ -204,6 +247,7 @@ qp_thread_init(qp_thread_t  thread, bool detach)
     detach ? qp_thread_set_detach(thread) : 1;
     return thread;
 }
+
 
 qp_int_t
 qp_thread_destroy(qp_thread_t  thread)
@@ -228,6 +272,7 @@ qp_thread_destroy(qp_thread_t  thread)
     
     return QP_ERROR;
 }
+
 
 static void* 
 qp_thread_runner(void *arg)
@@ -258,6 +303,7 @@ end:
     return  NULL;
 }
 
+
 qp_int_t
 qp_thread_start(qp_thread_t thread, void* (*handler_ptr)(void*), void* arg)
 {
@@ -280,6 +326,7 @@ qp_thread_start(qp_thread_t thread, void* (*handler_ptr)(void*), void* arg)
     return QP_ERROR;
 }
 
+
 qp_int_t
 qp_thread_stop(qp_thread_t thread)
 {
@@ -301,6 +348,7 @@ qp_thread_stop(qp_thread_t thread)
     return QP_ERROR;
 }
 
+
 void* 
 qp_thread_return(qp_thread_t thread)
 {
@@ -310,6 +358,7 @@ qp_thread_return(qp_thread_t thread)
     
     return NULL;
 }
+
 
 qp_process_t
 qp_process_create(qp_process_t process) 
@@ -334,6 +383,7 @@ qp_process_create(qp_process_t process)
     return process;
 }
 
+
 qp_process_t
 qp_process_init(qp_process_t process)
 {
@@ -346,6 +396,7 @@ qp_process_init(qp_process_t process)
     process->type = QP_PROCESS_TYPE_FORK;
     return process;
 }
+
 
 qp_int_t
 qp_process_destroy(qp_process_t process)
@@ -388,6 +439,7 @@ qp_process_set_exec(qp_process_t process, qp_char_t* const *argv)
     return QP_ERROR;
 }
 
+
 qp_int_t
 qp_process_set_vfork_exec(qp_process_t process, qp_char_t* const *argv)
 {
@@ -399,6 +451,7 @@ qp_process_set_vfork_exec(qp_process_t process, qp_char_t* const *argv)
     
     return QP_ERROR;
 }
+
 
 qp_int_t
 qp_process_set_clone(qp_process_t process, qp_int_t flag, \
@@ -415,6 +468,7 @@ qp_process_set_clone(qp_process_t process, qp_int_t flag, \
     
     return QP_ERROR;
 }
+
 
 pid_t
 qp_process_start(qp_process_t process)
@@ -522,6 +576,7 @@ qp_process_start(qp_process_t process)
     return QP_ERROR;
 }
 
+
 qp_int_t
 qp_process_stop(qp_process_t process, bool force)
 {
@@ -558,6 +613,7 @@ qp_process_stop(qp_process_t process, bool force)
     return QP_ERROR;
 }
 
+
 qp_int_t
 qp_process_kill(qp_process_t process, qp_int_t sig)
 {
@@ -572,6 +628,7 @@ qp_process_kill(qp_process_t process, qp_int_t sig)
     
     return QP_ERROR;
 }
+
 
 pid_t
 qp_process_pid(qp_process_t process) {

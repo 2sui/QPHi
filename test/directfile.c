@@ -5,7 +5,7 @@
  */
 
 
-#include <qp_file.h>
+#include <qphi/qphi.h>
 #include <stdlib.h>
 
 const qp_char_t* str = "12345678901234567890123456789012345678901234567890"

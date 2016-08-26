@@ -6,8 +6,9 @@
  */
 
 
-#include <qp_file.h>
-#include <qp_tiny_stack.h>
+#include <qphi/qp_file.h>
+#include <qphi/qp_tiny_stack.h>
+#include <qphi/core/qp_debug.h>
 
 
 #define  MAX_SNAPLEN    65535
@@ -70,7 +71,7 @@ pcap_process(qp_uchar_t* user, pcap_pkthdr* hdr, qp_uchar_t* data)
         return QP_SUCCESS;
     }
     
-    QP_LOGOUT_LOG("[%lu]"
+    qp_debug_info("[%lu]"
         "\n\tsrc mac: %.2x:%.2x:%.2x:%.2x:%.2x:%.2x"
         "\n\tdst mac: %.2x:%.2x:%.2x:%.2x:%.2x:%.2x"
         "\n\tsrc ip: %u.%u.%u.%u"
@@ -118,7 +119,7 @@ pcap_open(const char* path, pcap* cap)
         fread(&cap->file_hdr, 1, sizeof(pcap_file_header), cap->file))
     {
         pcap_close(cap);
-        QP_LOGOUT_LOG("[pcap_open] %s open fail.", path);
+        qp_debug_info("[pcap_open] %s open fail.", path);
         return QP_ERROR;
     }
     
@@ -127,7 +128,7 @@ pcap_open(const char* path, pcap* cap)
     if (memcmp(&cap->file_hdr.magic, &magic, sizeof(qp_uint32_t)))
     {
         pcap_close(cap);
-        QP_LOGOUT_LOG("[pcap_open] Get header info error.");
+        qp_debug_info("[pcap_open] Get header info error.");
         return QP_ERROR;
     }
     
@@ -137,7 +138,7 @@ pcap_open(const char* path, pcap* cap)
     
     fstat(fileno(cap->file), &cap->stat);
     
-    QP_LOGOUT_LOG("[pcap_open]File info : "
+    qp_debug_info("[pcap_open]File info : "
             "\n\tpcap magic: %.4x"
             "\n\tpcap size: %luKB"
             "\n\tpcap version: %d.%d"
@@ -189,7 +190,7 @@ pcap_read(pcap* cap)
             }
             
             if (cap->pkt_hdr.caplen > cap->file_hdr.snaplen) {
-                QP_LOGOUT_LOG("[pcap_read] Packet caplen error.");
+                qp_debug_info("[pcap_read] Packet caplen error.");
                 return QP_ERROR;
             }
             

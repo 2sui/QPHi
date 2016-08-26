@@ -6,8 +6,8 @@
  */
 
 
-#include <qp_socket.h>
-#include <qp_system.h>
+#include <qphi/qp_socket.h>
+#include <qphi/qp_system.h>
 
 #define SERV_ADDR             "127.0.0.1"
 #define SERV_PORT             80

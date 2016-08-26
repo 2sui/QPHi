@@ -5,9 +5,9 @@
  */
 
 
-#include <qp_pool.h>
-#include <qp_socket.h>
-#include <qp_event.h>
+#include <qphi/qp_pool.h>
+#include <qphi/qp_socket.h>
+#include <qphi/qp_event.h>
 
 
 #define  HTTP_RSP  \

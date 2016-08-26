@@ -4,7 +4,7 @@
  * Test for QPHi module.
  */
 
-#include <qp_o_memory.h>
+#include "core/qp_memory_core.h"
 
 void
 looping(qp_rbtree_t rbtree, qp_rbtree_node_t root)

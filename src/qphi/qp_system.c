@@ -1,17 +1,38 @@
-
-/**
-  * Copyright (C) 2sui.
-  */
+/*
+ * The MIT License
+ *
+ * Copyright © 2016 2sui.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
 
 
 #include "qp_system.h"
-#include "qp_o_memory.h"
+#include "core/qp_memory_core.h"
+
 
 struct  qp_library_s {
     void*         handler;
     qp_char_t*    error;
     qp_int_t      stat;
 };
+
 
 qp_int_t
 qp_daemonize(qp_int_t bg, qp_int_t holdfd, const char* workdir, 
@@ -105,6 +126,7 @@ qp_daemonize(qp_int_t bg, qp_int_t holdfd, const char* workdir,
     return true;
 }
 
+
 qp_int_t
 qp_limit_opt(qp_int_t opt, __rlimit_resource_t source, qp_limit_t* limit)
 {
@@ -127,6 +149,7 @@ qp_limit_opt(qp_int_t opt, __rlimit_resource_t source, qp_limit_t* limit)
 #endif
 }
 
+
 qp_int_t
 qp_check_root()
 {
@@ -140,6 +163,7 @@ qp_check_root()
         return QP_ERROR;
     }
 }
+
 
 qp_int_t
 qp_change_user_by_id(uid_t uid, gid_t gid)
@@ -162,6 +186,7 @@ qp_change_user_by_id(uid_t uid, gid_t gid)
     }
 }
 
+
 qp_int_t
 qp_change_user_by_name(const char *uname)
 {
@@ -179,6 +204,7 @@ qp_change_user_by_name(const char *uname)
 
     return qp_change_user_by_id(uid, gid);
 }
+
 
 qp_library_t
 qp_library_load(const qp_char_t* name, qp_int_t flag)
@@ -203,6 +229,7 @@ qp_library_load(const qp_char_t* name, qp_int_t flag)
     return libs;
 }
 
+
 void*
 qp_library_getFunc(qp_library_t libs, const char *func)
 {
@@ -218,6 +245,7 @@ qp_library_getFunc(qp_library_t libs, const char *func)
 
     return fun_ptr;
 }
+
 
 void
 qp_library_unload(qp_library_t libs)

@@ -1,12 +1,31 @@
-
-/**
-  * Copyright (C) 2sui.
-  */
+/*
+ * The MIT License
+ *
+ * Copyright © 2016 2sui.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
 
 
 #include "qp_socket.h"
-#include "qp_o_io.h"
-#include "qp_o_memory.h"
+#include "core/qp_io_core.h"
+#include "core/qp_memory_core.h"
 
 
 struct  qp_socket_s {
@@ -25,11 +44,13 @@ struct  qp_socket_s {
     bool                          is_alloced;  /* is alloced */
 };
 
+
 static inline void
 qp_socket_set_alloced(qp_socket_t skt)
 { 
     skt ? skt->is_alloced = true : 1;
 }
+
 
 static inline void
 qp_socket_set_listen(qp_socket_t skt)
@@ -37,11 +58,13 @@ qp_socket_set_listen(qp_socket_t skt)
     skt ? skt->is_listen = true : 1;
 }
 
+
 static inline void
 qp_socket_unset_alloced(qp_socket_t skt)
 { 
     skt ? skt->is_alloced = false : 1;
 }
+
 
 static inline void
 qp_socket_unset_listen(qp_socket_t skt)
@@ -49,11 +72,13 @@ qp_socket_unset_listen(qp_socket_t skt)
     skt ? skt->is_listen = false : 1;
 }
 
+
 static inline bool
 qp_socket_is_alloced(qp_socket_t skt) 
 { 
     return skt ? skt->is_alloced : false; 
 }
+
 
 static inline bool
 qp_socket_is_listen(qp_socket_t skt) 
@@ -65,11 +90,14 @@ qp_socket_is_listen(qp_socket_t skt)
 qp_socket_t
 qp_socket_assign_inet(qp_socket_t skt, const qp_char_t* name, qp_ushort_t port);
 
+
 qp_socket_t
 qp_socket_assign_inet6(qp_socket_t skt, const qp_char_t* name, qp_ushort_t port);
 
+
 qp_socket_t
 qp_socket_assign_unix(qp_socket_t skt, const qp_char_t* name);
+
 
 qp_socket_t 
 qp_socket_assign_packet(qp_socket_t skt);
@@ -107,6 +135,7 @@ qp_socket_create(qp_socket_t skt) {
     skt->type = QP_SOCKET_TYPE_UNSUPPORT;
     return skt;
 }
+
 
 qp_socket_t
 qp_socket_init(qp_socket_t skt, qp_int_t domain, qp_int_t type, 
@@ -217,6 +246,7 @@ qp_socket_init(qp_socket_t skt, qp_int_t domain, qp_int_t type,
     return NULL;
 }
 
+
 qp_int_t
 qp_socket_destroy(qp_socket_t skt)
 {
@@ -235,6 +265,7 @@ qp_socket_destroy(qp_socket_t skt)
     
     return QP_ERROR;
 }
+
 
 qp_socket_t
 qp_socket_assign_inet(qp_socket_t skt, const qp_char_t* name, qp_ushort_t port) 
@@ -280,6 +311,7 @@ qp_socket_assign_inet(qp_socket_t skt, const qp_char_t* name, qp_ushort_t port)
     return skt;
 }
 
+
 qp_socket_t
 qp_socket_assign_inet6(qp_socket_t skt, const qp_char_t* name, qp_ushort_t port) 
 {
@@ -294,6 +326,7 @@ qp_socket_assign_inet6(qp_socket_t skt, const qp_char_t* name, qp_ushort_t port)
     name = NULL;
     return NULL;
 }
+
 
 qp_socket_t
 qp_socket_assign_unix(qp_socket_t skt, const qp_char_t* name) 
@@ -349,6 +382,7 @@ qp_socket_assign_unix(qp_socket_t skt, const qp_char_t* name)
     return skt;
 }
 
+
 qp_socket_t 
 qp_socket_assign_packet(qp_socket_t skt) 
 {
@@ -372,6 +406,7 @@ qp_socket_to_int(qp_socket_t skt)
     return QP_ERROR;
 }
 
+
 qp_int_t
 qp_socket_close(qp_socket_t skt, qp_socket_shut_t shut)
 {
@@ -388,6 +423,7 @@ qp_socket_close(qp_socket_t skt, qp_socket_shut_t shut)
     
     return QP_ERROR;
 }
+
 
 qp_int_t
 qp_socket_listen(qp_socket_t skt, qp_int_t mod)
@@ -412,6 +448,7 @@ qp_socket_listen(qp_socket_t skt, qp_int_t mod)
 
     return QP_SUCCESS;
 }
+
 
 qp_socket_t
 qp_socket_accept(qp_socket_t skt, qp_socket_t sktClient)
@@ -454,6 +491,7 @@ qp_socket_accept(qp_socket_t skt, qp_socket_t sktClient)
     return NULL;
 }
 
+
 qp_int_t
 qp_socket_connect(qp_socket_t skt)
 {
@@ -464,6 +502,7 @@ qp_socket_connect(qp_socket_t skt)
     return connect(skt->socket.fd, (struct sockaddr*)&(skt->socket_addr),\
         skt->socket_len);
 }
+
 
 qp_int_t
 qp_socket_setsockopt(qp_socket_t skt, qp_int_t level, qp_int_t optname, \
@@ -476,11 +515,13 @@ qp_socket_setsockopt(qp_socket_t skt, qp_int_t level, qp_int_t optname, \
     return setsockopt(skt->socket.fd, level, optname, optval, optlen);
 }
 
+
 size_t
 qp_socket_sendn(qp_socket_t skt, const void* vptr, size_t nbytes)
 {
     return skt ? qp_fd_writen(&skt->socket, vptr, nbytes) : 0;
 }
+
 
 size_t
 qp_socket_recvn(qp_socket_t skt, void* vptr, size_t nbytes)
@@ -488,17 +529,20 @@ qp_socket_recvn(qp_socket_t skt, void* vptr, size_t nbytes)
     return skt ? qp_fd_readn(&skt->socket, vptr, nbytes) : 0;
 }
 
+
 ssize_t
 qp_socket_sendv(qp_socket_t skt, const struct iovec* iov, qp_int_t iovcnt)
 {
     return skt ? qp_fd_writev(&skt->socket, iov, iovcnt) : QP_ERROR;
 }
 
+
 ssize_t
 qp_socket_recvv(qp_socket_t skt, const struct iovec* iov, qp_int_t iovcnt)
 {
     return skt ? qp_fd_readv(&skt->socket, iov, iovcnt) : QP_ERROR;
 }
+
 
 ssize_t
 qp_socket_send(qp_socket_t skt, const void* vptr, size_t nbytes, qp_int_t flag)
@@ -509,6 +553,7 @@ qp_socket_send(qp_socket_t skt, const void* vptr, size_t nbytes, qp_int_t flag)
     
     return send(skt->socket.fd, vptr, nbytes, flag);
 }
+
 
 ssize_t
 qp_socket_recv(qp_socket_t skt, void* vptr, size_t nbytes, qp_int_t flag)
@@ -538,6 +583,7 @@ qp_socket_set_reuse(qp_socket_t skt, qp_int_t reuse, qp_int_t enable)
     return QP_SUCCESS;
 }
 
+
 qp_int_t
 qp_socket_set_nopush(qp_socket_t skt, qp_int_t enable)
 {   
@@ -550,12 +596,14 @@ qp_socket_set_nopush(qp_socket_t skt, qp_int_t enable)
 #endif
 }
 
+
 qp_int_t
 qp_socket_set_nodelay(qp_socket_t skt, qp_int_t enable)
 {
     return qp_socket_setsockopt(skt, IPPROTO_TCP, TCP_NODELAY, \
         (const void *)&enable, sizeof(enable));
 }
+
 
 qp_int_t
 qp_socket_set_quickack(qp_socket_t skt, qp_int_t enable)
