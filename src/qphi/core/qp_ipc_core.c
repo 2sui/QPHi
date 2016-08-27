@@ -94,6 +94,216 @@
  */
 
 
+static inline void
+qp_lock_set_inited(qp_lock_t lock)
+{ 
+    lock->is_inited = true;
+}
+
+
+static inline void
+qp_lock_set_alloced(qp_lock_t lock)
+{ 
+    lock->is_alloced = true;
+}
+
+
+static inline void
+qp_lock_set_shared(qp_lock_t lock)
+{ 
+    lock->is_shared = true;
+}
+
+
+static inline void
+qp_lock_unset_inited(qp_lock_t lock)
+{ 
+    lock->is_inited = false;
+}
+
+
+static inline void
+qp_lock_unset_alloced(qp_lock_t lock)
+{ 
+    lock->is_alloced = false;
+}
+
+
+static inline void
+qp_lock_unset_shared(qp_lock_t lock)
+{ 
+    lock->is_shared = false;
+}
+
+
+static inline void
+qp_lock_set_spin(qp_lock_t lock)
+{ 
+    lock->is_spin = true;
+}
+
+
+static inline void
+qp_lock_unset_spin(qp_lock_t lock)
+{ 
+    lock->is_spin = false;
+}
+
+
+static inline void
+qp_rwlock_set_inited(qp_rwlock_t rwlock)
+{ 
+    rwlock->is_inited = true;
+}
+
+
+static inline void
+qp_rwlock_set_alloced(qp_rwlock_t rwlock)
+{ 
+    rwlock->is_alloced = true;
+}
+
+
+static inline void
+qp_rwlock_set_shared(qp_rwlock_t rwlock)
+{ 
+    rwlock->is_shared = true;
+}
+
+
+static inline void
+qp_rwlock_unset_inited(qp_rwlock_t rwlock)
+{ 
+    rwlock->is_inited = false;
+}
+
+
+static inline void
+qp_rwlock_unset_alloced(qp_rwlock_t rwlock)
+{ 
+    rwlock->is_alloced = false;
+}
+
+
+static inline void
+qp_rwlock_unset_shared(qp_rwlock_t rwlock)
+{ 
+    rwlock->is_shared = false;
+}
+
+
+static inline void
+qp_cond_set_inited(qp_cond_t cond)
+{ 
+    cond->is_inited = true;
+}
+
+
+static inline void
+qp_cond_set_alloced(qp_cond_t cond)
+{ 
+    cond->is_alloced = true;
+}
+
+
+static inline void
+qp_cond_set_shared(qp_cond_t cond)
+{ 
+    cond->is_shared = true;
+}
+
+
+static inline void
+qp_cond_unset_inited(qp_cond_t cond)
+{ 
+    cond->is_inited = false;
+}
+
+
+static inline void
+qp_cond_unset_alloced(qp_cond_t cond)
+{ 
+    cond->is_alloced = false;
+}
+
+
+static inline void
+qp_cond_unset_shared(qp_cond_t cond)
+{ 
+    cond->is_shared = false;
+}
+
+
+static inline void
+qp_sem_set_inited(qp_sem_t sem)
+{ 
+    sem->is_inited = true;
+}
+
+
+static inline void
+qp_sem_set_alloced(qp_sem_t sem)
+{ 
+    sem->is_alloced = true;
+}
+
+
+static inline void
+qp_sem_set_shared(qp_sem_t sem)
+{ 
+    sem->is_shared = true;
+}
+
+
+static inline void
+qp_sem_unset_inited(qp_sem_t sem)
+{ 
+    sem->is_inited = false;
+}
+
+
+static inline void
+qp_sem_unset_alloced(qp_sem_t sem)
+{ 
+    sem->is_alloced = false;
+}
+
+
+static inline void
+qp_sem_unset_shared(qp_sem_t sem)
+{ 
+    sem->is_shared = false;
+}
+
+
+static inline void
+qp_shm_set_inited(qp_shm_t shm)
+{ 
+    shm->is_inited = true;
+}
+
+
+static inline void
+qp_shm_set_alloced(qp_shm_t shm)
+{ 
+    shm->is_alloced = true;
+}
+
+
+static inline void
+qp_shm_unset_inited(qp_shm_t shm)
+{ 
+    shm->is_inited = false;
+}
+
+
+static inline void
+qp_shm_unset_alloced(qp_shm_t shm)
+{ 
+    shm->is_alloced = false;
+}
+
+
 /**
  *   create lock.
  */
@@ -159,11 +369,13 @@ qp_lock_create(qp_lock_t lock, bool shared, bool spin)
     return lock;
 }
 
+
 qp_lock_t
 qp_lock_init(qp_lock_t lock, bool shared, bool spin)
 {
     return qp_lock_create(lock, shared, spin);
 }
+
 
 qp_int_t
 qp_lock_destroy(qp_lock_t lock)
@@ -195,6 +407,7 @@ qp_lock_destroy(qp_lock_t lock)
     
     return QP_ERROR;
 }
+
 
 qp_int_t
 qp_lock_lock(qp_lock_t lock)
@@ -253,6 +466,7 @@ qp_lock_lock(qp_lock_t lock)
     
     return QP_ERROR;
 }
+
 
 qp_int_t
 qp_lock_trylock(qp_lock_t lock)
@@ -333,10 +547,6 @@ qp_lock_unlock(qp_lock_t lock)
 qp_uint_t
 qp_lock_counter(qp_lock_t lock) 
 {
-    if (!lock) {
-        return 0;
-    }
-    
     return lock->hold_counter;
 }
 
@@ -389,11 +599,13 @@ qp_rwlock_create(qp_rwlock_t rwlock, bool shared)
     return rwlock;
 }
 
+
 qp_rwlock_t        
 qp_rwlock_init(qp_rwlock_t rwlock, bool shared)
 {
     return qp_rwlock_create(rwlock, shared);
 }
+
 
 qp_int_t
 qp_rwlock_destroy(qp_rwlock_t rwlock)
@@ -429,34 +641,39 @@ qp_rwlock_destroy(qp_rwlock_t rwlock)
     return QP_ERROR;
 }
 
+
 qp_int_t
 qp_rwlock_rdlock(qp_rwlock_t rwlock)
 {
-    return rwlock ? pthread_rwlock_rdlock(&rwlock->rwlock) : QP_ERROR;
+    return pthread_rwlock_rdlock(&rwlock->rwlock);
 }
+
 
 qp_int_t
 qp_rwlock_tryrdlock(qp_rwlock_t rwlock)
 {
-    return rwlock ? pthread_rwlock_tryrdlock(&rwlock->rwlock) : QP_ERROR;
+    return pthread_rwlock_tryrdlock(&rwlock->rwlock);
 }
+
 
 qp_int_t
 qp_rwlock_wrlock(qp_rwlock_t rwlock)
 {
-    return rwlock ? pthread_rwlock_wrlock(&rwlock->rwlock) : QP_ERROR;
+    return pthread_rwlock_wrlock(&rwlock->rwlock);
 }
+
 
 qp_int_t
 qp_rwlock_trywrlock(qp_rwlock_t rwlock)
 {
-    return rwlock ? pthread_rwlock_trywrlock(&rwlock->rwlock) : QP_ERROR;
+    return pthread_rwlock_trywrlock(&rwlock->rwlock);
 }
+
 
 qp_int_t
 qp_rwlock_unlock(qp_rwlock_t rwlock)
 {
-    return rwlock ? pthread_rwlock_unlock(&rwlock->rwlock) : QP_ERROR;
+    return pthread_rwlock_unlock(&rwlock->rwlock);
 }
 
 
@@ -489,7 +706,6 @@ qp_cond_create(qp_cond_t cond, bool shared)
         return NULL;
     }
     
-    
 #ifdef _POSIX_THREAD_PROCESS_SHARED
     if (shared) {
         
@@ -517,11 +733,13 @@ qp_cond_create(qp_cond_t cond, bool shared)
     return cond;
 }
 
+
 qp_cond_t
 qp_cond_init(qp_cond_t cond, bool shared)
 {
     return qp_cond_create(cond, shared);
 }
+
 
 qp_int_t
 qp_cond_destroy(qp_cond_t cond)
@@ -545,6 +763,7 @@ qp_cond_destroy(qp_cond_t cond)
     
     return QP_ERROR;
 }
+
 
 qp_int_t
 qp_cond_signal(qp_cond_t cond, void (*signal_to)(void*), void* arg)
@@ -570,6 +789,7 @@ qp_cond_signal(qp_cond_t cond, void (*signal_to)(void*), void* arg)
     
     return QP_SUCCESS;
 }
+
 
 qp_int_t
 qp_cond_wait(qp_cond_t cond, void (*wait_for)(void*), void* arg)
@@ -628,11 +848,13 @@ qp_sem_create(qp_sem_t sem, bool shared)
     return sem;
 }
 
+
 qp_sem_t
 qp_sem_init(qp_sem_t sem, bool shared)
 {
     return qp_sem_create(sem, shared);
 }
+
 
 qp_int_t
 qp_sem_destroy(qp_sem_t sem)
@@ -658,22 +880,25 @@ qp_sem_destroy(qp_sem_t sem)
     return QP_ERROR;
 }
 
+
 qp_int_t
 qp_sem_post(qp_sem_t sem)
 {
-    return sem ? sem_post(&sem->sem) : QP_ERROR;
+    return sem_post(&sem->sem);
 }
+
 
 qp_int_t
 qp_sem_trywait(qp_sem_t sem)
 {
-    return sem ? sem_trywait(&sem->sem) : QP_ERROR;
+    return sem_trywait(&sem->sem);
 }
+
 
 qp_int_t
 qp_sem_wait(qp_sem_t sem)
 {
-    return sem ? sem_wait(&sem->sem) : QP_ERROR;
+    return sem_wait(&sem->sem);
 }
 
 
@@ -729,6 +954,7 @@ qp_shm_create(qp_shm_t shm, size_t size, qp_int_t fd)
     return shm;
 }
 
+
 qp_shm_t
 qp_shm_init(qp_shm_t shm, size_t size, const qp_char_t* name)
 {
@@ -754,6 +980,7 @@ qp_shm_init(qp_shm_t shm, size_t size, const qp_char_t* name)
     shm->name = name;
     return shm;
 }
+
 
 qp_int_t
 qp_shm_destroy(qp_shm_t shm)
@@ -781,6 +1008,7 @@ qp_shm_destroy(qp_shm_t shm)
     
     return QP_ERROR;
 }
+
 
 qp_uchar_t* 
 qp_shm_start(qp_shm_t shm)

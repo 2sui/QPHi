@@ -203,7 +203,6 @@ qp_socket_init(qp_socket_t skt, qp_int_t domain, qp_int_t type,
     }
 
     /* get socket */
-//    qp_fd_set_fd(&skt->socket, socket(skt->domain, skt->type, 0));
     skt->socket.fd = socket(skt->domain, skt->type, 0);
     
     if (!qp_fd_is_valid(&skt->socket)) {

@@ -62,77 +62,49 @@ typedef struct qp_fd_s*         qp_fd_t;
 static inline bool
 qp_fd_is_inited(qp_fd_t fd)
 {
-    return fd ? fd->is_inited : false;
+    return fd->is_inited;
 }
 
 
 static inline bool
 qp_fd_is_alloced(qp_fd_t fd)
 {
-    return fd ? fd->is_alloced : false;
+    return fd->is_alloced;
 }
 
 
 static inline bool
 qp_fd_is_noblock(qp_fd_t fd)
 {
-   return fd ? fd->is_noblock : false; 
+   return fd->is_noblock; 
 }
 
 
 static inline bool
 qp_fd_is_aio(qp_fd_t fd)
 {
-    return fd ? (NULL != fd->aio) : false;
+    return NULL != fd->aio;
 }
 
 
 static inline bool
 qp_fd_is_valid(qp_fd_t fd)
 {
-    return fd ? (QP_FD_INVALID != fd->fd) : false;
+    return QP_FD_INVALID != fd->fd;
 }
 
 
-static inline void
-qp_fd_set_inited(qp_fd_t fd)
-{ 
-    fd ? fd->is_inited = true: 1;
+static inline qp_int_t
+qp_fd_get_fd(qp_fd_t fd) 
+{
+    return fd->fd;
 }
 
 
-static inline void
-qp_fd_set_alloced(qp_fd_t fd)
-{ 
-    fd ? fd->is_alloced = true : 1;
-}
-
-
-static inline void
-qp_fd_set_noblock(qp_fd_t fd)
-{ 
-    fd ? fd->is_noblock = true : 1;
-}
-
-
-static inline void
-qp_fd_unset_inited(qp_fd_t fd)
-{ 
-    fd ? fd->is_inited = false : 1;
-}
-
-
-static inline void
-qp_fd_unset_alloced(qp_fd_t fd)
-{ 
-    fd ? fd->is_alloced = false : 1;
-}
-
-
-static inline void
-qp_fd_unset_noblock(qp_fd_t fd)
-{ 
-    fd ? fd->is_noblock = false : 1;
+static inline qp_fd_type_t
+qp_fd_type(qp_fd_t fd)
+{
+    return fd->type;
 }
 
 
@@ -142,10 +114,6 @@ qp_fd_init(qp_fd_t fd, qp_fd_type_t type, bool aio);
 
 qp_int_t
 qp_fd_destroy(qp_fd_t fd);
-
-
-qp_fd_type_t
-qp_fd_type(qp_fd_t fd);
 
 
 qp_int_t
