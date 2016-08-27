@@ -70,87 +70,31 @@ struct qp_pool_manager_s {
 };
 
 
-static inline void
-qp_pool_set_inited(qp_pool_t pool)
-{ 
-    pool ? pool->is_inited = true : 1;
-}
-
-
-static inline void
-qp_pool_set_alloced(qp_pool_t pool)
-{ 
-    pool ? pool->is_alloced = true : 1;
-}
-
-
-static inline void
-qp_pool_manager_set_inited(qp_pool_manager_t manager)
-{ 
-    manager ? manager->is_inited = true : 1;
-}
-
-
-static inline void
-qp_pool_manager_set_alloced(qp_pool_manager_t manager)
-{ 
-    manager ? manager->is_alloced = true : 1;
-}
-
-
-static inline void
-qp_pool_unset_inited(qp_pool_t pool)
-{ 
-    pool ? pool->is_inited = false : 1;
-}
-
-
-static inline void
-qp_pool_unset_alloced(qp_pool_t pool)
-{ 
-    pool ? pool->is_alloced = false : 1;
-}
-
-
-static inline void
-qp_pool_manager_unset_inited(qp_pool_manager_t manager)
-{ 
-    manager ? manager->is_inited = false : 1;
-}
-
-
-static inline void
-qp_pool_manager_unset_alloced(qp_pool_manager_t manager)
-{ 
-    manager ? manager->is_alloced = false : 1;
-}
-
-
 static inline bool
 qp_pool_is_inited(qp_pool_t pool) 
 { 
-    return pool ? pool->is_inited : false;
+    return pool->is_inited;
 }
 
 
 static inline bool
 qp_pool_is_alloced(qp_pool_t pool)
 { 
-    return pool ? pool->is_alloced : false;
+    return pool->is_alloced;
 }
 
 
 static inline bool
 qp_pool_manager_is_inited(qp_pool_manager_t manager)
 { 
-    return manager ? manager->is_inited : false;
+    return manager->is_inited;
 }
 
 
 static inline bool
 qp_pool_manager_is_alloced(qp_pool_manager_t manager)
 { 
-    return manager ? manager->is_alloced : false;
+    return manager->is_alloced;
 }
 
 #ifdef __cplusplus
