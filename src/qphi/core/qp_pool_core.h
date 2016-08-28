@@ -45,8 +45,7 @@ struct qp_pool_s {
     size_t                  nsize;     /* max element number */
     size_t                  esize;     /* element size */
     qp_uchar_t*             room;      /* data room */
-    struct qp_list_s        idle;
-    struct qp_list_s        used;
+    struct qp_list_s        free;
     size_t                  nfree;
     bool                    is_inited;
     bool                    is_alloced;

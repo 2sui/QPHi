@@ -60,7 +60,7 @@ extern "C" {
 
 #ifdef QP_DEBUG
 #define qp_debug_info(info...) { \
-    fprintf(LOGOUT_TO, "\n[LOG] "); \
+    fprintf(LOGOUT_TO, "\n[INFO] "); \
     fprintf(LOGOUT_TO, info); \
 }
 #else

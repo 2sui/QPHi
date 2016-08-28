@@ -26,6 +26,7 @@
 #include "qp_event.h"
 #include "core/qp_io_core.h"
 #include "core/qp_pool_core.h"
+#include "core/qp_debug.h"
 
 
 #ifdef QP_OS_LINUX
@@ -71,7 +72,8 @@ typedef struct qp_event_source_s*      qp_event_source_t;
 
 
 struct  qp_event_s {
-    struct qp_pool_manager_s   source_cache_pool; /* cache pool */
+//    struct qp_pool_manager_s   source_cache_pool; /* cache pool */
+    struct qp_pool_s           source_cache_pool; /* cache pool */
     struct qp_pool_s           event_pool;        /* event mem pool */
     struct qp_rbtree_s         timer;
     struct qp_list_s           ready;             /* event ready list */
@@ -328,8 +330,9 @@ qp_event_source_alloc_read_cache(qp_event_t event, qp_event_source_t source)
     
     source->read_cache_size = QP_EVENT_READCACHE_SIZE;
     source->read_cache = \
-        (qp_uchar_t*)qp_pool_manager_alloc(&event->source_cache_pool, \
-        source->read_cache_size, NULL);
+          (qp_uchar_t*)qp_pool_alloc(&event->source_cache_pool, source->read_cache_size);
+//        (qp_uchar_t*)qp_pool_manager_alloc(&event->source_cache_pool, \
+//        source->read_cache_size, NULL);
     
     if (!source->read_cache) {
         source->read_cache_size = 0;
@@ -354,7 +357,8 @@ qp_event_source_free_read_cache(qp_event_t event, qp_event_source_t source)
         return QP_ERROR;
     }
     
-    qp_pool_manager_free(&event->source_cache_pool, source->read_cache, NULL);
+//    qp_pool_manager_free(&event->source_cache_pool, source->read_cache, NULL);
+    qp_pool_free(&event->source_cache_pool, source->read_cache);
     source->read_cache_size = 0;
     source->read_cache = NULL;
     return QP_SUCCESS;
@@ -378,8 +382,10 @@ qp_event_source_alloc_write_cache(qp_event_t event, qp_event_source_t source)
     source->write_cache_size = QP_EVENT_READCACHE_SIZE;
     source->write_cache_cur_offset = 0;
     source->write_cache = \
-        (qp_uchar_t*)qp_pool_manager_alloc(&event->source_cache_pool, \
-        source->write_cache_size, NULL);
+          (qp_uchar_t*)qp_pool_alloc(&event->source_cache_pool, source->write_cache_size);
+//        (qp_uchar_t*)qp_pool_manager_alloc(&event->source_cache_pool, \
+//        source->write_cache_size, NULL);
+    
     
     if (!source->write_cache) {
         source->write_cache_size = 0;
@@ -404,9 +410,11 @@ qp_event_source_free_write_cache(qp_event_t event, qp_event_source_t source)
         return QP_ERROR;
     }
     
-    qp_pool_manager_free(&event->source_cache_pool, source->write_cache, NULL);
+//    qp_pool_manager_free(&event->source_cache_pool, source->write_cache, NULL);
+    qp_pool_free(&event->source_cache_pool, source->write_cache);
     source->write_cache_size = 0;
     source->write_cache = NULL;
+    qp_debug_info("free used %lu", qp_pool_manager_used(&event->source_cache_pool));
     return QP_SUCCESS;
 }
 
@@ -628,8 +636,10 @@ qp_event_init(qp_event_t event, qp_int_t max_event_size, bool noblock, bool edge
     if (!event->bucket 
         || !qp_pool_init(&event->event_pool, sizeof(struct qp_event_source_s),\
         event->eventpool_size)
-        || !qp_pool_manager_init(&event->source_cache_pool, \
-        QP_EVENT_READCACHE_SIZE, event->source_cachepool_size))
+        || /*!qp_pool_manager_init(&event->source_cache_pool, \
+        QP_EVENT_READCACHE_SIZE, event->source_cachepool_size)*/
+           !qp_pool_init(&event->source_cache_pool, \
+           QP_EVENT_READCACHE_SIZE, event->source_cachepool_size))
     {
         qp_event_destroy(event);
         return NULL;
@@ -750,7 +760,8 @@ qp_event_destroy(qp_event_t event)
         }
         
         qp_pool_destroy(&event->event_pool, true);
-        qp_pool_manager_destroy(&event->source_cache_pool, true);
+//        qp_pool_manager_destroy(&event->source_cache_pool, true);
+        qp_pool_destroy(&event->source_cache_pool, true);
         
         if (qp_event_is_alloced(event)) {
             qp_free(event);

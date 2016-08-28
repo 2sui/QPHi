@@ -24,6 +24,7 @@
 
 
 #include "qp_pool_core.h"
+#include "qp_debug.h"
 
 
 static inline void
@@ -99,8 +100,7 @@ qp_pool_create(qp_pool_t pool)
         memset(pool, 0, sizeof(struct qp_pool_s));
     }
     
-    qp_list_init(&pool->idle);
-    qp_list_init(&pool->used);
+    qp_list_init(&pool->free);
     qp_pool_set_inited(pool);
     return pool;
 }
@@ -109,7 +109,7 @@ qp_pool_create(qp_pool_t pool)
 qp_pool_t
 qp_pool_init(qp_pool_t pool, size_t elmsize, size_t count)
 {
-    size_t i = 0, offset = 0;
+    size_t i = 0, offset = 0, bucket = 0;
     qp_pool_elm_t  elements = NULL;
     pool = qp_pool_create(pool);
     
@@ -121,18 +121,18 @@ qp_pool_init(qp_pool_t pool, size_t elmsize, size_t count)
     pool->nsize = count;
     pool->nfree = pool->nsize;
     
-    pool->room = (qp_uchar_t*)qp_alloc((pool->esize + sizeof(struct qp_pool_elm_s)) \
-        * pool->nsize);
+    bucket = pool->esize + sizeof(struct qp_pool_elm_s);
+    pool->room = (qp_uchar_t*)qp_alloc(bucket * pool->nsize);
     
     if (NULL == pool->room) {   
         qp_pool_destroy(pool, true);
         return NULL;
     }
     
-    for (;i < pool->nsize; i++, offset += pool->esize + sizeof(struct qp_pool_elm_s)) {
+    for (i = 0, offset = 0; i < pool->nsize; i++, offset += bucket) {
         elements = (qp_pool_elm_t)(pool->room + offset);
-        qp_list_push(&pool->idle, &elements->next);
         elements->root = pool;
+        qp_list_push(&pool->free, &elements->next);
     }
     
     return pool;
@@ -144,11 +144,8 @@ qp_pool_destroy(qp_pool_t pool, bool force)
 {
     if (qp_pool_is_inited(pool)) {
         
-        if (!force) {
-            
-            if (pool->nfree != pool->nsize) {
-                return QP_ERROR;
-            }
+        if (!force && (pool->nfree != pool->nsize)) {
+            return QP_ERROR;
         }
         
         if (pool->room) {
@@ -166,45 +163,6 @@ qp_pool_destroy(qp_pool_t pool, bool force)
     }
     
     return QP_ERROR;
-}
-
-
-void* 
-qp_pool_alloc(qp_pool_t pool, size_t size)
-{
-    qp_pool_elm_t elements = NULL;
-    qp_list_t     node = NULL;
-    
-    if (size <= pool->esize) {
-        node = qp_list_first(&pool->idle);
-        
-        if (!node) {
-            return NULL;
-        }
-
-        elements = (qp_pool_elm_t)qp_list_data(node, struct qp_pool_elm_s, next);
-//        qp_list_push(&pool->used, &elements->next);
-        qp_list_pop(&pool->idle);
-        pool->nfree--;
-        return (void*)((qp_uchar_t*)elements + sizeof(struct qp_pool_elm_s));
-    }
-    
-    return NULL;
-}
-
-
-qp_int_t
-qp_pool_free(qp_pool_t pool, void* ptr)
-{
-    qp_pool_elm_t elements = qp_pool_belong_to(ptr);
-    if (elements->root != pool) {
-        return QP_ERROR;
-    }
-        
-    qp_list_push(&pool->idle, &elements->next);
-//        qp_list_pop(&elments->next);
-    pool->nfree++;
-    return QP_SUCCESS;
 }
 
 
@@ -238,6 +196,47 @@ inline qp_pool_elm_t
 qp_pool_belong_to(void* ptr)
 {
     return (qp_pool_elm_t)((qp_uchar_t*)ptr - sizeof(struct qp_pool_elm_s));
+}
+
+
+void* 
+qp_pool_alloc(qp_pool_t pool, size_t size)
+{
+    qp_pool_elm_t elements = NULL;
+    qp_list_t     node = NULL;
+    
+    if (size <= pool->esize && qp_pool_available(pool) > 0) {
+        if (!(node = qp_list_first(&pool->free))) {
+            return NULL;
+        }
+        
+        qp_list_pop(&pool->free);
+        pool->nfree--;
+        node->next = NULL;
+
+        elements = (qp_pool_elm_t)qp_list_data(node, struct qp_pool_elm_s, next);
+        
+        qp_debug_info("rest in pool %lu", qp_pool_available(pool));
+        return (void*)((qp_uchar_t*)elements + sizeof(struct qp_pool_elm_s));
+    }
+    
+    qp_debug_error("Alloc size outof range!");
+    return NULL;
+}
+
+
+qp_int_t
+qp_pool_free(qp_pool_t pool, void* ptr)
+{
+    qp_pool_elm_t elements = qp_pool_belong_to(ptr);
+    if (elements->root != pool) {
+        qp_debug_error("Ptr does not belong to this pool!");
+        return QP_ERROR;
+    }
+        
+    qp_list_push(&pool->free, &elements->next);
+    pool->nfree++;
+    return QP_SUCCESS;
 }
 
 

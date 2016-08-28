@@ -127,6 +127,20 @@ qp_list_is_empty(qp_list_t list)
 }
 
 
+static inline qp_list_t
+qp_list_head(qp_list_t list)
+{ 
+    return list;
+}
+
+
+static inline qp_list_t 
+qp_list_first(qp_list_t list)
+{ 
+    return qp_list_is_empty(list) ? NULL : list->next;
+}
+ 
+
 static inline void
 qp_list_push(qp_list_t list, qp_list_t node)
 {
@@ -141,20 +155,6 @@ qp_list_pop(qp_list_t list)
     list->next = list->next->next;
 }
 
-
-static inline qp_list_t
-qp_list_head(qp_list_t list)
-{ 
-    return list;
-}
-
-
-static inline qp_list_t 
-qp_list_first(qp_list_t list)
-{ 
-    return qp_list_is_empty(list) ? NULL : list->next;
-}
- 
 
 # define  qp_list_next            qp_list_first
 # define  qp_list_remove_after    qp_list_pop

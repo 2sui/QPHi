@@ -3,6 +3,16 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 # project name
 PROJECT(qphi)
 
+set(CMAKE_BUILD_TYPE "Debug")
+
+if(CMAKE_BUILD_TYPE STREQUAL "Debug" )
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -g -Wall -DQP_DEBUG
+        -Wno-unused-variable -pthread")
+else(CMAKE_BUILD_TYPE STREQUAL "Debug" )
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O2 -pthread")
+endif( CMAKE_BUILD_TYPE STREQUAL "Debug" )
+message("CMake Build Type:"${CMAKE_BUILD_TYPE} ${CMAKE_CXX_FLAGS})
+
 # libs output path
 SET(BUILD_LIBS  ${PROJECT_SOURCE_DIR}/../../build/libs)
 # exec output path
@@ -29,7 +39,7 @@ SET(LIBRARY_OUTPUT_PATH  ${BUILD_LIBS})
 SET(CMAKE_INSTALL_PREFIX /usr)
 
 # add flag or definitions
-ADD_DEFINITIONS(-W -Wall -D_REENTRANT -D_FILE_OFFSET_BITS=64) # -DQP_DEBUG -g) 
+ADD_DEFINITIONS(-W -Wall -D_REENTRANT -D_FILE_OFFSET_BITS=64)  
 
 # lib target
 ADD_LIBRARY(output_shared  SHARED  ${SRC_ROOT} ${SRC_CORE} ${SRC_TINY_STACK})
