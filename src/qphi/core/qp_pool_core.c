@@ -284,19 +284,12 @@ qp_pool_manager_destroy(qp_pool_manager_t manager, bool force)
     if (qp_pool_manager_is_inited(manager)) {
         qp_pool_manager_elm_t pool = NULL;
         
-#ifdef QP_DEBUG
-        size_t counter = 0;
-#endif 
         while (!qp_queue_is_empty(&manager->pool_queue)) {
             pool = (qp_pool_manager_elm_t)qp_queue_data(qp_queue_first(&manager->pool_queue), \
                 struct qp_pool_manager_elm_s, queue);
             qp_queue_remove(&pool->queue);
             qp_pool_destroy(&pool->pool, force);
             qp_free(pool);
-            
-#ifdef QP_DEBUG
-            counter++;
-#endif 
         }
      
         return QP_SUCCESS;
@@ -311,7 +304,7 @@ qp_pool_manager_alloc(qp_pool_manager_t manager, size_t size, qp_pool_t* npool)
 {
     void* ptr = NULL;
         
-    /* if not say current pool, find or create one */
+    /* if have not current pool, find or create one */
     if ((NULL == manager->current) \
         || !qp_pool_available(&manager->current->pool)) 
     {

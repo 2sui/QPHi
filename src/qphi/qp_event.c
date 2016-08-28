@@ -635,7 +635,7 @@ qp_event_init(qp_event_t event, qp_int_t max_event_size, bool noblock, bool edge
     /* init event pool */
     if (!event->bucket 
         || !qp_pool_init(&event->event_pool, sizeof(struct qp_event_source_s),\
-        event->eventpool_size)
+        event->eventpool_size * 2)
         || /*!qp_pool_manager_init(&event->source_cache_pool, \
         QP_EVENT_READCACHE_SIZE, event->source_cachepool_size)*/
            !qp_pool_init(&event->source_cache_pool, \
@@ -645,7 +645,7 @@ qp_event_init(qp_event_t event, qp_int_t max_event_size, bool noblock, bool edge
         return NULL;
     }
     
-    for (itr = 0; itr < event->eventpool_size; itr++) {
+    for (itr = 0; itr < event->eventpool_size * 2; itr++) {
         qp_event_source_t source = (qp_event_source_t)\
             qp_pool_to_array(&event->event_pool, itr);
         memset(source, 0, sizeof(struct qp_event_source_s));
