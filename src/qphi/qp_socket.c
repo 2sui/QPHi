@@ -48,42 +48,42 @@ struct  qp_socket_s {
 static inline void
 qp_socket_set_alloced(qp_socket_t skt)
 { 
-    skt ? skt->is_alloced = true : 1;
+    skt->is_alloced = true;
 }
 
 
 static inline void
 qp_socket_set_listen(qp_socket_t skt)
 { 
-    skt ? skt->is_listen = true : 1;
+    skt->is_listen = true;
 }
 
 
 static inline void
 qp_socket_unset_alloced(qp_socket_t skt)
 { 
-    skt ? skt->is_alloced = false : 1;
+    skt->is_alloced = false;
 }
 
 
 static inline void
 qp_socket_unset_listen(qp_socket_t skt)
 { 
-    skt ? skt->is_listen = false : 1;
+    skt->is_listen = false;
 }
 
 
 static inline bool
 qp_socket_is_alloced(qp_socket_t skt) 
 { 
-    return skt ? skt->is_alloced : false; 
+    return skt->is_alloced; 
 }
 
 
 static inline bool
 qp_socket_is_listen(qp_socket_t skt) 
 { 
-    return skt ? skt->is_listen : false; 
+    return skt->is_listen; 
 }
 
 
@@ -269,10 +269,6 @@ qp_socket_destroy(qp_socket_t skt)
 qp_socket_t
 qp_socket_assign_inet(qp_socket_t skt, const qp_char_t* name, qp_ushort_t port) 
 {
-    if (!skt || !name || (0 == port)) {
-        return NULL;
-    }
-    
     memset(&skt->socket_addr, 0, sizeof(struct sockaddr_in));
         skt->socket_addr.inet_addr.sin_family = skt->domain;
 
@@ -317,10 +313,6 @@ qp_socket_assign_inet6(qp_socket_t skt, const qp_char_t* name, qp_ushort_t port)
     return NULL;
     
     // NOT SUPPORTED
-    if (!skt || !name || (0 == port)) {
-        return NULL;
-    }
-    
     skt = NULL;
     name = NULL;
     return NULL;
@@ -330,9 +322,6 @@ qp_socket_assign_inet6(qp_socket_t skt, const qp_char_t* name, qp_ushort_t port)
 qp_socket_t
 qp_socket_assign_unix(qp_socket_t skt, const qp_char_t* name) 
 {
-    if (!skt || !name) {
-        return NULL;
-    }
     memset(&skt->socket_addr.unet_addr, 0, sizeof(struct sockaddr_un));
     skt->socket_addr.unet_addr.sun_family = skt->domain;
     
@@ -360,10 +349,9 @@ qp_socket_assign_unix(qp_socket_t skt, const qp_char_t* name)
         unlink(saddr.sun_path);
 
         /* bind scoket */
-//        if (QP_SUCCESS != bind(qp_fd_get_fd(skt->socket), (struct sockaddr*)&saddr, len)) {
-//            return NULL;
-//        }
-        if (QP_SUCCESS != bind(skt->socket.fd, (struct sockaddr*)&saddr, len)) {
+        if (QP_SUCCESS != bind(qp_fd_get_fd(&skt->socket), \
+            (struct sockaddr*)&saddr, len)) 
+        {
             return NULL;
         }
 
@@ -413,8 +401,7 @@ qp_socket_close(qp_socket_t skt, qp_socket_shut_t shut)
         
         /* close socket at once */
         if (shut != QP_SOCKET_SHUT_CLOSE) {
-//            shutdown(qp_fd_get_fd(skt->socket), shut);
-            shutdown(skt->socket.fd, shut);
+            shutdown(qp_fd_get_fd(&skt->socket), shut);
         }
 
         return qp_fd_close(&skt->socket);

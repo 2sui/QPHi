@@ -54,50 +54,44 @@ struct qp_file_s {
 static inline void
 qp_file_set_alloced(qp_file_t file)
 { 
-    file ? file->is_alloced = true : 1;
+    file->is_alloced = true;
 }
 
 static inline void
 qp_file_set_directIO(qp_file_t file)
 { 
-    file ? file->is_directIO = true : 1;
+    file->is_directIO = true;
 }
 
 
 static inline void
 qp_file_unset_alloced(qp_file_t file)
 { 
-    file ? file->is_alloced = false : 1;
+    file->is_alloced = false;
 }
 
 
 static inline void
 qp_file_unset_directIO(qp_file_t file)
 { 
-    file ? file->is_directIO = false : 1;
+    file->is_directIO = false;
 }
 
 
 static inline bool
 qp_file_is_alloced(qp_file_t file) 
 { 
-    return file ? file->is_alloced : false; 
+    return  file->is_alloced; 
 }
 
 
 static inline bool
 qp_file_is_directIO(qp_file_t file) 
 { 
-    return file ? file->is_directIO : false; 
+    return file->is_directIO; 
 }
 
 
-/**
- * Get file stat.
- * 
- * @param file
- * @return Return QP_SUCCESS if success, otherwise return QP_ERROR.
- */
 qp_int_t
 qp_file_stat(qp_file_t file) {
     
@@ -168,8 +162,6 @@ qp_file_init(qp_file_t file, qp_int_t mod, size_t bufsize)
         file->wrbuf = (qp_uchar_t*) qp_alloc_align(QP_PAGE_SIZE, file->wrbuf_size);
         file->rdbuf = (qp_uchar_t*) qp_alloc_align(QP_PAGE_SIZE, file->rdbuf_size);
         qp_file_set_directIO(file);
-        
-        fprintf(stderr, "\n set direct io");
             
     } break;
     
