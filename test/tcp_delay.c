@@ -80,7 +80,7 @@ main(int argc, char** argv)
                 end = ntime.tv_sec * 1000 + ntime.tv_usec / 1000;
                 
                 /* The client send 160 bytes in total , if Nagle is not disabled, 
-                 * the server will recv 16 byte for first time and recv 114 bytes 
+                 * the server will recv 16 bytes for first time and recv 114 bytes 
                  * for the second, beacuse the first 16 bytes will be sent at once,
                  * and then the client wait for ACK, but the server will never 
                  * send any data, so the client will never recv an ACK in 40~200ms,

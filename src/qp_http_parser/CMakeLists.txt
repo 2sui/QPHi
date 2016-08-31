@@ -1,0 +1,48 @@
+# cmake version
+CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
+# project name
+PROJECT(QPHttpParse)
+
+# libs output path
+SET(BUILD_LIBS  ${PROJECT_SOURCE_DIR}/../../build/libs)
+# exec output path
+SET(BUILD_BIN  ${PROJECT_SOURCE_DIR}/../../build/bin)
+
+# deps dir
+SET(DEPS_HTTP_PARSER  ../../deps/http-parser)
+
+SET(CMAKE_INSTALL_PREFIX /usr)
+
+# sources dir
+AUX_SOURCE_DIRECTORY(${PROJECT_SOURCE_DIR}  SRC_ROOT)
+SET(SRC_HTTP_PARSER  ${DEPS_HTTP_PARSER}/http_parser.c)
+
+# headers dir
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR} ${DEPS_HTTP_PARSER})
+
+# set libs output path
+SET(LIBRARY_OUTPUT_PATH  ${BUILD_LIBS})
+# set exec output path
+SET(EXECUTABLE_OUTPUT_PATH  ${BUILD_BIN})
+
+# add flag or definitions
+ADD_DEFINITIONS(-W -Wall -D_REENTRANT -D_FILE_OFFSET_BITS=64)
+
+# lib target
+# .so
+ADD_LIBRARY(output_shared  SHARED  ${SRC_ROOT} ${SRC_HTTP_PARSER})
+TARGET_LINK_LIBRARIES(output_shared  pthread dl rt QPCore)
+SET_TARGET_PROPERTIES(output_shared PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
+SET_TARGET_PROPERTIES(output_shared PROPERTIES CLEAN_DIRECT_OUTPUT 1)
+#.a
+ADD_LIBRARY(output_static  STATIC  ${SRC_ROOT} ${SRC_HTTP_PARSER})
+TARGET_LINK_LIBRARIES(output_static  pthread dl rt QPCore)
+SET_TARGET_PROPERTIES(output_static PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
+SET_TARGET_PROPERTIES(output_static PROPERTIES CLEAN_DIRECT_OUTPUT 1)
+
+INSTALL(FILES ${BUILD_LIBS}/lib${PROJECT_NAME}.so ${BUILD_LIBS}/lib${PROJECT_NAME}.a DESTINATION lib)
+
+INSTALL(FILES ${PROJECT_SOURCE_DIR}/qp_http_parse.h
+        ${DEPS_HTTP_PARSER}/http_parser.h
+        DESTINATION include)
+
