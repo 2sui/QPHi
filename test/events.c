@@ -8,7 +8,7 @@
 #include <qphi/qp_pool.h>
 #include <qphi/qp_socket.h>
 #include <qphi/qp_event.h>
-
+#include <qphi/qp_system.h>
 
 #define  HTTP_RSP  \
 "HTTP/1.1 200 OK\r\n"\
@@ -47,9 +47,16 @@ main()
 {
     qp_event_t    event;
     qp_socket_t   skt;
+    qp_limit_t    fno_limit;
+    fno_limit.rlim_cur = 65535;
+    fno_limit.rlim_max = 65535;
     
-    if (!(skt = qp_socket_init(NULL, AF_INET, SOCK_STREAM, "0.0.0.0", 8080, true,\
-        128)) || !(event = qp_event_init(NULL, 1024, true, true) )) 
+    if (QP_ERROR == qp_limit_opt(QP_LIMIT_SET, RLIMIT_NOFILE, &fno_limit)) {
+        goto end;
+    }
+    
+    if (!(skt = qp_socket_init(NULL, AF_INET, SOCK_STREAM, "0.0.0.0", 8080, \
+        true, 1024)) || !(event = qp_event_init(NULL, 4096, true, true) )) 
     {
         fprintf(stderr, "\n Socket or event init fail.");
         goto end;
