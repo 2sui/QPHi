@@ -45,13 +45,14 @@ write_process(qp_int_t index, qp_event_stat_t stat, qp_uchar_t* cache, \
 int
 main()
 {
-    qp_event_t    event;
-    qp_socket_t   skt;
+    qp_event_t    event = NULL;
+    qp_socket_t   skt = NULL;
     qp_limit_t    fno_limit;
     fno_limit.rlim_cur = 65535;
     fno_limit.rlim_max = 65535;
     
     if (QP_ERROR == qp_limit_opt(QP_LIMIT_SET, RLIMIT_NOFILE, &fno_limit)) {
+        fprintf(stderr, "\n Set fileno limit fail.");
         goto end;
     }
     
