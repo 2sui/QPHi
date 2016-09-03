@@ -32,12 +32,7 @@ extern "C" {
 
     
 #include "qp_defines.h"
-    
-
-/* PAGE size */
-# ifndef QP_PAGE_SIZE
-# define QP_PAGE_SIZE   getpagesize()
-# endif
+ 
 
 /*
  * Allocate memory, return 16Byte-alignment memory on 64bit system or

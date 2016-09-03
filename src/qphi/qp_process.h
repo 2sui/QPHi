@@ -38,7 +38,7 @@ extern "C" {
 # define QP_PROCESS_INVALID       QP_ERROR
 # define QP_PROCESS_STACK_SIZE    8388608 /* system default 8M */
 
-    
+
 enum qp_process_type_e {
     QP_PROCESS_TYPE_UNKNOW,
     QP_PROCESS_TYPE_FORK,

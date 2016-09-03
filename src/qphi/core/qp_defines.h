@@ -493,6 +493,12 @@ __extension__
 # endif
 
 
+static qp_long_t qp_pagesize = sysconf(_SC_PAGESIZE) > 0 ? \
+    sysconf(_SC_PAGESIZE) : 4096;
+static qp_long_t qp_cpu_num = sysconf(_SC_NPROCESSORS_CONF) > 1 ? \
+    sysconf(_SC_NPROCESSORS_ONLN) : 1;
+static qp_long_t qp_cache_line = 64;
+
 # define  QP_ERROR             -1
 # define  QP_SUCCESS           0
 
