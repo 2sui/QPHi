@@ -159,8 +159,8 @@ qp_file_init(qp_file_t file, qp_int_t mod, size_t bufsize)
     switch (mod) {
         
     case QP_FILE_DIRECTIO: {
-        file->wrbuf = (qp_uchar_t*) qp_alloc_align(QP_PAGE_SIZE, file->wrbuf_size);
-        file->rdbuf = (qp_uchar_t*) qp_alloc_align(QP_PAGE_SIZE, file->rdbuf_size);
+        file->wrbuf = (qp_uchar_t*) qp_alloc_align(qp_pagesize, file->wrbuf_size);
+        file->rdbuf = (qp_uchar_t*) qp_alloc_align(qp_pagesize, file->rdbuf_size);
         qp_file_set_directIO(file);
             
     } break;

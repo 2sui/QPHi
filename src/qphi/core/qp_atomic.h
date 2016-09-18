@@ -145,12 +145,6 @@ static inline qp_atom_t qp_atom_fetch(qp_atom_t* atom_ptr)
     return qp_atom_fetch_add(atom_ptr, 0);
 }
 
-
-static inline qp_long_t qp_cpu_num() {
-    return ((sysconf(_SC_NPROCESSORS_ONLN) > 1) ? \
-        sysconf(_SC_NPROCESSORS_ONLN) : 1);
-}
-
 #ifdef __cplusplus
 }
 #endif

@@ -436,7 +436,7 @@ qp_lock_lock(qp_lock_t lock)
                 return QP_SUCCESS;
             }
             
-            if (qp_cpu_num() > 1) {
+            if (qp_cpu_num > 1) {
                 
                 for (i = 1; i < n; i <<= 1) {
                     
