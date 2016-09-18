@@ -1,0 +1,5 @@
+module CQPHi [system] {
+    header "/usr/include/qphi/qphi.h"
+    link   "qphi"
+    export *
+}
