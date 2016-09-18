@@ -42,10 +42,11 @@ struct qp_pool_elm_s {
 
 
 struct qp_pool_s {
+    struct qp_list_s        free;
+    qp_uchar_t*             room;      /* data room */
+    void*                   info_node; /* stored info related to this pool */
     size_t                  nsize;     /* max element number */
     size_t                  esize;     /* element size */
-    qp_uchar_t*             room;      /* data room */
-    struct qp_list_s        free;
     size_t                  nfree;
     bool                    is_inited;
     bool                    is_alloced;

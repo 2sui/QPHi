@@ -213,14 +213,10 @@ qp_pool_alloc(qp_pool_t pool, size_t size)
         qp_list_pop(&pool->free);
         pool->nfree--;
         node->next = NULL;
-
         elements = (qp_pool_elm_t)qp_list_data(node, struct qp_pool_elm_s, next);
-        
-        qp_debug_info("rest in pool %lu", qp_pool_available(pool));
         return (void*)((qp_uchar_t*)elements + sizeof(struct qp_pool_elm_s));
     }
     
-    qp_debug_error("Alloc size outof range!");
     return NULL;
 }
 
@@ -230,7 +226,6 @@ qp_pool_free(qp_pool_t pool, void* ptr)
 {
     qp_pool_elm_t elements = qp_pool_belong_to(ptr);
     if (elements->root != pool) {
-        qp_debug_error("Ptr does not belong to this pool!");
         return QP_ERROR;
     }
         
