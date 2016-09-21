@@ -41,13 +41,6 @@ typedef struct qp_pool_manager_elm_s*    qp_pool_manager_elm_t;
 
 
 /**
- * Create a memory pool.
- */
-qp_pool_t
-qp_pool_create(qp_pool_t pool);
-
-
-/**
  * Init a memory pool.
  * elmsize is the size of element in pool, and count is the element count in 
  * pool.
@@ -104,13 +97,6 @@ qp_pool_to_array(qp_pool_t pool, size_t index);
  */
 qp_pool_elm_t
 qp_pool_belong_to(void* ptr);
-
-
-/**
- * Create a pool manager.
- */
-qp_pool_manager_t
-qp_pool_manager_create(qp_pool_manager_t manager);
 
 
 /**

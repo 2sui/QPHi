@@ -294,14 +294,13 @@ qp_pool_manager_destroy(qp_pool_manager_t manager, bool force)
 }
 
 
-void*
-qp_pool_manager_alloc(qp_pool_manager_t manager, size_t size, qp_pool_t* npool)
-{
-    return NULL;
+//void*
+//qp_pool_manager_alloc(qp_pool_manager_t manager, size_t size, qp_pool_t* npool)
+//{
 //    void* ptr = NULL;
         
     /* if have not current pool, find or create one */
-//    if ((NULL == manager->current) \
+//    if ((NULL == manager->current) 
 //        || !qp_pool_available(&manager->current->pool)) 
 //    {
 //        qp_queue_t node = qp_queue_first(&manager->pool_queue);
@@ -309,7 +308,7 @@ qp_pool_manager_alloc(qp_pool_manager_t manager, size_t size, qp_pool_t* npool)
 //            
 //        /* find available pool */
 //        while (node && (node != &manager->pool_queue)) {
-//            manager->current = (qp_pool_manager_elm_t)qp_queue_data(node, \
+//            manager->current = (qp_pool_manager_elm_t)qp_queue_data(node, 
 //                struct qp_pool_manager_elm_s, queue);
 //        
 //            /* have room in this pool, use it */
@@ -323,14 +322,14 @@ qp_pool_manager_alloc(qp_pool_manager_t manager, size_t size, qp_pool_t* npool)
 //            
 //        /* if no pool available, create one */
 //        if (NULL == manager->current) {
-//            manager->current = (qp_pool_manager_elm_t) \
+//            manager->current = (qp_pool_manager_elm_t) 
 //                qp_alloc(sizeof(struct qp_pool_manager_elm_s));
 //                
 //            if (NULL == manager->current) {
 //                return NULL;
 //            }
 //                
-//            if (NULL == qp_pool_init(&(manager->current->pool),\
+//            if (NULL == qp_pool_init(&(manager->current->pool),
 //                manager->esize, manager->ecount)) 
 //            {
 //                qp_free(manager->current);
@@ -338,7 +337,7 @@ qp_pool_manager_alloc(qp_pool_manager_t manager, size_t size, qp_pool_t* npool)
 //                return NULL;
 //            }
 //                
-//            qp_queue_insert_after_head(&(manager->pool_queue), \
+//            qp_queue_insert_after_head(&(manager->pool_queue), 
 //                &(manager->current->queue));
 //            manager->current->manager = manager;
 //            manager->pool_count++;
@@ -356,13 +355,12 @@ qp_pool_manager_alloc(qp_pool_manager_t manager, size_t size, qp_pool_t* npool)
 //    }
 //        
 //    return ptr;
-}
+//}
 
 
-qp_int_t
-qp_pool_manager_free(qp_pool_manager_t manager, void* ptr, qp_pool_t npool)
-{
-    return ;
+//qp_int_t
+//qp_pool_manager_free(qp_pool_manager_t manager, void* ptr, qp_pool_t npool)
+//{
 //    if (manager->used_count)  {
 //        
 //        if (!npool) {
@@ -397,7 +395,7 @@ qp_pool_manager_free(qp_pool_manager_t manager, void* ptr, qp_pool_t npool)
 //    }
 //    
 //    return QP_ERROR;
-}
+//}
 
 
 inline qp_pool_manager_elm_t

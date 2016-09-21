@@ -137,15 +137,39 @@ extern "C" {
 
 # if defined(__APPLE__) && defined(__GNUC__)
 #  ifndef  QP_OS_MACX
-#  define QP_OS_MACX    /* MAC OSX */
+#  define QP_OS_MACX    /* MAC OSX/ macOS */
 #  endif
 # elif defined(__MACOSX__)
 #  ifndef  QP_OS_MACX
-#  define QP_OS_MACX    /* MAC OSX */
+#  define QP_OS_MACX    /* MAC OSX/ macOS */
 #  endif
 # elif defined(macintosh)
 #  ifndef  QP_OS_MAC9
 #  define QP_OS_MAC9
+#  endif
+# elif defined(__FreeBSD__)
+#  ifndef QP_OS_FREEBSD
+#  define QP_OS_FREEBSD
+#  endif
+# elif defined(__NetBSD__)
+#  ifndef  QP_OS_NETBSD
+#  define QP_OS_NETBSD
+#  endif
+# elif defined(__OpenBSD__)
+#  ifndef  QP_OS_OPENBSD
+#  define QP_OS_OPENBSD
+#  endif
+# elif defined(__bsdi__)
+#  ifndef  QP_OS_BSDI
+#  define QP_OS_BSDI
+#  endif
+# elif defined(__linux__) || defined(__linux)
+#  ifndef QP_OS_LINUX
+#  define QP_OS_LINUX   /* ## LINUX ## */
+#  endif
+# elif defined(__sun) || defined(sun)
+#  ifndef  QP_OS_SOLARIS
+#  define QP_OS_SOLARIS   /* ## Solaris ## */
 #  endif
 # elif defined(__OS2__)
 #  if defined(__EMX__)
@@ -174,17 +198,13 @@ extern "C" {
 #  define QP_OS_WIN64
 #  endif
 # elif !defined(SAG_COM) \
-      && (defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__))
+    && (defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__))
 #  ifndef  QP_OS_WIN32
 #  define QP_OS_WIN32
 #  endif
 # elif defined(__MWERKS__) && defined(__INTEL__)
 #  ifndef  QP_OS_WIN32
 #  define QP_OS_WIN32
-#  endif
-# elif defined(__sun) || defined(sun)
-#  ifndef  QP_OS_SOLARIS
-#  define QP_OS_SOLARIS   /* ## Solaris ## */
 #  endif
 # elif defined(hpux) || defined(__hpux)
 #  ifndef QP_OS_HPUX
@@ -198,33 +218,13 @@ extern "C" {
 #  ifndef  QP_OS_RELIANT
 #  define QP_OS_RELIANT
 #  endif
-# elif defined(__linux__) || defined(__linux)
-#  ifndef QP_OS_LINUX
-#  define QP_OS_LINUX   /* ## LINUX ## */
-#  endif
-# elif defined(__FreeBSD__)
-#  ifndef QP_OS_FREEBSD
-#  define QP_OS_FREEBSD
-#  endif
-# elif defined(__NetBSD__)
-#  ifndef  QP_OS_NETBSD
-#  define QP_OS_NETBSD
-#  endif
-# elif defined(__OpenBSD__)
-#  ifndef  QP_OS_OPENBSD
-#  define QP_OS_OPENBSD
-#  endif
-#elif defined(__bsdi__)
-#  ifndef  QP_OS_BSDI
-#  define QP_OS_BSDI
+# elif defined(__osf__)
+#  ifndef  QP_OS_OSF
+#  define QP_OS_OSF
 #  endif
 # elif defined(__sgi)
 #  ifndef  QP_OS_IRIX
 #  define QP_OS_IRIX
-#  endif
-# elif defined(__osf__)
-#  ifndef  QP_OS_OSF
-#  define QP_OS_OSF
 #  endif
 # elif defined(_AIX)
 #  ifndef  QP_OS_AIX
@@ -273,38 +273,22 @@ extern "C" {
 #  define QP_OS_UNIXWARE7
 #  endif
 # else
-#  error "QPHi has not been ported to this OS!"
+# error "QPHi has not been ported to this OS!"
 # endif
 
-# if defined(QP_OS_MAC9) || defined(QP_OS_MSDOS) \
-    || defined(QP_OS_OS2) || defined(QP_OS_WIN32) || defined(QP_OS_WIN64)
-# undef QP_OS_UNIX
-# elif !defined(QP_OS_UNIX)   /* ## UNIX ## */
+# if defined(QP_OS_MACX)  
+# define QP_OS_MACOS   
+# endif
+    
+# if defined(QP_OS_MACOS) || defined(QP_OS_FREEBSD) || defined(QP_OS_NETBSD) || \
+    defined(QP_OS_OPENBSD) || defined(QP_OS_BSDI)
+# define QP_OS_BSD         /* ## BSD ## */
+# endif
+    
+# if defined(QP_OS_BSD) || defined(QP_OS_LINUX) || defined(QP_OS_SOLARIS)
 # define QP_OS_UNIX
-# endif
-
-# if defined(QP_OS_MACX)
-# define QP_OS_OSX         /* ## OSX ## */
-# endif
-
-# if defined(QP_OS_FREEBSD) || defined(QP_OS_NETBSD)\
-    || defined(QP_OS_OPENBSD) || defined(QP_OS_BSDI)
-# define QP_OS_BSD4     /* ## BSD4 ## */
-# endif
-
-//# ifndef QP_OS_LINUX
-//# error "ONLY SUPPORT LINUX FOR NOW!!!"
-//# endif
-
-# if defined(QP_OS_UNIX)
-# define QP_OS_POSIX
-# else
-# error "QPHi does not support this OS (1)!"
-# endif
-
-/* POSIX */
-# ifdef QP_OS_POSIX
-# define QP_POSIX_XSI
+# else 
+# error "QPHi does not match this OS!"
 # endif
 
 
@@ -325,6 +309,8 @@ extern "C" {
 # include <stdlib.h>
 # include <string.h>
 # include <time.h>
+ /* posix */
+# define QP_OS_POSIX
 # endif
 
 # ifdef QP_OS_POSIX
@@ -341,7 +327,7 @@ extern "C" {
 # include <netdb.h>
 # include <net/if.h>         /* <less> */
 # include <netinet/in.h>
-#  include <netinet/tcp.h>    /* TCP_NODELAY, TCP_NOPUSH */
+# include <netinet/tcp.h>    /* TCP_NODELAY, TCP_NOPUSH */
 # include <nl_types.h>
 # include <poll.h>
 # include <pthread.h>
@@ -364,9 +350,10 @@ extern "C" {
 # include <termios.h>
 # include <unistd.h>
 //# include <wordexp.h>
-
 /* option */
 //# include <spawn.h>
+ /* XSI */
+# define QP_POSIX_XSI
 # endif
 
 # ifdef QP_POSIX_XSI
@@ -385,18 +372,19 @@ extern "C" {
 # include <sys/file.h>         /* ?? */
 # endif
 
-# if !defined(QP_OS_BSD4) && !defined(QP_OS_SOLARIS) \
-  && !defined(QP_OS_OSX) && !defined(QP_OS_LINUX)
-# error "QP does not support this OS (2)!"
-# endif
-
-# if defined(QP_OS_BSD4)
-# include <mqueue.h>
+# if defined(QP_OS_BSD)
+#  if defined(QP_OS_MACOS)
+#  include <sys/ioctl.h>
+#  include <xlocale.h>
+#  include <utmpx.h>
+#  else 
+#  include <mqueue.h>       /* FIONBIO */
+#  include <libutil.h>            /* setproctitle() before 4.1 */
+#  include <osreldate.h>
+#  endif
 # include <sys/param.h>          /* ALIGN() */
 # include <sys/mount.h>          /* statfs() */
-# include <sys/filio.h>          /* FIONBIO */
-# include <libutil.h>            /* setproctitle() before 4.1 */
-# include <osreldate.h>
+# include <sys/filio.h>   
 # include <sys/sysctl.h>
 # include <sys/event.h>
 # elif defined(QP_OS_SOLARIS)
@@ -409,14 +397,6 @@ extern "C" {
 # include <sys/devpoll.h>
 # include <port.h>
 # include <sys/sendfile.h>
-# include <utmpx.h>
-# elif defined(QP_OS_OSX)
-# include <sys/mount.h>          /* statfs() */
-# include <sys/filio.h>          /* FIONBIO */
-# include <sys/ioctl.h>
-# include <sys/sysctl.h>
-# include <xlocale.h>
-# include <sys/event.h>
 # include <utmpx.h>
 # else
 # include <mqueue.h>
