@@ -292,9 +292,9 @@ extern "C" {
 # define QP_OS_BSD4     /* ## BSD4 ## */
 # endif
 
-# ifndef QP_OS_LINUX
-# error "ONLY SUPPORT LINUX FOR NOW!!!"
-# endif
+//# ifndef QP_OS_LINUX
+//# error "ONLY SUPPORT LINUX FOR NOW!!!"
+//# endif
 
 # if defined(QP_OS_UNIX)
 # define QP_OS_POSIX
