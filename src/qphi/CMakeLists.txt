@@ -1,8 +1,20 @@
-# cmake version
+# Cmake version
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
-# project name
+# Project name
 PROJECT(qphi)
 
+# Compiler
+SET (CMAKE_C_COMPILER             "/usr/bin/clang")
+
+#SET (CMAKE_CXX_COMPILER             "/usr/bin/clang++")
+#SET (CMAKE_CXX_FLAGS                "-Wall")
+#SET (CMAKE_CXX_FLAGS_DEBUG          "-g")
+#SET (CMAKE_CXX_FLAGS_MINSIZEREL     "-Os -DNDEBUG")
+#SET (CMAKE_CXX_FLAGS_RELEASE        "-O4 -DNDEBUG")
+#SET (CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")
+
+
+# Debug & Release
 set(CMAKE_BUILD_TYPE "Debug")
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug" )
@@ -13,9 +25,9 @@ else(CMAKE_BUILD_TYPE STREQUAL "Debug" )
 endif( CMAKE_BUILD_TYPE STREQUAL "Debug" )
 message("CMake Build Type:"${CMAKE_BUILD_TYPE} ${CMAKE_CXX_FLAGS})
 
-# libs output path
+# Libs output path
 SET(BUILD_LIBS  ${PROJECT_SOURCE_DIR}/../../build/libs)
-# exec output path
+# Exec output path
 SET(BUILD_BIN  ${PROJECT_SOURCE_DIR}/../../build/bin)
 
 # set path 
@@ -23,25 +35,25 @@ SET(PATH_ROOT  ${PROJECT_SRC_ROOT_DIR})
 SET(PATH_CORE  ${PROJECT_SRC_ROOT_DIR}/core)
 SET(PATH_TINY_STACK ${PROJECT_SRC_ROOT_DIR}/qp_tiny_stack)
 
-# sources dir
+# Sources dir
 AUX_SOURCE_DIRECTORY(${PROJECT_SOURCE_DIR}  SRC_ROOT)
 AUX_SOURCE_DIRECTORY(${PROJECT_SOURCE_DIR}/core  SRC_CORE)
 AUX_SOURCE_DIRECTORY(${PROJECT_SOURCE_DIR}/qp_tiny_stack  SRC_TINY_STACK)
 
-# headers dir
+# Headers dir
 INCLUDE_DIRECTORIES(${PATH_ROOT} ${PATH_CORE} ${PATH_TINY_STACK})
 
-# set libs output path 
+# Set libs output path 
 SET(LIBRARY_OUTPUT_PATH  ${BUILD_LIBS})
-# set exec output path
+# Set exec output path
 #SET(EXECUTABLE_OUTPUT_PATH ${BUILD_BIN})
 
 SET(CMAKE_INSTALL_PREFIX /usr)
 
-# add flag or definitions
+# Add flag or definitions
 ADD_DEFINITIONS(-W -Wall -D_REENTRANT -D_FILE_OFFSET_BITS=64)  
 
-# lib target
+# Lib target
 ADD_LIBRARY(output_shared  SHARED  ${SRC_ROOT} ${SRC_CORE} ${SRC_TINY_STACK})
 TARGET_LINK_LIBRARIES(output_shared  pthread dl rt)
 SET_TARGET_PROPERTIES(output_shared PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
@@ -72,6 +84,6 @@ INSTALL(FILES ${PROJECT_SOURCE_DIR}/qphi.h
         ${PROJECT_SOURCE_DIR}/qp_tiny_stack.h
         DESTINATION include/qphi)
 
-# exec target
+# Exec target
 #ADD_EXECUTABLE(${PROJECT_NAME} ${SRC_ROOT} ${SRC_CORE} ${SRC_QP_TINY_STACK})
 #TARGET_LINK_LIBRARIES(${PROJECT_NAME}  pthread dl rt)

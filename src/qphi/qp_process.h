@@ -155,4 +155,3 @@ qp_process_pid(qp_process_t process);
 #endif
 
 #endif /* QP_PROCESS_H */
-

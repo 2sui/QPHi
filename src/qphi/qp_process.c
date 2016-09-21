@@ -27,7 +27,7 @@
 #include "core/qp_memory_core.h"
 
 
-struct  qp_thread_handler_s {
+struct qp_thread_handler_s {
     void*                         (*handler_ptr)(void*);
     void*                         args_ptr;
     void*                         ret;
