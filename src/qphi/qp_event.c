@@ -28,14 +28,29 @@
 #include "core/qp_pool_core.h"
 #include "core/qp_debug.h"
 
+#if !defined(QP_OS_LINUX)
+typedef union epoll_data
+{
+  void         *ptr;
+  qp_int_t     fd;
+  qp_uint32_t  u32;
+  qp_uint64_t  u64;
+} epoll_data_t;
 
-#ifdef QP_OS_LINUX
-typedef  struct epoll_event    qp_epoll_event_s;
-#else 
-typedef  void                  qp_epoll_event_s;
+struct epoll_event
+{
+  qp_uint32_t   events;  /* Epoll events */
+  epoll_data_t  data;    /* User data variable */
+} __attribute__((__packed__));
+
+enum EPOLL_CTL_OPTION {
+    EPOLL_CTL_ADD,
+    EPOLL_CTL_MOD,
+    EPOLL_CTL_DEL
+};
 #endif
 
-
+typedef  struct epoll_event    qp_epoll_event_s;
 typedef  qp_epoll_event_s*     qp_epoll_event_t;
 
 
@@ -68,7 +83,7 @@ struct qp_event_source_s {
 };
 
 
-typedef struct qp_event_source_s*      qp_event_source_t;
+typedef struct qp_event_source_s*  qp_event_source_t;
 
 
 struct  qp_event_s {
@@ -125,27 +140,34 @@ qp_event_is_alloced(qp_event_t event)
 }
 
 
-#ifndef  QP_OS_LINUX
+#if !defined(QP_OS_LINUX)
 qp_int_t
 epoll_create(int __size)
 {
+# if defined(QP_OS_BSD)
+# else
     return QP_ERROR;
+# endif
 }
 
 
 qp_int_t
 epoll_ctl(int __epfd, int __op, int __fd, epoll_event *__event)
 {
+# if defined(QP_OS_BSD)
+# else
     return QP_ERROR;
+# endif
 }
-
 
 qp_int_t
 epoll_wait(int __epfd, epoll_event *__events, int __maxevents, int __timeout)
 {
+# if defined(QP_OS_BSD)
+# else
     return QP_ERROR;
+# endif
 }
-
 #endif
 
 
@@ -159,11 +181,7 @@ epoll_wait(int __epfd, epoll_event *__events, int __maxevents, int __timeout)
 qp_int_t
 qp_event_epoll_create(qp_event_t event, qp_int_t size)
 {
-#ifdef QP_OS_LINUX
     event->event_fd.fd = epoll_create(size);
-#else 
-    event->event_fd.fd = QP_ERROR;
-#endif
     return event->event_fd.fd;
 }
 
@@ -181,11 +199,7 @@ qp_int_t
 qp_event_epoll_wait(qp_event_t event, qp_epoll_event_t bucket, \
     qp_int_t bucket_size, qp_int_t timeout)
 {
-#ifdef QP_OS_LINUX
     return epoll_wait(event->event_fd.fd, bucket, bucket_size, timeout);
-#else 
-    return QP_ERROR;
-#endif
 }
 
 
@@ -205,14 +219,10 @@ qp_event_epoll_add(qp_event_t event, qp_event_source_t source)
     }
     
     qp_epoll_event_s setter;
-#ifdef  QP_OS_LINUX
     setter.data.ptr = source;
     setter.events = source->events;
     return epoll_ctl(event->event_fd.fd, EPOLL_CTL_ADD, \
         source->source_fd, &setter);
-#else
-    return QP_ERROR;
-#endif
 }
 
 
@@ -228,14 +238,10 @@ qp_int_t
 qp_event_epoll_reset(qp_event_t event, qp_event_source_t source, qp_uint32_t flag)
 {
     qp_epoll_event_s setter;
-#ifdef  QP_OS_LINUX
     setter.data.ptr = source;
     setter.events = source->events | flag;
     return epoll_ctl(event->event_fd.fd, EPOLL_CTL_MOD, \
         source->source_fd, &setter);
-#else
-    return QP_ERROR;
-#endif
 }
 
 
@@ -250,12 +256,8 @@ qp_int_t
 qp_event_epoll_del(qp_event_t event, qp_event_source_t source)
 {
     qp_epoll_event_s setter;
-#ifdef  QP_OS_LINUX
     return epoll_ctl(event->event_fd.fd, EPOLL_CTL_DEL, \
-        source->source_fd, &setter);
-#else
-    return QP_ERROR;
-#endif
+        source->source_fd, &setter); 
 }
 
 
