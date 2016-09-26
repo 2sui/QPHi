@@ -48,13 +48,13 @@ extern "C" {
 #  define  QP_EPOLL_EXCLUSIVE    EPOLLEXCLUSIVE
 # else
 #  define  QP_EPOLL_EXCLUSIVE    0
-#  define  QP_EPOLL_ET           1
-#  define  QP_EPOLL_ONESHOT      2
-#  define  QP_EPOLL_IN           3               
-#  define  QP_EPOLL_OUT          4
-#  define  QP_EPOLL_ERR          5              
-#  define  QP_EPOLL_HUP          6             
-#  define  QP_EPOLL_RDHUP        7 
+#  define  QP_EPOLL_ET           0
+#  define  QP_EPOLL_ONESHOT      EV_ONESHOT
+#  define  QP_EPOLL_IN           EVFILT_READ               
+#  define  QP_EPOLL_OUT          EVFILT_WRITE
+#  define  QP_EPOLL_ERR          EV_ERROR              
+#  define  QP_EPOLL_HUP          0             
+#  define  QP_EPOLL_RDHUP        0 
 # endif
 
     

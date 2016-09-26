@@ -48,6 +48,13 @@ enum EPOLL_CTL_OPTION {
     EPOLL_CTL_MOD,
     EPOLL_CTL_DEL
 };
+
+# if defined(QP_OS_BSD)
+struct kevent*  changelist = NULL;
+qp_int_t        changlist_size = 0;
+# else 
+# endif
+
 #endif
 
 typedef  struct epoll_event    qp_epoll_event_s;
@@ -104,6 +111,12 @@ struct  qp_event_s {
     qp_int_t                   bucket_size;       /* ready bucket size */
     bool                       is_alloced; 
     bool                       is_run;
+# if !defined(QP_OS_LINUX)
+#  if defined(QP_OS_BSD)
+    struct  kevent*            changelist;
+#  else 
+#  endif
+# endif
 };
 
 
@@ -145,6 +158,7 @@ qp_int_t
 epoll_create(int __size)
 {
 # if defined(QP_OS_BSD)
+    return kqueue();
 # else
     return QP_ERROR;
 # endif
@@ -155,6 +169,7 @@ qp_int_t
 epoll_ctl(int __epfd, int __op, int __fd, epoll_event *__event)
 {
 # if defined(QP_OS_BSD)
+    
 # else
     return QP_ERROR;
 # endif
@@ -556,6 +571,8 @@ qp_event_create(qp_event_t event)
         qp_event_is_alloced(event) ? qp_free(event) : 1;
         return NULL;
     }
+    
+    if 
     
     qp_list_init(&event->ready);
     qp_list_init(&event->listen_ready);
