@@ -57,8 +57,23 @@ qp_int_t        changlist_size = 0;
 
 #endif
 
-typedef  struct epoll_event    qp_epoll_event_s;
-typedef  qp_epoll_event_s*     qp_epoll_event_t;
+# if defined(QP_OS_LINUX)
+typedef  struct epoll_event    qp_evpoll_event_s;
+
+struct {
+} event
+# else 
+#  if defined(QP_OS_BSD)
+typedef  struct kevent         qp_evpoll_event_s;
+#  else
+typedef  void                  qp_evpoll_event_s;
+#  endif
+# endif
+typedef  qp_evpoll_event_s*    qp_evpoll_event_t;
+
+struct qp_event_ev_handle {
+    
+};
 
 
 struct qp_event_source_s {
@@ -76,6 +91,7 @@ struct qp_event_source_s {
     qp_uint32_t                events;
     qp_uint32_t                revents;  
     qp_int_t                   timeout;
+    
     qp_uint16_t                stat       :4;    
     qp_uint16_t                closed     :1;     /* need close */
     qp_uint16_t                listen     :1;     /* listen flag */
@@ -85,6 +101,7 @@ struct qp_event_source_s {
     qp_uint16_t                read       :1;     /* read event */
     qp_uint16_t                write_close:1;
     qp_uint16_t                           :5;
+    
     bool                       noblock;   /* need noblock */
     bool                       edge;      /* ET mod */
 };
@@ -101,22 +118,22 @@ struct  qp_event_s {
     struct qp_list_s           ready;             /* event ready list */
     struct qp_list_s           listen_ready;      /* event listen list */
     struct qp_fd_s             event_fd;          
-    qp_epoll_event_t           bucket;            /* ready bucket */
     qp_event_read_process_handler   read_process;
     qp_event_write_process_handler  write_process;
     qp_event_idle_handler      idle;              /* idle callback */
     void*                      idle_arg;          /* idle event callback arg */
-    qp_int_t                   source_cachepool_size; /* cache pool size */
-    qp_int_t                   eventpool_size;    /* event pool size */
-    qp_int_t                   bucket_size;       /* ready bucket size */
-    bool                       is_alloced; 
-    bool                       is_run;
+    qp_evpoll_event_t          bucket;            /* ready bucket */
 # if !defined(QP_OS_LINUX)
 #  if defined(QP_OS_BSD)
     struct  kevent*            changelist;
 #  else 
 #  endif
 # endif
+    qp_int_t                   source_cachepool_size; /* cache pool size */
+    qp_int_t                   eventpool_size;    /* event pool size */
+    qp_int_t                   bucket_size;       /* ready bucket size */
+    bool                       is_alloced; 
+    bool                       is_run;
 };
 
 
@@ -153,39 +170,6 @@ qp_event_is_alloced(qp_event_t event)
 }
 
 
-#if !defined(QP_OS_LINUX)
-qp_int_t
-epoll_create(int __size)
-{
-# if defined(QP_OS_BSD)
-    return kqueue();
-# else
-    return QP_ERROR;
-# endif
-}
-
-
-qp_int_t
-epoll_ctl(int __epfd, int __op, int __fd, epoll_event *__event)
-{
-# if defined(QP_OS_BSD)
-    
-# else
-    return QP_ERROR;
-# endif
-}
-
-qp_int_t
-epoll_wait(int __epfd, epoll_event *__events, int __maxevents, int __timeout)
-{
-# if defined(QP_OS_BSD)
-# else
-    return QP_ERROR;
-# endif
-}
-#endif
-
-
 /**
  * Create an epoll event manager.
  * 
@@ -194,7 +178,7 @@ epoll_wait(int __epfd, epoll_event *__events, int __maxevents, int __timeout)
  * @return 
  */
 qp_int_t
-qp_event_epoll_create(qp_event_t event, qp_int_t size)
+qp_event_evpoll_create(qp_event_t event, qp_int_t size)
 {
     event->event_fd.fd = epoll_create(size);
     return event->event_fd.fd;
@@ -211,7 +195,7 @@ qp_event_epoll_create(qp_event_t event, qp_int_t size)
  * @return 
  */
 qp_int_t
-qp_event_epoll_wait(qp_event_t event, qp_epoll_event_t bucket, \
+qp_event_evpoll_wait(qp_event_t event, qp_epoll_event_t bucket, \
     qp_int_t bucket_size, qp_int_t timeout)
 {
     return epoll_wait(event->event_fd.fd, bucket, bucket_size, timeout);
@@ -226,7 +210,7 @@ qp_event_epoll_wait(qp_event_t event, qp_epoll_event_t bucket, \
  * @return 
  */
 qp_int_t
-qp_event_epoll_add(qp_event_t event, qp_event_source_t source)
+qp_event_evpoll_add(qp_event_t event, qp_event_source_t source)
 {
     if (source->noblock) {
         fcntl(source->source_fd, F_SETFL, \
@@ -250,7 +234,7 @@ qp_event_epoll_add(qp_event_t event, qp_event_source_t source)
  * @return 
  */
 qp_int_t
-qp_event_epoll_reset(qp_event_t event, qp_event_source_t source, qp_uint32_t flag)
+qp_event_evpoll_reset(qp_event_t event, qp_event_source_t source, qp_uint32_t flag)
 {
     qp_epoll_event_s setter;
     setter.data.ptr = source;
@@ -268,7 +252,7 @@ qp_event_epoll_reset(qp_event_t event, qp_event_source_t source, qp_uint32_t fla
  * @return 
  */
 qp_int_t
-qp_event_epoll_del(qp_event_t event, qp_event_source_t source)
+qp_event_evpoll_del(qp_event_t event, qp_event_source_t source)
 {
     qp_epoll_event_s setter;
     return epoll_ctl(event->event_fd.fd, EPOLL_CTL_DEL, \
