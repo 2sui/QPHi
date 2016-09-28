@@ -100,7 +100,7 @@ typedef  void* (*qp_event_idle_handler)(void*);
  * @return Return QP_ERROR if the event should be shut down; return value > 0 
  *         means there are some data to be sent; otherwise return 0.
  */
-typedef qp_int_t (*qp_event_read_process_handler)(qp_int_t index, \
+typedef qp_int_t (*qp_event_read_handler)(qp_int_t index, \
     qp_event_stat_t stat, qp_uchar_t* cache, \
     size_t cache_offset);
 
@@ -119,7 +119,7 @@ typedef qp_int_t (*qp_event_read_process_handler)(qp_int_t index, \
  *        close current event after data in cache is sent; otherwise will do 
  *        nothing except sending data.
  */
-typedef qp_int_t (*qp_event_write_process_handler)(qp_int_t index, \
+typedef qp_int_t (*qp_event_write_handler)(qp_int_t index, \
     qp_event_stat_t stat, qp_uchar_t* cache, \
     size_t *write_bytes, size_t cache_size);
 
@@ -139,12 +139,12 @@ qp_event_regist_idle_handler(qp_event_t event, qp_event_idle_handler idle_cb, \
 
 qp_int_t
 qp_event_regist_read_process_handler(qp_event_t event, \
-    qp_event_read_process_handler process);
+    qp_event_read_handler process);
 
 
 qp_int_t
 qp_event_regist_write_process_handler(qp_event_t event, \
-    qp_event_write_process_handler process);
+    qp_event_write_handler process);
 
 
 qp_int_t
