@@ -33,6 +33,7 @@ extern "C" {
 #include "../core/qp_io_core.h"
 #include "../core/qp_pool_core.h"
 #include "../core/qp_debug.h"
+#include "../qp_event.h"
 
 #if !defined(QP_OS_LINUX)
 typedef union epoll_data
@@ -66,7 +67,21 @@ typedef  struct kevent         qp_evpoll_event_s;
 typedef  void                  qp_evpoll_event_s;
 # endif
 #endif
-typedef  qp_evpoll_event_s*    qp_evpoll_event_t;
+
+typedef  qp_evpoll_event_s*        qp_evpoll_event_t;
+typedef struct qp_event_source_s*  qp_event_source_t;
+
+
+typedef struct {
+    qp_int_t (*qp_event_ev_create)(qp_event_t event, qp_int_t size);
+    qp_int_t (*qp_event_ev_wait)(qp_event_t event, qp_int_t timeout);
+    qp_int_t (*qp_event_ev_queue)();
+    qp_int_t (*qp_event_ev_add)(qp_event_t event, qp_event_source_t source);
+    qp_int_t (*qp_event_ev_reset)(qp_event_t event, qp_event_source_t source, \
+        qp_uint32_t flag);
+    qp_int_t (*qp_event_ev_del)(qp_event_t event, qp_event_source_t source);
+} qp_event_ev_handle;
+
 
 struct qp_event_source_s {
     struct qp_list_s           ready_next;          /* event source list */
@@ -99,17 +114,6 @@ struct qp_event_source_s {
 };
 
 
-typedef struct qp_event_source_s*  qp_event_source_t;
-
-typedef struct {
-    qp_int_t (*qp_event_ev_create)(qp_event_t event, qp_int_t size);
-    qp_int_t (*qp_event_ev_wait)(qp_event_t event, qp_int_t timeout);
-    qp_int_t (*qp_event_ev_add)(qp_event_t event, qp_event_source_t source);
-    qp_int_t (*qp_event_ev_reset)(qp_event_t event, qp_event_source_t source, \
-        qp_uint32_t flag);
-    qp_int_t (*qp_event_ev_del)(qp_event_t event, qp_event_source_t source);
-} qp_event_ev_handle;
-
 struct  qp_event_s {
     struct qp_pool_s         source_cache_pool; /* read/write cache pool */
     size_t                   source_cachepool_size; /* cache pool size */
@@ -120,10 +124,7 @@ struct  qp_event_s {
     struct qp_list_s         listen_ready;      /* event listen list */
     struct qp_fd_s           event_fd;     
     qp_event_ev_handle       event_handle;      /* event handler */
-    void*                    idle_arg;          /* idle event callback arg */
-    qp_event_idle_handler    idle;              
-    qp_event_read_handler    read_process;
-    qp_event_write_handler   write_process;     /* idle callback */
+    qp_event_process_handle  process_handle;    /* process handler */
     qp_evpoll_event_t        bucket;            /* ready bucket */
     size_t                   bucket_size;       /* ready bucket size */
 # if !defined(QP_OS_LINUX)
@@ -131,12 +132,12 @@ struct  qp_event_s {
     struct  kevent*          changelist;        /* change bucket */
     size_t                   changelist_size;
 #  else 
+    // other system
 #  endif
 # endif
     bool                     is_alloced; 
     bool                     is_run;
 };
-
 
 #ifdef __cplusplus
 }

@@ -37,8 +37,7 @@
 qp_int_t
 qp_event_evpoll_create(qp_event_t event, qp_int_t size)
 {
-    event->event_fd.fd = epoll_create(size);
-    return event->event_fd.fd;
+    return (event->event_fd.fd = epoll_create(size));
 }
 
 
@@ -52,7 +51,7 @@ qp_event_evpoll_create(qp_event_t event, qp_int_t size)
  * @return 
  */
 qp_int_t
-qp_event_evpoll_wait(qp_event_t event, qp_epoll_event_t bucket, \
+qp_event_evpoll_wait(qp_event_t event, qp_evpoll_event_t bucket, \
     qp_int_t bucket_size, qp_int_t timeout)
 {
     return epoll_wait(event->event_fd.fd, bucket, bucket_size, timeout);
@@ -74,7 +73,7 @@ qp_event_evpoll_add(qp_event_t event, qp_event_source_t source)
             fcntl(source->source_fd, F_GETFL) | O_NONBLOCK);
     }
     
-    qp_epoll_event_s setter;
+    qp_evpoll_event_s setter;
     setter.data.ptr = source;
     setter.events = source->events;
     return epoll_ctl(event->event_fd.fd, EPOLL_CTL_ADD, \
@@ -93,7 +92,7 @@ qp_event_evpoll_add(qp_event_t event, qp_event_source_t source)
 qp_int_t
 qp_event_evpoll_reset(qp_event_t event, qp_event_source_t source, qp_uint32_t flag)
 {
-    qp_epoll_event_s setter;
+    qp_evpoll_event_s setter;
     setter.data.ptr = source;
     setter.events = source->events | flag;
     return epoll_ctl(event->event_fd.fd, EPOLL_CTL_MOD, \
@@ -111,7 +110,7 @@ qp_event_evpoll_reset(qp_event_t event, qp_event_source_t source, qp_uint32_t fl
 qp_int_t
 qp_event_evpoll_del(qp_event_t event, qp_event_source_t source)
 {
-    qp_epoll_event_s setter;
+    qp_evpoll_event_s setter;
     return epoll_ctl(event->event_fd.fd, EPOLL_CTL_DEL, \
         source->source_fd, &setter); 
 }

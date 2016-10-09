@@ -34,7 +34,7 @@ extern "C" {
 #include "core/qp_defines.h"
 
     
-# ifdef  QP_OS_LINUX
+# if defined(QP_OS_LINUX)
 #  ifndef  EPOLLEXCLUSIVE
 #   define  EPOLLEXCLUSIVE      0
 #  endif
@@ -47,27 +47,24 @@ extern "C" {
 #  define  QP_EPOLL_RDHUP        EPOLLRDHUP 
 #  define  QP_EPOLL_EXCLUSIVE    EPOLLEXCLUSIVE
 # else
-#  define  QP_EPOLL_EXCLUSIVE    0
-#  define  QP_EPOLL_ET           0
-#  define  QP_EPOLL_ONESHOT      EV_ONESHOT
-#  define  QP_EPOLL_IN           EVFILT_READ               
-#  define  QP_EPOLL_OUT          EVFILT_WRITE
-#  define  QP_EPOLL_ERR          EV_ERROR              
-#  define  QP_EPOLL_HUP          0             
-#  define  QP_EPOLL_RDHUP        0 
+#  if defined(QP_OS_BSD)
+#   define  QP_EPOLL_EXCLUSIVE    0
+#   define  QP_EPOLL_ET           0
+#   define  QP_EPOLL_ONESHOT      EV_ONESHOT
+#   define  QP_EPOLL_IN           EVFILT_READ               
+#   define  QP_EPOLL_OUT          EVFILT_WRITE
+#   define  QP_EPOLL_ERR          EV_ERROR              
+#   define  QP_EPOLL_HUP          0             
+#   define  QP_EPOLL_RDHUP        0 
+#  else 
+   // other system
+#  endif
 # endif
 
     
 # define  QP_EVENT_READCACHE_SIZE    4096    // common buffer size
     
     
-/* buf type */
-typedef enum  {
-    QP_EVENT_BLOCK_OPT = 0,  /* do read/write with block buf */
-    QP_EVENT_VECT_OPT,       /* do read/write with iovec buf */
-} qp_event_opt_t;
-
-
 /* event fd stat */
 typedef enum {
     QP_EVENT_IDL = 0,
@@ -77,51 +74,55 @@ typedef enum {
 } qp_event_stat_t;
 
 
+/* buf type */
+typedef enum  {
+    QP_EVENT_BLOCK_OPT = 0,  /* do read/write with block buf */
+    QP_EVENT_VECT_OPT,       /* do read/write with iovec buf */
+} qp_event_opt_t;
+
+
 typedef union {
     qp_uchar_t*    block;
     struct iovec*  vector;
 } qp_event_buf_t;
 
 
-typedef struct qp_event_s*         qp_event_t;
+typedef struct qp_event_s*         qp_event_t;  
 
 
-/* idle process handler */
-typedef  void* (*qp_event_idle_handler)(void*); 
-
-
-/** 
- * Read events process handler.
- * 
- * @param index Current event identification.
- * @param stat: Event stat. See qp_event_stat_t.
- * @param cache: Read cache address.
- * @param cache_size: Read cache content size.
- * @return Return QP_ERROR if the event should be shut down; return value > 0 
- *         means there are some data to be sent; otherwise return 0.
- */
-typedef qp_int_t (*qp_event_read_handler)(qp_int_t index, \
-    qp_event_stat_t stat, qp_uchar_t* cache, \
-    size_t cache_offset);
-
-
-/**
- * Write events process handler.
- * 
- * @param index Current event identification.
- * @param stat: Event stat. See qp_event_stat_t.
- * @param cache: Write cache address.
- * @param write_bytes: Data size in cache that will be sent.(this arg should 
- *        always be set bigger than 0 if some data needs be sent)
- * @param cache_size: Max write cache size. The data to be sent should NOT bigger
- *         than it.
- * @return Return QP_ERROR will close current event immediately; return 0 will 
- *        close current event after data in cache is sent; otherwise will do 
- *        nothing except sending data.
- */
-typedef qp_int_t (*qp_event_write_handler)(qp_int_t index, \
-    qp_event_stat_t stat, qp_uchar_t* cache, \
-    size_t *write_bytes, size_t cache_size);
+typedef struct {
+    /** 
+     * Read events process handler.
+     * 
+     * @param index Current event identification.
+     * @param stat: Event stat. See qp_event_stat_t.
+     * @param cache: Read cache address.
+     * @param cache_size: Read cache content size.
+     * @return Return QP_ERROR if the event should be shut down; return value > 0 
+     *         means there are some data to be sent; otherwise return 0.
+     */
+    qp_int_t (*read)(qp_int_t index, qp_event_stat_t stat, \
+        qp_uchar_t* cache, size_t cache_offset); 
+    /**
+     * Write events process handler.
+     * 
+     * @param index Current event identification.
+     * @param stat: Event stat. See qp_event_stat_t.
+     * @param cache: Write cache address.
+     * @param write_bytes: Data size in cache that will be sent.(this arg should 
+     *        always be set bigger than 0 if some data needs be sent)
+     * @param cache_size: Max write cache size. The data to be sent should NOT bigger
+     *         than it.
+     * @return Return QP_ERROR will close current event immediately; return 0 will 
+     *        close current event after data in cache is sent; otherwise will do 
+     *        nothing except sending data.
+     */
+    qp_int_t (*write)(qp_int_t index, qp_event_stat_t stat, \
+        qp_uchar_t* cache, size_t *write_bytes, size_t cache_size);
+    
+    void* (*idle)(void*); 
+    void* idle_arg;
+} qp_event_process_handle;
 
 
 qp_event_t
@@ -133,18 +134,7 @@ qp_event_destroy(qp_event_t event);
 
 
 qp_int_t
-qp_event_regist_idle_handler(qp_event_t event, qp_event_idle_handler idle_cb, \
-    void* idle_arg);
-
-
-qp_int_t
-qp_event_regist_read_process_handler(qp_event_t event, \
-    qp_event_read_handler process);
-
-
-qp_int_t
-qp_event_regist_write_process_handler(qp_event_t event, \
-    qp_event_write_handler process);
+qp_event_regist_process_handler(qp_event_t event, qp_event_process_handle handle);
 
 
 qp_int_t

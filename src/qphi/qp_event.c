@@ -23,8 +23,7 @@
  */
 
 
-#include "qp_event.h"
-#include "event_module/qp_event_module.h"
+#include "qp_event_module/qp_event_module.h"
 
 
 typedef  size_t (*qp_read_handler)(qp_event_t, qp_event_source_t);
@@ -569,52 +568,10 @@ qp_event_destroy(qp_event_t event)
  * @return 
  */
 qp_int_t
-qp_event_regist_idle_handler(qp_event_t event, qp_event_idle_handler idle_cb, \
-    void* idle_arg) 
+qp_event_regist_process_handler(qp_event_t event, qp_event_process_handle handle)
 {
     if (event && qp_fd_is_inited(&event->event_fd)) {
-        event->idle = idle_cb;
-        event->idle_arg = idle_arg;
-        return QP_SUCCESS;
-    }
-    
-    return QP_ERROR;
-}
-
-
-/**
- * Regist a hander that will be called when read events happen.
- * 
- * @param event
- * @param process
- * @return 
- */
-qp_int_t
-qp_event_regist_read_process_handler(qp_event_t event, \
-    qp_event_read_handler process) 
-{
-    if (event && qp_fd_is_inited(&event->event_fd)) {
-        event->read_process = process;
-        return QP_SUCCESS;
-    }
-    
-    return QP_ERROR;
-}
-
-
-/**
- * Regist a hander that will be called when write events happen.
- * 
- * @param event
- * @param process
- * @return 
- */
-qp_int_t
-qp_event_regist_write_process_handler(qp_event_t event, \
-    qp_event_write_handler process)
-{
-    if (event && qp_fd_is_inited(&event->event_fd)) {
-        event->write_process = process;
+        event->process_handle = handle;
         return QP_SUCCESS;
     }
     
@@ -701,8 +658,8 @@ qp_event_dispatch_queue(qp_event_t event) {
         if (!source->write_cache) {
             // read event
             if (source->read_cache) {
-                if (event->read_process) {
-                    ret = event->read_process(source->index, source->stat, \
+                if (event->process_handle.read) {
+                    ret = event->process_handle.read(source->index, source->stat,\
                         source->read_cache, source->read_cache_offset);
                     
                 } else {
@@ -722,7 +679,10 @@ qp_event_dispatch_queue(qp_event_t event) {
                 }
             
                 // have data to be sent, alloc cache for write event
-                if ((ret > 0) && !source->shutdown && event->write_process) {
+                if ((ret > 0) 
+                    && !source->shutdown 
+                    && event->process_handle.write) 
+                {
                     if (QP_ERROR == \
                         qp_event_source_alloc_write_cache(event, source)) 
                     {
@@ -733,7 +693,7 @@ qp_event_dispatch_queue(qp_event_t event) {
             
             // fill write cache 
             if (source->write_cache) {
-                ret = event->write_process(source->index, source->stat,\
+                ret = event->process_handle.write(source->index, source->stat,\
                     source->write_cache, &source->write_cache_offset,\
                     source->write_cache_size);
                 
@@ -794,8 +754,8 @@ qp_event_dispatch(qp_event_t event, qp_int_t timeout)
             }
             
             /* no error beacuse no event happen */
-            if (event->idle) {
-                event->idle(event->idle_arg);
+            if (event->process_handle.idle) {
+                event->process_handle.idle(event->process_handle.idle_arg);
             }
 
             continue;
@@ -805,7 +765,7 @@ qp_event_dispatch(qp_event_t event, qp_int_t timeout)
         for (itr = 0; itr < revent_num; itr++) {
             source = (qp_event_source_t)event->bucket[itr].data.ptr;
             source->revents = event->bucket[itr].events;
-            qp_list_push(source->listen ? &event->listen_ready : &event->ready, \
+            qp_list_push(source->listen ? &event->listen_ready : &event->ready,\
                 &source->ready_next);
         }
         
