@@ -6,7 +6,7 @@
 [![tag](https://img.shields.io/badge/tag-v1.1.1-yellow.svg)](https://github.com/2sui/QPHi/tree/1.1.1)
 [![Build Status](https://travis-ci.org/2sui/QPHi.svg?branch=master)](https://travis-ci.org/2sui/QPHi)
 
-Linux libraries for developing.
+Linux libraries for developing. *(It`s NOT finished yet!)*
 
 ----
 
