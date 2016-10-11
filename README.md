@@ -11,20 +11,30 @@ Linux libraries for developing.
 ----
 
 ## Build and Install
-Change current dirctrory to [_src/QPCore_](./src/QPCore) in **QPHi**:
+Change current dirctrory to QPHi, run `./build.sh help` that will show usage:
 
+```shell
+$ ./build.sh help
+Usage:
+  ./build.sh -- Release build.
+  ./build.sh debug -- Debug build.
+  ./build.sh install -- Install after build.
 ```
-$ QPHi$ cd src/QPCore
-```
-Then run `cmake` in [_src/QPCore_](./src/QPCore) to pre-build library:
+First, build the library:
 
+```shell
+$ ./build.sh
 ```
-QPHi/src/QPCore$ cmake
-```
-And run `make && sudo make install` to build and install library (You may need to type in your sudo password):
+If you want build it with debug info:
 
+```shell
+$ ./build.sh debug
 ```
-QPHi/src/QPCore$ make && sudo make install
+
+After that, run `./build.sh install` to install the library (may need `sudo`):
+
+```shell
+$ sudo ./build.sh install
 ```
 
 ----

@@ -19,7 +19,7 @@ endif( CMAKE_BUILD_TYPE STREQUAL "Debug" )
 
 
 # Libs output path
-SET(BUILD_LIBS  ${PROJECT_SOURCE_DIR}/../../build/libs)
+SET(BUILD_LIBS  ${PROJECT_SOURCE_DIR}/../../build/lib)
 # Exec output path
 SET(BUILD_BIN  ${PROJECT_SOURCE_DIR}/../../build/bin)
 
@@ -55,8 +55,6 @@ AUX_SOURCE_DIRECTORY(${PROJECT_SOURCE_DIR}/qp_tiny_stack  SRC_TINY_STACK)
 
 # Add flag or definitions
 ADD_DEFINITIONS(-W -Wall -D_REENTRANT -D_FILE_OFFSET_BITS=64)  
-
-
 
 # Lib target
 ADD_LIBRARY(output_shared  SHARED  
