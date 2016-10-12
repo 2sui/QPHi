@@ -65,13 +65,6 @@ qp_file_set_directIO(qp_file_t file)
 
 
 static inline void
-qp_file_unset_alloced(qp_file_t file)
-{ 
-    file->is_alloced = false;
-}
-
-
-static inline void
 qp_file_unset_directIO(qp_file_t file)
 { 
     file->is_directIO = false;
@@ -227,6 +220,9 @@ qp_file_open(qp_file_t file, const qp_char_t* path, qp_int_t oflag, qp_int_t mod
     file->open_mode = mod;
     
     if (qp_file_is_directIO(file)) {
+#ifndef O_DIRECT
+#define O_DIRECT  0
+#endif
         file->open_flag |= O_DIRECT;
         fprintf(stderr, "\n using direct");
     }
@@ -471,7 +467,7 @@ qp_file_reglock(qp_file_t file, qp_int_t type, off_t offset, \
 # ifdef __USE_LARGEFILE64
     struct flock64  lock;
 # else
-    sturct flock      flock;
+    struct flock    lock;
 # endif
     lock.l_type = (qp_short_t)type;
     lock.l_start = offset;
@@ -498,11 +494,11 @@ qp_file_locktest(qp_file_t file, qp_int_t type, off_t offset, \
         return QP_ERROR;
     }
 #ifdef QP_OS_POSIX
-
+    
 # ifdef __USE_LARGEFILE64
     struct flock64  lock;
 # else
-    sturct flock      flock;
+    struct flock    lock;
 # endif
     lock.l_type = (qp_short_t)type;
     lock.l_start = offset;

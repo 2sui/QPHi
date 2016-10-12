@@ -34,8 +34,8 @@ extern "C" {
 #include "core/qp_defines.h"
 
     
-# define QP_THREAD_INVALID        QP_ERROR
-# define QP_PROCESS_INVALID       QP_ERROR
+# define QP_THREAD_INVALID        0
+# define QP_PROCESS_INVALID       0
 # define QP_PROCESS_STACK_SIZE    8388608 /* system default 8M */
 
 

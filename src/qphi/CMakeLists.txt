@@ -8,7 +8,7 @@ PROJECT(qphi)
 #SET (CMAKE_CXX_COMPILER           "/usr/bin/g++")
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug" )
-    SET(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS} -g3 -Wall -Wno-uvimnused-variable -pthread")
+    SET(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS} -g3 -Wall -Wno-unused-variable -pthread")
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -g3 -Wall -Wno-unused-variable -pthread")
     SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS} ${CMAKE_C_FLAGS_DEBUG}")
     SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_DEBUG}")
@@ -38,7 +38,9 @@ SET(PATH_EVENT_MODULE  ${PROJECT_SRC_ROOT_DIR}/qp_event_module)
 SET(PATH_TINY_STACK ${PROJECT_SRC_ROOT_DIR}/qp_tiny_stack)
 
 # Link libraries
-SET(RUNTIME_LIBS pthread rt dl)
+FIND_LIBRARY(LB_SYS NAMES rt dl)
+SET(RUNTIME_LIBS "pthread ${LB_SYS}")
+
 
 # Headers dir
 INCLUDE_DIRECTORIES(
@@ -96,7 +98,11 @@ INSTALL(FILES ${BUILD_LIBS}/lib${PROJECT_NAME}.a
         DESTINATION lib)
 
 # Exec target
-#ADD_EXECUTABLE(${PROJECT_NAME} ${SRC_ROOT} ${SRC_CORE} ${SRC_QP_TINY_STACK})
+#ADD_EXECUTABLE(${PROJECT_NAME} 
+#    ${SRC_ROOT} 
+#    ${SRC_CORE} 
+#    ${SRC_EVENT_MODULE} 
+#    ${SRC_QP_TINY_STACK})
 #TARGET_LINK_LIBRARIES(${PROJECT_NAME}  ${RUNTIME_LIBS})
 
 message("=================== info =======================
@@ -106,7 +112,7 @@ Flags:
   c debug: ${CMAKE_C_FLAGS_DEBUG}
   c++: ${CMAKE_CXX_FLAGS}
   c++ debug: ${CMAKE_CXX_FLAGS_DEBUG}
-
+Linked Libraries: ${RUNTIME_LIBS}
 CMake Build Library output path: ${BUILD_LIBS}
 CMake Build exec output path: ${BUILD_BIN}
 ================================================")

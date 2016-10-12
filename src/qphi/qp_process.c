@@ -122,13 +122,6 @@ qp_thread_unset_inited(qp_thread_t thread)
 
 
 static inline void
-qp_thread_unset_alloced(qp_thread_t thread)
-{ 
-    thread->is_alloced = false;
-}
-
-
-static inline void
 qp_thread_unset_detach(qp_thread_t thread)
 { 
     thread->is_detach = false;
@@ -146,13 +139,6 @@ static inline void
 qp_process_unset_inited(qp_process_t process)
 { 
     process->is_inited = false;
-}
-
-
-static inline void
-qp_process_unset_alloced(qp_process_t process)
-{ 
-    process->is_alloced = false;
 }
 
 
@@ -453,6 +439,7 @@ qp_process_set_vfork_exec(qp_process_t process, qp_char_t* const *argv)
 }
 
 
+#if defined(QP_OS_LINUX)
 qp_int_t
 qp_process_set_clone(qp_process_t process, qp_int_t flag, \
     int (*fn)(void*), void* arg, size_t stack_size)
@@ -468,7 +455,7 @@ qp_process_set_clone(qp_process_t process, qp_int_t flag, \
     
     return QP_ERROR;
 }
-
+#endif
 
 pid_t
 qp_process_start(qp_process_t process)
@@ -535,7 +522,7 @@ qp_process_start(qp_process_t process)
                 }
                 
             }break;
-            
+#if defined(QP_OS_LINUX)
             case QP_PROCESS_TYPE_CLONE: {
                 
                 if (!process->handler.stack_size) {
@@ -567,6 +554,7 @@ qp_process_start(qp_process_t process)
                 return process->pid;
                 
             }break;
+#endif
             
             default: {
             }

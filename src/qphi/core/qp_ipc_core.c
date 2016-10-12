@@ -123,13 +123,6 @@ qp_lock_unset_inited(qp_lock_t lock)
 
 
 static inline void
-qp_lock_unset_alloced(qp_lock_t lock)
-{ 
-    lock->is_alloced = false;
-}
-
-
-static inline void
 qp_lock_unset_shared(qp_lock_t lock)
 { 
     lock->is_shared = false;
@@ -179,13 +172,6 @@ qp_rwlock_unset_inited(qp_rwlock_t rwlock)
 
 
 static inline void
-qp_rwlock_unset_alloced(qp_rwlock_t rwlock)
-{ 
-    rwlock->is_alloced = false;
-}
-
-
-static inline void
 qp_rwlock_unset_shared(qp_rwlock_t rwlock)
 { 
     rwlock->is_shared = false;
@@ -217,13 +203,6 @@ static inline void
 qp_cond_unset_inited(qp_cond_t cond)
 { 
     cond->is_inited = false;
-}
-
-
-static inline void
-qp_cond_unset_alloced(qp_cond_t cond)
-{ 
-    cond->is_alloced = false;
 }
 
 
@@ -263,13 +242,6 @@ qp_sem_unset_inited(qp_sem_t sem)
 
 
 static inline void
-qp_sem_unset_alloced(qp_sem_t sem)
-{ 
-    sem->is_alloced = false;
-}
-
-
-static inline void
 qp_sem_unset_shared(qp_sem_t sem)
 { 
     sem->is_shared = false;
@@ -294,13 +266,6 @@ static inline void
 qp_shm_unset_inited(qp_shm_t shm)
 { 
     shm->is_inited = false;
-}
-
-
-static inline void
-qp_shm_unset_alloced(qp_shm_t shm)
-{ 
-    shm->is_alloced = false;
 }
 
 

@@ -56,13 +56,6 @@ qp_fd_unset_inited(qp_fd_t fd)
 
 
 static inline void
-qp_fd_unset_alloced(qp_fd_t fd)
-{ 
-    fd->is_alloced = false;
-}
-
-
-static inline void
 qp_fd_unset_noblock(qp_fd_t fd)
 { 
     fd->is_noblock = false;

@@ -52,7 +52,7 @@ extern "C" {
  * Allocate {size} byte memory with {alignment}.
  * Return memory addr if success otherwise return NULL.
  */
-# if defined(QP_OS_LINUX)  || defined(QP_OS_BSD4) || defined(QP_OS_SOLARIS)
+# if defined(QP_OS_LINUX)  || defined(QP_OS_BSD) || defined(QP_OS_SOLARIS)
 void*
 qp_alloc_align(size_t alignment, size_t size);
 # else

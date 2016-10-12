@@ -54,7 +54,9 @@ enum qp_socket_domain_e {
     QP_SOCKET_DOMAIN_UNIX = AF_UNIX,
     QP_SOCKET_DOMAIN_INET = AF_INET,
     QP_SOCKET_DOMAIN_INET6 = AF_INET6,
+#if !defined(QP_OS_BSD)
     QP_SOCKET_DOMAIN_PACKET = AF_PACKET
+#endif
 };
 
 
@@ -260,8 +262,10 @@ qp_socket_set_nodelay(qp_socket_t skt, qp_int_t enable);
 
 
 /* TCP_QUICKACK */
+#if !defined(QP_OS_BSD)
 qp_int_t
 qp_socket_set_quickack(qp_socket_t skt, qp_int_t enable);
+#endif
 
 #ifdef __cplusplus
 }

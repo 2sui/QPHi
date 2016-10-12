@@ -36,13 +36,13 @@ extern "C" {
 # define _GNU_SOURCE
 # endif
 
-# ifndef _LARGEFILE64_SOURCE
-# define _LARGEFILE64_SOURCE  1
-# endif
+//# ifndef _LARGEFILE64_SOURCE
+//# define _LARGEFILE64_SOURCE  1
+//# endif
 
-# ifndef _LARGEFILE_SOURCE
-# define _LARGEFILE_SOURCE  1
-# endif
+//# ifndef _LARGEFILE_SOURCE
+//# define _LARGEFILE_SOURCE  1
+//# endif
 
 # ifdef _LARGEFILE_SOURCE
 # define __USE_LARGEFILE  1
@@ -137,7 +137,7 @@ extern "C" {
 
 # if defined(__APPLE__) && defined(__GNUC__)
 #  ifndef  QP_OS_MACX
-#  define QP_OS_MACX    /* MAC OSX/ macOS */
+#  define QP_OS_MACX    /* MAC OSX/macOS */
 #  endif
 # elif defined(__MACOSX__)
 #  ifndef  QP_OS_MACX
@@ -387,6 +387,7 @@ extern "C" {
 # include <sys/filio.h>   
 # include <sys/sysctl.h>
 # include <sys/event.h>
+# include <net/bpf.h>
 # elif defined(QP_OS_SOLARIS)
 # include <mqueue.h>
 # include <sys/statvfs.h>        /* statvfs() */

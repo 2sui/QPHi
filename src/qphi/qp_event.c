@@ -763,8 +763,8 @@ qp_event_dispatch(qp_event_t event, qp_int_t timeout)
         
         /* dispatch events */
         for (itr = 0; itr < revent_num; itr++) {
-            source = (qp_event_source_t)event->bucket[itr].data.ptr;
-            source->revents = event->bucket[itr].events;
+            //source = (qp_event_source_t)event->bucket[itr].data.ptr;
+            //source->revents = event->bucket[itr].events;
             qp_list_push(source->listen ? &event->listen_ready : &event->ready,\
                 &source->ready_next);
         }

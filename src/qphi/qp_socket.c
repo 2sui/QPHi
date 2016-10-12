@@ -60,13 +60,6 @@ qp_socket_set_listen(qp_socket_t skt)
 
 
 static inline void
-qp_socket_unset_alloced(qp_socket_t skt)
-{ 
-    skt->is_alloced = false;
-}
-
-
-static inline void
 qp_socket_unset_listen(qp_socket_t skt)
 { 
     skt->is_listen = false;
@@ -163,10 +156,11 @@ qp_socket_init(qp_socket_t skt, qp_int_t domain, qp_int_t type,
         }
         
     }break;
-
+#if !defined(QP_OS_BSD)
     case QP_SOCKET_DOMAIN_PACKET: {
         return NULL; // NOT SUPPORTED
     }break;
+#endif
 
     default: {
         return NULL;
@@ -228,10 +222,11 @@ qp_socket_init(qp_socket_t skt, qp_int_t domain, qp_int_t type,
         assign = qp_socket_assign_unix(skt, name);
         
     }break;
-
+#if !defined(QP_OS_BSD)
     case QP_SOCKET_DOMAIN_PACKET:{
         assign = qp_socket_assign_packet(skt);
     }break;
+#endif
 
     default: {
     }break;
@@ -372,7 +367,7 @@ qp_socket_assign_unix(qp_socket_t skt, const qp_char_t* name)
     return skt;
 }
 
-
+#if !defined(QP_OS_BSE)
 qp_socket_t 
 qp_socket_assign_packet(qp_socket_t skt) 
 {
@@ -385,6 +380,7 @@ qp_socket_assign_packet(qp_socket_t skt)
     
     return NULL;
 }
+#endif
 
 qp_int_t
 qp_socket_to_int(qp_socket_t skt)
@@ -464,9 +460,9 @@ qp_socket_accept(qp_socket_t skt, qp_socket_t sktClient)
         case QP_SOCKET_DOMAIN_INET6:{
             sktClient->socket_len = sizeof(struct sockaddr_in6);
         }break;
-
+#if !defined(QP_OS_BSD)
         case QP_SOCKET_DOMAIN_PACKET:
-            
+#endif
         default:{
             sktClient->socket_len = sizeof(struct sockaddr);
         }break;
@@ -563,7 +559,7 @@ qp_socket_set_reuse(qp_socket_t skt, qp_int_t reuse, qp_int_t enable)
         return qp_socket_setsockopt(skt, SOL_SOCKET, SO_REUSEADDR, \
             (const void *)&enable, sizeof(enable));
     }
-#ifdef QP_OS_BSD4
+#ifdef QP_OS_BSD
     if (reuse == QP_SOCKET_SO_REUSE_PORT) {
         return qp_socket_setsockopt(skt, SOL_SOCKET, SO_REUSEPORT, \
             (const void *)&enable, sizeof(enable));
@@ -576,7 +572,7 @@ qp_socket_set_reuse(qp_socket_t skt, qp_int_t reuse, qp_int_t enable)
 qp_int_t
 qp_socket_set_nopush(qp_socket_t skt, qp_int_t enable)
 {   
-#ifdef QP_OS_BSD4
+#ifdef QP_OS_BSD
     return qp_socket_setsockopt(skt, IPPROTO_TCP, TCP_NOPUSH, \
         (const void *)&enable, sizeof(enable));
 #else
@@ -593,10 +589,11 @@ qp_socket_set_nodelay(qp_socket_t skt, qp_int_t enable)
         (const void *)&enable, sizeof(enable));
 }
 
-
+#if !defined(QP_OS_BSD)
 qp_int_t
 qp_socket_set_quickack(qp_socket_t skt, qp_int_t enable)
 {
     return qp_socket_setsockopt(skt, IPPROTO_TCP, TCP_QUICKACK, \
         (const void *)&enable, sizeof(enable));
 }
+#endif

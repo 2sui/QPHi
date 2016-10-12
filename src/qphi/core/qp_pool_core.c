@@ -63,23 +63,9 @@ qp_pool_unset_inited(qp_pool_t pool)
 
 
 static inline void
-qp_pool_unset_alloced(qp_pool_t pool)
-{ 
-    pool->is_alloced = false;
-}
-
-
-static inline void
 qp_pool_manager_unset_inited(qp_pool_manager_t manager)
 { 
     manager->is_inited = false;
-}
-
-
-static inline void
-qp_pool_manager_unset_alloced(qp_pool_manager_t manager)
-{ 
-    manager->is_alloced = false;
 }
 
 

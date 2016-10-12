@@ -128,7 +128,7 @@ qp_daemonize(qp_int_t bg, qp_int_t holdfd, const char* workdir,
 
 
 qp_int_t
-qp_limit_opt(qp_int_t opt, __rlimit_resource_t source, qp_limit_t* limit)
+qp_limit_opt(qp_int_t opt, qp_int_t source, qp_limit_t* limit)
 {
     if (!limit) {
         return QP_ERROR;
