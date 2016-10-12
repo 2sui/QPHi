@@ -17,7 +17,7 @@ qp_stack_transmit_tcp(qp_uchar_t* frame, qp_uint32_t len, \
         return (result->l4_type = QP_STACK_PROTO_UNKNOWN);
     }
     
-    result->sport = &tcp->sport;
-    result->dport = &tcp->dport;
+    result->sport = tcp->sport;
+    result->dport = tcp->dport;
     return result->l4_type;
 }

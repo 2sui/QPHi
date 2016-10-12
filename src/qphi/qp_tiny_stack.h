@@ -255,8 +255,8 @@ typedef struct qp_stack_frame_result_s {
     qp_uint32_t    l4_type;
     qp_uint32_t    l4_offset;
     qp_uint32_t    data_offset;
-    qp_uint16_t*   sport;
-    qp_uint16_t*   dport;
+    qp_uint16_t    sport;
+    qp_uint16_t    dport;
     qp_stack_mac_addr_t*  smac;
     qp_stack_mac_addr_t*  dmac;
     

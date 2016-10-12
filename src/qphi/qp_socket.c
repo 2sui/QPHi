@@ -305,14 +305,12 @@ qp_socket_assign_inet(qp_socket_t skt, const qp_char_t* name, qp_ushort_t port)
 qp_socket_t
 qp_socket_assign_inet6(qp_socket_t skt, const qp_char_t* name, qp_ushort_t port) 
 {
-    port = port;
-    name = name;
-    skt = skt;
     return NULL;
     
     // NOT SUPPORTED
     skt = NULL;
     name = NULL;
+    port = 0;
     return NULL;
 }
 

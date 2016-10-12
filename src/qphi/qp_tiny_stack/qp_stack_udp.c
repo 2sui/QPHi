@@ -17,7 +17,7 @@ qp_stack_transmit_udp(qp_uchar_t* frame, qp_uint32_t len, \
         return (result->l4_type = QP_STACK_PROTO_UNKNOWN);
     }
     
-    result->sport = &udp->sport;
-    result->dport = &udp->dport;
+    result->sport = udp->sport;
+    result->dport = udp->dport;
     return result->l4_type;
 }
