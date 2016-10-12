@@ -224,7 +224,6 @@ qp_file_open(qp_file_t file, const qp_char_t* path, qp_int_t oflag, qp_int_t mod
 #define O_DIRECT  0
 #endif
         file->open_flag |= O_DIRECT;
-        fprintf(stderr, "\n using direct");
     }
     
     file->file.fd = open(file->name, file->open_flag, file->open_mode);
