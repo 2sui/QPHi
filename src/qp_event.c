@@ -58,12 +58,6 @@ qp_event_is_alloced(qp_event_t event)
     return event ? event->is_alloced : false; 
 }
 
-/**
- * Accept from a listen source.
- * 
- * @param source
- * @return 
- */
 static inline qp_int_t
 qp_event_source_accept(qp_event_source_t source)
 {
@@ -71,12 +65,6 @@ qp_event_source_accept(qp_event_source_t source)
 }
 
 
-/**
- * Close an event source.
- * 
- * @param source
- * @return 
- */
 qp_int_t
 qp_event_source_close(qp_event_source_t source)
 {
@@ -89,13 +77,6 @@ qp_event_source_close(qp_event_source_t source)
 }
 
 
-/**
- * Set read cache for the source.
- * 
- * @param event
- * @param source
- * @return 
- */
 qp_int_t
 qp_event_source_alloc_read_cache(qp_event_t event, qp_event_source_t source) 
 {
@@ -117,13 +98,6 @@ qp_event_source_alloc_read_cache(qp_event_t event, qp_event_source_t source)
 }
 
 
-/**
- * Free read cache for the source.
- * 
- * @param event
- * @param source
- * @return 
- */
 qp_int_t
 qp_event_source_free_read_cache(qp_event_t event, qp_event_source_t source) 
 {
@@ -138,13 +112,6 @@ qp_event_source_free_read_cache(qp_event_t event, qp_event_source_t source)
 }
 
 
-/**
- * Set write cache for the source.
- * 
- * @param event
- * @param source
- * @return 
- */
 qp_int_t 
 qp_event_source_alloc_write_cache(qp_event_t event, qp_event_source_t source) 
 {
@@ -166,13 +133,6 @@ qp_event_source_alloc_write_cache(qp_event_t event, qp_event_source_t source)
 }
 
 
-/**
- * Free write cache for the source.
- * 
- * @param event
- * @param source
- * @return 
- */
 qp_int_t
 qp_event_source_free_write_cache(qp_event_t event, qp_event_source_t source)
 {
@@ -187,12 +147,6 @@ qp_event_source_free_write_cache(qp_event_t event, qp_event_source_t source)
 }
 
 
-/**
- * Read data from a source.
- * 
- * @param source
- * @return 
- */
 size_t
 qp_event_source_read(qp_event_t event, qp_event_source_t source)
 {
@@ -245,12 +199,6 @@ qp_event_source_read(qp_event_t event, qp_event_source_t source)
 }
 
 
-/**
- * Write data to a source.
- * 
- * @param source
- * @return 
- */
 size_t
 qp_event_source_write(qp_event_t event, qp_event_source_t source)
 {
@@ -299,11 +247,6 @@ qp_event_source_write(qp_event_t event, qp_event_source_t source)
 }
 
 
-/**
- * Clear flag of the source.
- * 
- * @param source
- */
 void
 qp_event_source_clear_flag(qp_event_source_t source)
 {
@@ -318,12 +261,6 @@ qp_event_source_clear_flag(qp_event_source_t source)
 }
 
 
-/**
- * Create an event system.
- * 
- * @param event
- * @return 
- */
 qp_event_t
 qp_event_create(qp_event_t event)
 {
@@ -354,15 +291,6 @@ qp_event_create(qp_event_t event)
 }
 
 
-/**
- * Init an event system.
- * 
- * @param event
- * @param max_event_size
- * @param noblock
- * @param edge
- * @return 
- */
 qp_event_t
 qp_event_init(qp_event_t event, qp_int_t max_event_size, bool noblock, bool edge)
 {   
@@ -433,13 +361,6 @@ qp_event_init(qp_event_t event, qp_int_t max_event_size, bool noblock, bool edge
 }
 
 
-/**
- * Remove event source from event system .
- * 
- * @param event
- * @param source
- * @return 
- */
 qp_int_t
 qp_event_removeevent(qp_event_t event, qp_event_source_t source)
 {
@@ -458,16 +379,6 @@ qp_event_removeevent(qp_event_t event, qp_event_source_t source)
 }
 
 
-/**
- * Add a fd to event system.
- * 
- * @param event
- * @param fd
- * @param timeout
- * @param listen
- * @param auto_close
- * @return 
- */
 qp_int_t
 qp_event_addevent(qp_event_t event, qp_int_t fd, qp_int_t timeout, bool listen, \
     bool auto_close)
@@ -509,12 +420,6 @@ qp_event_addevent(qp_event_t event, qp_int_t fd, qp_int_t timeout, bool listen, 
 }
 
 
-/**
- * Destroy an event system.
- * 
- * @param emodule
- * @return 
- */
 qp_int_t
 qp_event_destroy(qp_event_t event)
 {
@@ -559,14 +464,6 @@ qp_event_destroy(qp_event_t event)
 }
 
 
-/**
- * Regist a handler that will be called when no events comming.
- * 
- * @param event
- * @param idle_cb
- * @param idle_arg
- * @return 
- */
 qp_int_t
 qp_event_regist_process_handler(qp_event_t event, qp_event_process_handle handle)
 {
@@ -579,12 +476,6 @@ qp_event_regist_process_handler(qp_event_t event, qp_event_process_handle handle
 }
 
 
-/**
- * Dispatch listen events to listen queue.
- * 
- * @param event
- * @param timeout
- */
 void
 qp_event_dispatch_listen_queue(qp_event_t event, qp_int_t timeout) {
     qp_event_source_t  source = NULL;
@@ -618,11 +509,6 @@ qp_event_dispatch_listen_queue(qp_event_t event, qp_int_t timeout) {
 }
 
 
-/**
- * Dispatch read/write events to event queue.
- * 
- * @param event
- */
 void
 qp_event_dispatch_queue(qp_event_t event) {
     qp_event_source_t  source = NULL;
@@ -722,13 +608,6 @@ qp_event_dispatch_queue(qp_event_t event) {
 }
 
 
-/**
- * Events dispatch run loop.
- * 
- * @param event
- * @param timeout
- * @return 
- */
 qp_int_t
 qp_event_dispatch(qp_event_t event, qp_int_t timeout) 
 {

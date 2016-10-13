@@ -269,9 +269,6 @@ qp_shm_unset_inited(qp_shm_t shm)
 }
 
 
-/**
- *   create lock.
- */
 qp_lock_t
 qp_lock_create(qp_lock_t lock, bool shared, bool spin)
 {

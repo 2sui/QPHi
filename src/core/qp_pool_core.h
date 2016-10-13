@@ -52,22 +52,22 @@ struct qp_pool_s {
     bool                    is_alloced;
 };
 
-struct qp_pool_manager_elm_s {
-    struct qp_pool_manager_s*  manager;
-    struct qp_pool_s           pool;
-    struct qp_queue_s          queue;
-};
-
-struct qp_pool_manager_s {
-    struct qp_queue_s              pool_queue; /* queue of pools */
-    struct qp_pool_manager_elm_s*  current;
-    size_t                         pool_count; /* pool count in queue */
-    size_t                         used_count; /* totol used element in manager */
-    size_t                         esize;      /* size per element in pool */
-    size_t                         ecount;     /* element number in pool */
-    bool                           is_inited;
-    bool                           is_alloced;
-};
+//struct qp_pool_manager_elm_s {
+//    struct qp_pool_manager_s*  manager;
+//    struct qp_pool_s           pool;
+//    struct qp_queue_s          queue;
+//};
+//
+//struct qp_pool_manager_s {
+//    struct qp_queue_s              pool_queue; /* queue of pools */
+//    struct qp_pool_manager_elm_s*  current;
+//    size_t                         pool_count; /* pool count in queue */
+//    size_t                         used_count; /* totol used element in manager */
+//    size_t                         esize;      /* size per element in pool */
+//    size_t                         ecount;     /* element number in pool */
+//    bool                           is_inited;
+//    bool                           is_alloced;
+//};
 
 
 static inline bool
@@ -84,18 +84,18 @@ qp_pool_is_alloced(qp_pool_t pool)
 }
 
 
-static inline bool
-qp_pool_manager_is_inited(qp_pool_manager_t manager)
-{ 
-    return manager->is_inited;
-}
-
-
-static inline bool
-qp_pool_manager_is_alloced(qp_pool_manager_t manager)
-{ 
-    return manager->is_alloced;
-}
+//static inline bool
+//qp_pool_manager_is_inited(qp_pool_manager_t manager)
+//{ 
+//    return manager->is_inited;
+//}
+//
+//
+//static inline bool
+//qp_pool_manager_is_alloced(qp_pool_manager_t manager)
+//{ 
+//    return manager->is_alloced;
+//}
 
 #ifdef __cplusplus
 }

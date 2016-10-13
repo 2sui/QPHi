@@ -96,32 +96,17 @@ qp_socket_init(qp_socket_t skt, qp_int_t domain, qp_int_t type, \
     bool as_server, qp_int_t server_backlog);
 
 
-/**
- * Destroy a socket.
- * 
- * @param skt: Valid qp_socket_t.s
- * @return  Return QP_SUCCESS if success, otherwise return QP_ERROR.
- */
 qp_int_t
 qp_socket_destroy(qp_socket_t skt);
 
 
 /**
  * Get the [int] fd.
- * @param skt
- * @return 
  */
 qp_int_t
 qp_socket_to_int(qp_socket_t skt);
 
 
-/**
- * Clsoe an opened socket.
- * 
- * @param skt: Valid qp_socket_t.
- * @param shut: SHUT_RW, SHUT_WR, SUHT_RDWR.
- * @return Return QP_SUCCESS if success, otherwise return QP_ERROR.
- */
 qp_int_t
 qp_socket_close(qp_socket_t skt, qp_socket_shut_t shut);
 
@@ -151,25 +136,12 @@ qp_socket_t
 qp_socket_accept(qp_socket_t skt, qp_socket_t sktClient);
 
 
-/**
- * Connect to host.
- * 
- * @param skt: Valid qp_socket_t.
- * @return Return QP_SUCCESS if success, otherwise return QP_ERROR.
- */
 qp_int_t
 qp_socket_connect(qp_socket_t skt);
 
 
 /**
  * Set socket opt just like setsockopt.
- * 
- * @param skt: Valid qp_socket_t.
- * @param level: Same with setsockopt().
- * @param optname: Same with setsockopt().
- * @param optval: Same with setsockopt().
- * @param optlen: Same with setsockopt().
- * @return Return QP_SUCCESS if success otherwise reutrn QP_ERROR.
  */
 qp_int_t
 qp_socket_setsockopt(qp_socket_t skt, qp_int_t level, qp_int_t optname, \

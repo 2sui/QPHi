@@ -67,16 +67,10 @@ qp_int_t
 qp_thread_destroy(qp_thread_t thread);
 
 
-/*
- * Start a thread.
-*/
 qp_int_t
 qp_thread_start(qp_thread_t thread, void* (*handler_ptr)(void*), void* arg);
 
 
-/**
- * Wait for thread stop.
- */
 qp_int_t
 qp_thread_stop(qp_thread_t thread);
 
@@ -88,17 +82,10 @@ void*
 qp_thread_return(qp_thread_t thread);
 
 
-
-/**
- * Init a process struct.
- */
 qp_process_t
 qp_process_init(qp_process_t process);
 
 
-/**
- * Destroy a process struct.
- */
 qp_int_t
 qp_process_destroy(qp_process_t process);
 
@@ -120,9 +107,11 @@ qp_process_set_vfork_exec(qp_process_t process, qp_char_t* const *argv);
 /**
  * Create process using clone().
  */
+#if defined(QP_OS_LINUX)
 qp_int_t
 qp_process_set_clone(qp_process_t process, qp_int_t flag, \
     int (*fn)(void*), void* arg, size_t stack_size);
+#endif
 
 
 /**
