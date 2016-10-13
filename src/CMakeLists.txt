@@ -9,9 +9,9 @@ PROJECT(qphi)
 
 
 # Libs output path
-SET(BUILD_LIBS  ${PROJECT_SOURCE_DIR}/../../build/lib)
+SET(BUILD_LIBS  ${PROJECT_SOURCE_DIR}/../build/lib)
 # Exec output path
-SET(BUILD_BIN  ${PROJECT_SOURCE_DIR}/../../build/bin)
+SET(BUILD_BIN  ${PROJECT_SOURCE_DIR}/../build/bin)
 
 # Set libs output path 
 SET(LIBRARY_OUTPUT_PATH  ${BUILD_LIBS})
