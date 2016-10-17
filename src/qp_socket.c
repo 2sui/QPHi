@@ -549,6 +549,16 @@ qp_socket_recv(qp_socket_t skt, void* vptr, size_t nbytes, qp_int_t flag)
 }
 
 
+qp_int_t
+qp_socket_set_noblock(qp_socket_t skt)
+{
+    if (!skt) {
+        return QP_ERROR;
+    }
+    
+    return qp_fd_setNoBlock(&skt->socket);
+}
+
 /* option */
 qp_int_t
 qp_socket_set_reuse(qp_socket_t skt, qp_int_t reuse, qp_int_t enable)

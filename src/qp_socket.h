@@ -212,7 +212,11 @@ qp_socket_send(qp_socket_t skt, const void* vptr, size_t nbytes, qp_int_t flag);
 ssize_t
 qp_socket_recv(qp_socket_t skt, void* vptr, size_t nbytes, qp_int_t flag);
 
-
+/*
+ * Set noblock.
+ */
+qp_int_t
+qp_socket_set_noblock(qp_socket_t skt);
 
 /* option */
 # define QP_SOCKET_SO_REUSE_ADDR    SO_REUSEADDR
