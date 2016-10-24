@@ -153,14 +153,14 @@ qp_pool_destroy(qp_pool_t pool, bool force)
 }
 
 
-inline size_t
+size_t
 qp_pool_available(qp_pool_t pool)
 {
     return pool->nfree;
 }
 
 
-inline size_t
+size_t
 qp_pool_used(qp_pool_t pool)
 {
     return pool->nsize - pool->nfree;
@@ -179,7 +179,7 @@ qp_pool_to_array(qp_pool_t pool, size_t index)
 }
 
 
-inline qp_pool_elm_t
+qp_pool_elm_t
 qp_pool_belong_to(void* ptr)
 {
     return (qp_pool_elm_t)((qp_uchar_t*)ptr - sizeof(struct qp_pool_elm_s));
@@ -282,7 +282,7 @@ qp_manager_destroy(qp_manager_t manager, bool force)
 }
 
 
-inline qp_manager_elm_t
+qp_manager_elm_t
 qp_manager_belong_to(qp_pool_t pool)
 {
     return (qp_manager_elm_t)((qp_uchar_t*)pool - 
@@ -290,14 +290,14 @@ qp_manager_belong_to(qp_pool_t pool)
 }
 
 
-inline size_t
+size_t
 qp_manager_used(qp_manager_t manager)
 {
     return manager->used_count;
 }
 
 //void*
-//qp_pool_manager_alloc(qp_pool_manager_t manager, size_t size, qp_pool_t* npool)
+//qp_manager_alloc(qp_manager_t manager, size_t size)
 //{
 //    void* ptr = NULL;
         
@@ -361,7 +361,7 @@ qp_manager_used(qp_manager_t manager)
 
 
 //qp_int_t
-//qp_pool_manager_free(qp_pool_manager_t manager, void* ptr, qp_pool_t npool)
+//qp_manager_free(qp_manager_t manager, void* ptr)
 //{
 //    if (manager->used_count)  {
 //        
