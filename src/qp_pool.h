@@ -36,8 +36,8 @@ extern "C" {
     
 typedef struct qp_pool_elm_s*            qp_pool_elm_t;
 typedef struct qp_pool_s*                qp_pool_t;
-//typedef struct qp_pool_manager_s*        qp_pool_manager_t;
-//typedef struct qp_pool_manager_elm_s*    qp_pool_manager_elm_t;
+typedef struct qp_manager_s*             qp_manager_t;
+typedef struct qp_manager_elm_s*         qp_manager_elm_t;
 
 
 qp_pool_t
@@ -72,28 +72,28 @@ qp_pool_elm_t
 qp_pool_belong_to(void* ptr);
 
 
-//qp_pool_manager_t
-//qp_pool_manager_init(qp_pool_manager_t manager, size_t elmsize, size_t count);
+qp_manager_t
+qp_manager_init(qp_manager_t manager, size_t elmsize, size_t count);
 
 
-//qp_int_t
-//qp_pool_manager_destroy(qp_pool_manager_t manager, bool force);
+qp_int_t
+qp_manager_destroy(qp_manager_t manager, bool force);
 
 
-//void*
-//qp_pool_manager_alloc(qp_pool_manager_t manager, size_t size, qp_pool_t* npool);
+void*
+qp_manager_alloc(qp_manager_t manager, size_t size);
 
 
-//qp_int_t
-//qp_pool_manager_free(qp_pool_manager_t manager, void* ptr, qp_pool_t npool);
+qp_int_t
+qp_manager_free(qp_manager_t manager, void* ptr);
 
 
-//qp_pool_manager_elm_t
-//qp_pool_manager_belong_to(qp_pool_t pool);
+qp_manager_elm_t
+qp_manager_belong_to(qp_pool_t pool);
 
 
-//size_t
-//qp_pool_manager_used(qp_pool_manager_t manager);
+size_t
+qp_manager_used(qp_manager_t manager);
 
 #ifdef __cplusplus
 }
