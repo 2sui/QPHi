@@ -68,20 +68,12 @@ void*
 qp_pool_to_array(qp_pool_t pool, size_t index);
 
 
-qp_pool_elm_t
-qp_pool_belong_to(void* ptr);
-
-
 qp_manager_t
 qp_manager_init(qp_manager_t manager, size_t elmsize, size_t count);
 
 
 qp_int_t
 qp_manager_destroy(qp_manager_t manager, bool force);
-
-
-qp_manager_elm_t
-qp_manager_belong_to(qp_pool_t pool);
 
 
 size_t

@@ -265,15 +265,19 @@ qp_int_t
 qp_pool_manager_destroy(qp_manager_t manager, bool force)
 {
     if (qp_manager_is_inited(manager)) {
-        qp_manager_elm_t pool = NULL;
+        if (!force && !qp_queue_is_empty(&manager->pools_queue)) {
+            return QP_ERROR;
+        }
+        
+        qp_manager_elm_t elm = NULL;
         
         while (!qp_queue_is_empty(&manager->pools_queue)) {
-            pool = (qp_manager_elm_t)qp_queue_data(
+            elm = (qp_manager_elm_t)qp_queue_data(
                 qp_queue_first(&manager->pools_queue), 
                 struct qp_manager_elm_s, queue);
-            qp_queue_remove(&pool->queue);
-            qp_pool_destroy(&pool->pool, force);
-            qp_free(pool);
+            qp_pool_destroy(&elm->pool, force);
+            qp_queue_remove(&elm->queue);
+            qp_free(elm);
         }
      
         return QP_SUCCESS;
@@ -282,13 +286,6 @@ qp_pool_manager_destroy(qp_manager_t manager, bool force)
     return QP_ERROR;
 }
 
-
-inline qp_manager_elm_t
-qp_manager_belong_to(qp_pool_t pool)
-{
-    return (qp_manager_elm_t)((qp_uchar_t*)pool - \
-        offsetof(struct qp_manager_elm_s, pool));
-}
 
 inline size_t 
 qp_manager_available(qp_manager_t manager) 
