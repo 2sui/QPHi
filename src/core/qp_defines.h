@@ -65,42 +65,6 @@ extern "C" {
   * Unix sys headers.
   */
 
-# if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) /* BSD */
-# include <machine/endian.h>
-# endif /* BSD */
-
-# ifdef __OpenBSD__ /* __OPENBSD__ */
-# include <endian.h>
-# define __BYTE_ORDER BYTE_ORDER
-#  if BYTE_ORDER == LITTLE_ENDIAN /* BYTE_ORDER */
-#  define __QP_LITTLE_ENDIAN__
-#  else
-#  define __QP_BIG_ENDIAN__
-#  endif /* BYTE_ORDER */
-# endif /* __OPENBSD__ */
-
-# ifdef WIN32 /* WIN32 */
-# define __QP_LITTLE_ENDIAN__ 1
-# endif /* WIN32 */
-
-# if !(defined(__QP_LITTLE_ENDIAN__) || defined(__QP_BIG_ENDIAN__)) /* ORDER */
-/* Kernel modules */
-#  if defined(__LITTLE_ENDIAN) /* __LITTLE_ENDIAN */
-#  define __QP_LITTLE_ENDIAN__
-#  endif /* __LITTLE_ENDIAN */
-#  if defined(__BIG_ENDIAN) /* __BIG_ENDIAN */
-#  define __QP_BIG_ENDIAN__
-#  endif /* __BIG_ENDIAN */
-/* Everything else */
-#  if (defined(__BYTE_ORDER__) && defined(__ORDER_LITTLE_ENDIAN__)) /* ELSE */
-#   if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ /*__BYTE_ORDER__  */
-#   define __QP_LITTLE_ENDIAN__
-#   else
-#   define __QP_BIG_ENDIAN__
-#   endif /*__BYTE_ORDER__  */
-#  endif /* ELSE */
-# endif /* ORDER */
-
 /*
    The operating system, must be one of: (QP_OS_x)
 
@@ -372,7 +336,8 @@ extern "C" {
 # include <sys/file.h>         /* ?? */
 # endif
 
-# if defined(QP_OS_BSD)
+# if defined(QP_OS_BSD)   
+#  include <machine/endian.h>
 #  if defined(QP_OS_MACOS)
 #  include <sys/ioctl.h>
 #  include <xlocale.h>
@@ -388,7 +353,9 @@ extern "C" {
 # include <sys/sysctl.h>
 # include <sys/event.h>
 # include <net/bpf.h>
+# define __BYTE_ORDER BYTE_ORDER
 # elif defined(QP_OS_SOLARIS)
+# include <endian.h>
 # include <mqueue.h>
 # include <sys/statvfs.h>        /* statvfs() */
 # include <sys/filio.h>          /* FIONBIO */
@@ -400,6 +367,7 @@ extern "C" {
 # include <sys/sendfile.h>
 # include <utmpx.h>
 # else
+# include <endian.h>
 # include <mqueue.h>
 # include <crypt.h>
 # include <malloc.h>             /* memalign() */
@@ -473,6 +441,28 @@ __extension__
 # define  qp_long_t            long long
 # endif
 
+
+# if defined(QP_OS_WIN32) || defined(QP_OS_WIN64) /* WIN */
+# define __QP_LITTLE_ENDIAN__ 
+# endif /* WIN */
+
+# if !defined(__QP_LITTLE_ENDIAN__) && !defined(__QP_BIG_ENDIAN__) /* ORDER */
+/* Kernel modules */
+#  if defined(__LITTLE_ENDIAN) /* __LITTLE_ENDIAN */
+#  define __QP_LITTLE_ENDIAN__
+#  endif /* __LITTLE_ENDIAN */
+#  if defined(__BIG_ENDIAN) /* __BIG_ENDIAN */
+#  define __QP_BIG_ENDIAN__
+#  endif /* __BIG_ENDIAN */
+/* Everything else */
+#  if (defined(__BYTE_ORDER__) && defined(__ORDER_LITTLE_ENDIAN__)) /* ELSE */
+#   if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ /*__BYTE_ORDER__  */
+#   define __QP_LITTLE_ENDIAN__
+#   else
+#   define __QP_BIG_ENDIAN__
+#   endif /*__BYTE_ORDER__  */
+#  endif /* ELSE */
+# endif /* ORDER */
 
 # define  qp_pagesize  (sysconf(_SC_PAGESIZE) > 0 ? sysconf(_SC_PAGESIZE) : 4096)
 # define  qp_cpu_num   (sysconf(_SC_NPROCESSORS_CONF) > 1 ? \

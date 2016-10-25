@@ -239,14 +239,15 @@ qp_manager_create(qp_manager_t manager)
         memset(manager, 0, sizeof(struct qp_manager_s));
     }
     
-    qp_queue_init(&manager->pool_queue);
+    qp_queue_init(&manager->pools_queue);
+    qp_list_init(&manager->available_pools);
     qp_manager_set_inited(manager);
     return manager;
 }
 
 
 qp_manager_t
-qp_manager_init(qp_manager_t manager, size_t elmsize, size_t count)
+qp_pool_manager_init(qp_manager_t manager, size_t elmsize, size_t count)
 {
     manager = qp_manager_create(manager);
     
@@ -261,14 +262,14 @@ qp_manager_init(qp_manager_t manager, size_t elmsize, size_t count)
 
 
 qp_int_t
-qp_manager_destroy(qp_manager_t manager, bool force)
+qp_pool_manager_destroy(qp_manager_t manager, bool force)
 {
     if (qp_manager_is_inited(manager)) {
         qp_manager_elm_t pool = NULL;
         
-        while (!qp_queue_is_empty(&manager->pool_queue)) {
+        while (!qp_queue_is_empty(&manager->pools_queue)) {
             pool = (qp_manager_elm_t)qp_queue_data(
-                qp_queue_first(&manager->pool_queue), 
+                qp_queue_first(&manager->pools_queue), 
                 struct qp_manager_elm_s, queue);
             qp_queue_remove(&pool->queue);
             qp_pool_destroy(&pool->pool, force);
@@ -282,120 +283,103 @@ qp_manager_destroy(qp_manager_t manager, bool force)
 }
 
 
-qp_manager_elm_t
+inline qp_manager_elm_t
 qp_manager_belong_to(qp_pool_t pool)
 {
-    return (qp_manager_elm_t)((qp_uchar_t*)pool - 
+    return (qp_manager_elm_t)((qp_uchar_t*)pool - \
         offsetof(struct qp_manager_elm_s, pool));
 }
 
-
-size_t
-qp_manager_used(qp_manager_t manager)
+inline size_t 
+qp_manager_available(qp_manager_t manager) 
 {
-    return manager->used_count;
+    return manager->nfree;
 }
 
-//void*
-//qp_manager_alloc(qp_manager_t manager, size_t size)
-//{
-//    void* ptr = NULL;
+
+inline size_t
+qp_manager_used(qp_manager_t manager)
+{
+    return manager->pool_count * manager->ecount - manager->nfree;
+}
+
+void* 
+qp_manager_alloc(qp_manager_t manager, size_t size)
+{
+    if (!manager || size > manager->esize) {
+        return NULL;
+    }
+    
+    // if no available pool, allocate one 
+    qp_list_t node = qp_list_first(&manager->available_pools);
+    if (!node) {
+        qp_manager_elm_t elm = (qp_manager_elm_t)
+            qp_alloc(sizeof(struct qp_manager_elm_s));
+        if (!elm || !qp_pool_init(&elm->pool, manager->esize, manager->ecount)) {
+            if (elm) {
+                qp_free(elm);
+            }
+            return NULL;
+        }
         
-    /* if have not current pool, find or create one */
-//    if ((NULL == manager->current) 
-//        || !qp_pool_available(&manager->current->pool)) 
-//    {
-//        qp_queue_t node = qp_queue_first(&manager->pool_queue);
-//        manager->current = NULL;
-//            
-//        /* find available pool */
-//        while (node && (node != &manager->pool_queue)) {
-//            manager->current = (qp_pool_manager_elm_t)qp_queue_data(node, 
-//                struct qp_pool_manager_elm_s, queue);
-//        
-//            /* have room in this pool, use it */
-//            if (qp_pool_available(&manager->current->pool)) {
-//                break;
-//            } 
-//                
-//            manager->current = NULL;
-//            node = qp_queue_next(node);
-//        }
-//            
-//        /* if no pool available, create one */
-//        if (NULL == manager->current) {
-//            manager->current = (qp_pool_manager_elm_t) 
-//                qp_alloc(sizeof(struct qp_pool_manager_elm_s));
-//                
-//            if (NULL == manager->current) {
-//                return NULL;
-//            }
-//                
-//            if (NULL == qp_pool_init(&(manager->current->pool),
-//                manager->esize, manager->ecount)) 
-//            {
-//                qp_free(manager->current);
-//                manager->current = NULL;
-//                return NULL;
-//            }
-//                
-//            qp_queue_insert_after_head(&(manager->pool_queue), 
-//                &(manager->current->queue));
-//            manager->current->manager = manager;
-//            manager->pool_count++;
-//        }
-//    }
-//        
-//    if (NULL == (ptr = qp_pool_alloc(&manager->current->pool, size))) {
-//        return NULL;
-//    }
-//        
-//    manager->used_count++;
-//        
-//    if (npool) {
-//        *npool = &(manager->current->pool);
-//    }
-//        
-//    return ptr;
-//}
+        node = &elm->link;
+        qp_queue_insert_after_head(&manager->pools_queue, &elm->queue);
+        qp_list_push(&manager->available_pools, node);
+        manager->nfree += manager->ecount;
+        manager->pool_count++;
+    }
+    
+    // qp_manager_elm_t
+    qp_manager_elm_t elm = (qp_manager_elm_t)qp_list_data(node, 
+        struct qp_manager_elm_s, link);
+    // allocate block from elm
+    void* ptr = qp_pool_alloc(&elm->pool, size);
+    if (!ptr) {
+        return NULL;
+    }
+    
+    manager->nfree--;
+    if (1 > qp_pool_available(&elm->pool)) {
+        qp_list_pop(&manager->available_pools);
+        qp_list_init(&elm->link);
+    }
+    
+    return ptr;
+}
 
 
-//qp_int_t
-//qp_manager_free(qp_manager_t manager, void* ptr)
-//{
-//    if (manager->used_count)  {
-//        
-//        if (!npool) {
-//           /* find the pool that ptr belongs to */
-//            npool = qp_pool_belong_to(ptr)->root;
-//        }
-//        
-//        if (QP_ERROR == qp_pool_free(npool, ptr)) {
-//            return QP_ERROR;
-//        }
-//        
-//        manager->used_count--;
-//        
-//        /* if pool is empty , free it */
-//        if (qp_pool_available(npool) == npool->nsize) {
-//            qp_pool_manager_elm_t element = qp_pool_manager_belong_to(npool);
-//            
-//            if ((element->manager == manager)
-//                && (manager->pool_count > 1)) 
-//            {
-//                qp_queue_remove(&(element->queue));
-//                qp_pool_destroy(&(element->pool), true);
-//                qp_free(element);
-//                manager->pool_count--;
-//                
-//            } else {
-//                return QP_ERROR;
-//            }  
-//        }
-//        
-//        return QP_SUCCESS;
-//    }
-//    
-//    return QP_ERROR;
-//}
-
+qp_int_t
+qp_manager_free(qp_manager_t manager, void* ptr)
+{
+    if (!manager || !ptr) {
+        return QP_ERROR;
+    }
+    
+    qp_pool_t pool = qp_pool_belong_to(ptr)->root;
+    qp_manager_elm_t elm = (qp_manager_elm_t)qp_list_data(pool, 
+        struct qp_manager_elm_s, pool);
+    if (elm->manager != manager) {
+        return QP_ERROR;
+    }
+    
+    manager->nfree--;
+    qp_pool_free(pool, ptr);
+    // if not added to available list, add
+    if (NULL == qp_list_first(&elm->link)) {
+        qp_list_push(&manager->available_pools, &elm->link);
+        
+    } else {
+        // if the head of available pool list is empty, free it
+        if (1 > qp_pool_used(pool) 
+            && &elm->link == qp_list_first(&manager->available_pools)) 
+        {
+            qp_list_pop(&manager->available_pools);
+            qp_queue_remove(&elm->queue);
+            qp_pool_destroy(pool, true);
+            qp_free(elm);
+            manager->pool_count--;
+        }
+    }
+    
+    return QP_SUCCESS;
+}

@@ -43,6 +43,15 @@ qp_alloc_align(size_t alignment, size_t size)
 
 #endif
 
+void
+qp_rbtree_init(qp_rbtree_t rbtree)
+{
+    rbtree->sentinel.left = qp_rbtree_nil(rbtree);
+    rbtree->sentinel.right = qp_rbtree_nil(rbtree);
+    rbtree->sentinel.parent = qp_rbtree_nil(rbtree);
+    qp_rbtree_set_black(qp_rbtree_nil(rbtree));
+    rbtree->root = qp_rbtree_nil(rbtree);
+}
 
 void
 qp_rbtree_left_rotate(qp_rbtree_t rbtree, qp_rbtree_node_t node)

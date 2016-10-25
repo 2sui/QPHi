@@ -111,14 +111,16 @@ typedef struct qp_rbtree_s*         qp_rbtree_t;
 static inline void 
 qp_list_init(qp_list_t list)
 { 
-    list->next = list;
+    if (list) {
+        list->next = list;
+    }
 }
 
 
 static inline bool
 qp_list_is_empty(qp_list_t list)
 { 
-    return list == list->next;
+    return list ? list == list->next : true;
 }
 
 
@@ -139,15 +141,19 @@ qp_list_first(qp_list_t list)
 static inline void
 qp_list_push(qp_list_t list, qp_list_t node)
 {
-    node->next = list->next;
-    list->next = node;
+    if (list && node) {
+        node->next = list->next;
+        list->next = node;
+    }
 }
 
 
 static inline void
 qp_list_pop(qp_list_t list)
 { 
-    list->next = list->next->next;
+    if (list) {
+        list->next = list->next->next;
+    }
 }
 
 
@@ -164,25 +170,29 @@ qp_list_pop(qp_list_t list)
 static inline void
 qp_queue_init(qp_queue_t queue)
 {
-    queue->prev = queue;
-    queue->next = queue;
+    if (queue) {
+        queue->prev = queue;
+        queue->next = queue;
+    }
 }
 
 
 static inline bool
 qp_queue_is_empty(qp_queue_t queue)
 { 
-    return queue == queue->prev;
+    return queue ? queue == queue->prev : true;
 }
 
 
 static inline void
 qp_queue_insert_after_head(qp_queue_t queue, qp_queue_t node)
 {
-    node->next = queue->next;
-    node->next->prev = node;
-    node->prev = queue;
-    queue->next = node;
+    if (queue && node) {
+        node->next = queue->next;
+        node->next->prev = node;
+        node->prev = queue;
+        queue->next = node;
+    }
 }
 
 
@@ -192,10 +202,12 @@ qp_queue_insert_after_head(qp_queue_t queue, qp_queue_t node)
 static inline void
 qp_queue_insert_after_tail(qp_queue_t queue, qp_queue_t node)
 {
-    node->prev = queue->prev;
-    node->prev->next = node;
-    node->next = queue;
-    queue->prev = node;
+    if (queue && node) {
+        node->prev = queue->prev;
+        node->prev->next = node;
+        node->next = queue;
+        queue->prev = node;
+    }
 }
 
 
@@ -223,44 +235,50 @@ qp_queue_head(qp_queue_t queue)
 static inline qp_queue_t
 qp_queue_next(qp_queue_t node)
 { 
-    return node->next;
+    return node ? node->next : NULL;
 }
 
 
 static inline qp_queue_t
 qp_queue_prev(qp_queue_t node)
 { 
-    return node->prev;
+    return node ? node->prev : NULL;
 }
 
 
 static inline void
 qp_queue_remove(qp_queue_t node)
 {
-    node->next->prev = node->prev;
-    node->prev->next = node->next;
+    if (node) {
+        node->next->prev = node->prev;
+        node->prev->next = node->next;
+    }
 }
 
 
 static inline void
 qp_queue_split(qp_queue_t queue, qp_queue_t node, qp_queue_t newq)
 {
-    newq->prev = queue->prev;
-    newq->prev->next = newq;
-    newq->next = node;
-    queue->prev = node->prev;
-    queue->prev->next = queue;
-    node->prev = newq;
+    if (queue && node && newq) {
+        newq->prev = queue->prev;
+        newq->prev->next = newq;
+        newq->next = node;
+        queue->prev = node->prev;
+        queue->prev->next = queue;
+        node->prev = newq;
+    }
 }
 
 
 static inline void
 qp_queue_merge(qp_queue_t queue, qp_queue_t newq)
 {
-    queue->prev->next = newq->next;
-    newq->next->prev = queue->prev;
-    queue->prev = newq->prev;
-    queue->prev->next = queue;
+    if (queue && newq) {
+        queue->prev->next = newq->next;
+        newq->next->prev = queue->prev;
+        queue->prev = newq->prev;
+        queue->prev->next = queue;
+    }
 }
 
 
@@ -368,15 +386,8 @@ qp_rbtree_is_empty(qp_rbtree_t rbtree)
 
 
 /* init rbtree */
-static inline void
-qp_rbtree_init(qp_rbtree_t rbtree)
-{
-    rbtree->sentinel.left = qp_rbtree_nil(rbtree);
-    rbtree->sentinel.right = qp_rbtree_nil(rbtree);
-    rbtree->sentinel.parent = qp_rbtree_nil(rbtree);
-    qp_rbtree_set_black(qp_rbtree_nil(rbtree));
-    rbtree->root = qp_rbtree_nil(rbtree);
-}
+void
+qp_rbtree_init(qp_rbtree_t rbtree);
 
 
 /* insert [node] into [rbtree], return inserted node pointer */

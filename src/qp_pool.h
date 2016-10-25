@@ -80,20 +80,20 @@ qp_int_t
 qp_manager_destroy(qp_manager_t manager, bool force);
 
 
-void*
-qp_manager_alloc(qp_manager_t manager, size_t size);
-
-
-qp_int_t
-qp_manager_free(qp_manager_t manager, void* ptr);
-
-
 qp_manager_elm_t
 qp_manager_belong_to(qp_pool_t pool);
 
 
 size_t
 qp_manager_used(qp_manager_t manager);
+
+
+void*
+qp_manager_alloc(qp_manager_t manager, size_t size);
+
+
+qp_int_t
+qp_manager_free(qp_manager_t manager, void* ptr);
 
 #ifdef __cplusplus
 }

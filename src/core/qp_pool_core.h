@@ -53,20 +53,21 @@ struct qp_pool_s {
 };
 
 struct qp_manager_elm_s {
-    struct qp_manager_s*       manager;
-    struct qp_pool_s           pool;
-    struct qp_queue_s          queue;
+    struct qp_queue_s          queue; // pools_queue
+    struct qp_list_s           link; // available_pools
+    struct qp_pool_s           pool; // single memory pool 
+    struct qp_manager_s*       manager; // manager
 };
 
 struct qp_manager_s {
-    struct qp_queue_s              pool_queue; /* queue of pools */
-    struct qp_manager_elm_s*       current;
-    size_t                         pool_count; /* pool count in queue */
-    size_t                         used_count; /* totol used element in manager */
-    size_t                         esize;      /* size per element in pool */
-    size_t                         ecount;     /* element number in pool */
-    bool                           is_inited;
-    bool                           is_alloced;
+    struct qp_queue_s          pools_queue; /* queue of pools */
+    struct qp_list_s           available_pools; /* pools that still available */
+    size_t                     pool_count; /* pool count in queue */
+    size_t                     nfree;      /* totol free element in manager */
+    size_t                     esize;      /* size per element in pool */
+    size_t                     ecount;     /* element number in pool */
+    bool                       is_inited;
+    bool                       is_alloced;
 };
 
 
