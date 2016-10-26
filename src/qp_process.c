@@ -68,133 +68,157 @@ struct qp_process_s {
 static inline void
 qp_thread_set_inited(qp_thread_t thread)
 { 
-    thread->is_inited = true;
+    if (thread) {
+        thread->is_inited = true;
+    }
 }
 
 
 static inline void
 qp_thread_set_alloced(qp_thread_t thread)
 { 
-    thread->is_alloced = true;
+    if (thread) {
+        thread->is_alloced = true;
+    }
 }
 
 
 static inline void
 qp_thread_set_detach(qp_thread_t thread)
 { 
-    thread->is_detach = true;
+    if (thread) {
+        thread->is_detach = true;
+    }
 }
 
 
 static inline void
 qp_thread_set_running(qp_thread_t thread)
 { 
-    thread->is_running = true;
+    if (thread) {
+        thread->is_running = true;
+    }
 }
 
 
 static inline void
 qp_process_set_inited(qp_process_t process)
 { 
-    process->is_inited = true;
+    if (process) {
+        process->is_inited = true;
+    }
 }
 
 
 static inline void
 qp_process_set_alloced(qp_process_t process)
 { 
-    process->is_alloced = true;
+    if (process) {
+        process->is_alloced = true;
+    }
 }
 
 
 static inline void
 qp_process_set_running(qp_process_t process)
 { 
-    process->is_running = true;
+    if (process) {
+        process->is_running = true;
+    }
 }
 
 
 static inline void
 qp_thread_unset_inited(qp_thread_t thread)
 { 
-    thread->is_inited = false;
+    if (thread) {
+        thread->is_inited = false;
+    }
 }
 
 
 static inline void
 qp_thread_unset_detach(qp_thread_t thread)
 { 
-    thread->is_detach = false;
+    if (thread) {
+        thread->is_detach = false;
+    }
 }
 
 
 static inline void
 qp_thread_unset_running(qp_thread_t thread)
 { 
-    thread->is_running = false;
+    if (thread) {
+        thread->is_running = false;
+    }
 }
 
 
 static inline void
 qp_process_unset_inited(qp_process_t process)
 { 
-    process->is_inited = false;
+    if (process) {
+        process->is_inited = false;
+    }
 }
 
 
 static inline void
 qp_process_unset_running(qp_process_t process)
 { 
-    process->is_running = false;
+    if (process) {
+        process->is_running = false;
+    }
 }
 
 
 static inline bool
 qp_thread_is_alloced(qp_thread_t thread) 
 { 
-    return thread->is_alloced;
+    return thread ? thread->is_alloced : false;
 }
 
 
 static inline bool
 qp_thread_is_inited(qp_thread_t thread) 
 { 
-    return thread->is_inited;
+    return thread ? thread->is_inited : false;
 }
 
 
 static inline bool
 qp_thread_is_detach(qp_thread_t thread) 
 { 
-    return thread->is_detach;
+    return thread ? thread->is_detach : false;
 }
 
 
 static inline bool
 qp_thread_is_running(qp_thread_t thread) 
 { 
-    return thread->is_running;
+    return thread ? thread->is_running : false;
 }
 
 
 static inline bool
 qp_process_is_alloced(qp_process_t process) 
 { 
-    return process->is_alloced;
+    return process ? process->is_alloced : false;
 }
 
 
 static inline bool
 qp_process_is_inited(qp_process_t process)
 { 
-    return process->is_inited;
+    return process ? process->is_inited : false;
 }
 
 
 static inline bool
 qp_process_is_running(qp_process_t process)
 { 
-    return process->is_running;
+    return process ? process->is_running : false;
 }
 
 

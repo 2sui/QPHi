@@ -33,22 +33,19 @@ typedef  qp_read_handler       qp_write_handler;
 static inline void 
 qp_event_set_alloced(qp_event_t event) 
 {
-    event->is_alloced = true;
-}
-
-
-static inline void 
-qp_event_unset_alloced(qp_event_t event) 
-{
-    event->is_alloced = false;
+    if (event) {
+        event->is_alloced = true;
+    }
 }
 
 
 static inline void
 qp_event_source_set_shutdown(qp_event_source_t source) 
 {
-    source->shutdown = 1;
-    source->stat = QP_EVENT_CLOSE;
+    if (source) {
+        source->shutdown = 1;
+        source->stat = QP_EVENT_CLOSE;
+    }
 }
 
 
@@ -61,13 +58,17 @@ qp_event_is_alloced(qp_event_t event)
 static inline qp_int_t
 qp_event_source_accept(qp_event_source_t source)
 {
-    return accept(source->source_fd, NULL, NULL);
+    return source ? accept(source->source_fd, NULL, NULL) : QP_ERROR;
 }
 
 
 qp_int_t
 qp_event_source_close(qp_event_source_t source)
 {
+    if (!source) {
+        return QP_ERROR;
+    }
+    
     if (source->closed && (QP_FD_INVALID != source->source_fd)) {
         close(source->source_fd);
     }
@@ -80,7 +81,7 @@ qp_event_source_close(qp_event_source_t source)
 qp_int_t
 qp_event_source_alloc_read_cache(qp_event_t event, qp_event_source_t source) 
 {
-    if (source->read_cache) {
+    if (!event || !source || source->read_cache) {
         return QP_ERROR;
     }
     
@@ -101,7 +102,7 @@ qp_event_source_alloc_read_cache(qp_event_t event, qp_event_source_t source)
 qp_int_t
 qp_event_source_free_read_cache(qp_event_t event, qp_event_source_t source) 
 {
-    if (!source->read_cache) {
+    if (!event || !source || !source->read_cache) {
         return QP_ERROR;
     }
     
@@ -115,7 +116,7 @@ qp_event_source_free_read_cache(qp_event_t event, qp_event_source_t source)
 qp_int_t 
 qp_event_source_alloc_write_cache(qp_event_t event, qp_event_source_t source) 
 {
-    if (source->write_cache) {
+    if (!event || !source || source->write_cache) {
         return QP_ERROR;
     }
     
@@ -136,7 +137,7 @@ qp_event_source_alloc_write_cache(qp_event_t event, qp_event_source_t source)
 qp_int_t
 qp_event_source_free_write_cache(qp_event_t event, qp_event_source_t source)
 {
-    if (!source->write_cache) {
+    if (!event || !source || !source->write_cache) {
         return QP_ERROR;
     }
     
@@ -150,6 +151,10 @@ qp_event_source_free_write_cache(qp_event_t event, qp_event_source_t source)
 size_t
 qp_event_source_read(qp_event_t event, qp_event_source_t source)
 {
+    if (!event || !source) {
+        return 0;
+    }
+    
     source->read_cache_offset = 0;
     
     if (source->read) {
@@ -202,7 +207,7 @@ qp_event_source_read(qp_event_t event, qp_event_source_t source)
 size_t
 qp_event_source_write(qp_event_t event, qp_event_source_t source)
 {
-    if (!source->write_cache) {
+    if (!event || !source || !source->write_cache) {
         return QP_ERROR;
     }
     
@@ -250,6 +255,7 @@ qp_event_source_write(qp_event_t event, qp_event_source_t source)
 void
 qp_event_source_clear_flag(qp_event_source_t source)
 {
+    if (!source) return;
     source->listen = 0;
     source->closed = 0;
     source->shutdown = 0;
@@ -276,7 +282,6 @@ qp_event_create(qp_event_t event)
         
     } else {
         memset(event, 0, sizeof(struct qp_event_s));
-        qp_event_unset_alloced(event);
     }
     
     if (NULL == qp_fd_init(&event->event_fd, QP_FD_TYPE_EVENT, false)) {
@@ -480,6 +485,9 @@ void
 qp_event_dispatch_listen_queue(qp_event_t event, qp_int_t timeout) {
     qp_event_source_t  source = NULL;
     qp_int_t           sys_accept_fd = QP_FD_INVALID;
+    if (!event) {
+        return;
+    }
     
     while (!qp_list_is_empty(&event->listen_ready)) {
         source = (qp_event_source_t)qp_list_data(qp_list_first(&event->listen_ready), \
@@ -515,6 +523,9 @@ qp_event_dispatch_queue(qp_event_t event) {
     qp_read_handler    read_handler = 0;
     qp_write_handler   write_handler = 0;
     qp_int_t           ret = 0;
+    if (!event) {
+        return;
+    }
     
     while (!qp_list_is_empty(&event->ready)) {
         source = (qp_event_source_t)qp_list_data(qp_list_first(&event->ready), \

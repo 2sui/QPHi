@@ -54,34 +54,40 @@ struct qp_file_s {
 static inline void
 qp_file_set_alloced(qp_file_t file)
 { 
-    file->is_alloced = true;
+    if (file) {
+        file->is_alloced = true;
+    }
 }
 
 static inline void
 qp_file_set_directIO(qp_file_t file)
 { 
-    file->is_directIO = true;
+    if (file) {
+        file->is_directIO = true;
+    }
 }
 
 
 static inline void
 qp_file_unset_directIO(qp_file_t file)
 { 
-    file->is_directIO = false;
+    if (file) {
+        file->is_directIO = false;
+    }
 }
 
 
 static inline bool
 qp_file_is_alloced(qp_file_t file) 
 { 
-    return  file->is_alloced; 
+    return  file ? file->is_alloced : false; 
 }
 
 
 static inline bool
 qp_file_is_directIO(qp_file_t file) 
 { 
-    return file->is_directIO; 
+    return file ? file->is_directIO : false; 
 }
 
 

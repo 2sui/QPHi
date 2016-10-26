@@ -48,35 +48,41 @@ struct  qp_socket_s {
 static inline void
 qp_socket_set_alloced(qp_socket_t skt)
 { 
-    skt->is_alloced = true;
+    if (skt) {
+        skt->is_alloced = true;
+    }
 }
 
 
 static inline void
 qp_socket_set_listen(qp_socket_t skt)
 { 
-    skt->is_listen = true;
+    if (skt) {
+        skt->is_listen = true;
+    }
 }
 
 
 static inline void
 qp_socket_unset_listen(qp_socket_t skt)
 { 
-    skt->is_listen = false;
+    if (skt) {
+        skt->is_listen = false;
+    }
 }
 
 
 static inline bool
 qp_socket_is_alloced(qp_socket_t skt) 
 { 
-    return skt->is_alloced; 
+    return skt ? skt->is_alloced : false; 
 }
 
 
 static inline bool
 qp_socket_is_listen(qp_socket_t skt) 
 { 
-    return skt->is_listen; 
+    return skt ? skt->is_listen : false; 
 }
 
 
