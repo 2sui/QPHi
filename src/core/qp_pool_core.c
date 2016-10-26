@@ -292,6 +292,12 @@ qp_manager_destroy(qp_manager_t manager, bool force)
             qp_free(elm);
         }
      
+        qp_manager_unset_inited(manager);
+        
+        if (qp_manager_is_alloced(manager)) {
+            qp_free(manager);
+        }
+        
         return QP_SUCCESS;
     }
     

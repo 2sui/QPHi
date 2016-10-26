@@ -63,15 +63,6 @@ qp_socket_set_listen(qp_socket_t skt)
 }
 
 
-static inline void
-qp_socket_unset_listen(qp_socket_t skt)
-{ 
-    if (skt) {
-        skt->is_listen = false;
-    }
-}
-
-
 static inline bool
 qp_socket_is_alloced(qp_socket_t skt) 
 { 
