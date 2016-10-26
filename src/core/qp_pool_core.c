@@ -247,7 +247,7 @@ qp_manager_create(qp_manager_t manager)
 
 
 qp_manager_t
-qp_pool_manager_init(qp_manager_t manager, size_t elmsize, size_t count)
+qp_manager_init(qp_manager_t manager, size_t elmsize, size_t count)
 {
     manager = qp_manager_create(manager);
     
@@ -262,10 +262,10 @@ qp_pool_manager_init(qp_manager_t manager, size_t elmsize, size_t count)
 
 
 qp_int_t
-qp_pool_manager_destroy(qp_manager_t manager, bool force)
+qp_manager_destroy(qp_manager_t manager, bool force)
 {
     if (qp_manager_is_inited(manager)) {
-        if (!force && !qp_queue_is_empty(&manager->pools_queue)) {
+        if (!force && (manager->ecount > 2)) {
             return QP_ERROR;
         }
         
@@ -299,7 +299,6 @@ qp_manager_used(qp_manager_t manager)
 {
     return manager->pool_count * manager->ecount - manager->nfree;
 }
-
 void* 
 qp_manager_alloc(qp_manager_t manager, size_t size)
 {
@@ -319,6 +318,7 @@ qp_manager_alloc(qp_manager_t manager, size_t size)
             return NULL;
         }
         
+        elm->manager = manager;
         node = &elm->link;
         qp_queue_insert_after_head(&manager->pools_queue, &elm->queue);
         qp_list_push(&manager->available_pools, node);
@@ -352,14 +352,15 @@ qp_manager_free(qp_manager_t manager, void* ptr)
         return QP_ERROR;
     }
     
-    qp_pool_t pool = qp_pool_belong_to(ptr)->root;
+    qp_pool_elm_t pool_elm = (qp_pool_elm_t)qp_pool_belong_to(ptr);
+    qp_pool_t pool = pool_elm->root;
     qp_manager_elm_t elm = (qp_manager_elm_t)qp_list_data(pool, 
         struct qp_manager_elm_s, pool);
     if (elm->manager != manager) {
         return QP_ERROR;
     }
     
-    manager->nfree--;
+    manager->nfree++;
     qp_pool_free(pool, ptr);
     // if not added to available list, add
     if (NULL == qp_list_first(&elm->link)) {
@@ -367,7 +368,7 @@ qp_manager_free(qp_manager_t manager, void* ptr)
         
     } else {
         // if the head of available pool list is empty, free it
-        if (1 > qp_pool_used(pool) 
+        if (/*1 < manager->pool_count &&*/ 1 > qp_pool_used(pool) 
             && &elm->link == qp_list_first(&manager->available_pools)) 
         {
             qp_list_pop(&manager->available_pools);
@@ -375,6 +376,7 @@ qp_manager_free(qp_manager_t manager, void* ptr)
             qp_pool_destroy(pool, true);
             qp_free(elm);
             manager->pool_count--;
+            manager->nfree -= manager->ecount;   
         }
     }
     
