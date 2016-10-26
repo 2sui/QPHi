@@ -62,49 +62,49 @@ typedef struct qp_fd_s*         qp_fd_t;
 static inline bool
 qp_fd_is_inited(qp_fd_t fd)
 {
-    return fd->is_inited;
+    return fd ? fd->is_inited : false;
 }
 
 
 static inline bool
 qp_fd_is_alloced(qp_fd_t fd)
 {
-    return fd->is_alloced;
+    return fd ? fd->is_alloced : false;
 }
 
 
 static inline bool
 qp_fd_is_noblock(qp_fd_t fd)
 {
-   return fd->is_noblock; 
+   return fd ? fd->is_noblock : false; 
 }
 
 
 static inline bool
 qp_fd_is_aio(qp_fd_t fd)
 {
-    return NULL != fd->aio;
+    return fd ? NULL != fd->aio : false;
 }
 
 
 static inline bool
 qp_fd_is_valid(qp_fd_t fd)
 {
-    return QP_FD_INVALID != fd->fd;
+    return fd ? QP_FD_INVALID != fd->fd : false;
 }
 
 
 static inline qp_int_t
 qp_fd_get_fd(qp_fd_t fd) 
 {
-    return fd->fd;
+    return fd ? fd->fd : QP_ERROR;
 }
 
 
 static inline qp_fd_type_t
 qp_fd_type(qp_fd_t fd)
 {
-    return fd->type;
+    return fd ? fd->type : QP_FD_TYPE_UNKNOW;
 }
 
 

@@ -30,35 +30,45 @@
 static inline void
 qp_pool_set_inited(qp_pool_t pool)
 { 
-    pool->is_inited = true;
+    if (pool) {
+        pool->is_inited = true;
+    }
 }
 
 
 static inline void
 qp_pool_set_alloced(qp_pool_t pool)
 { 
-    pool->is_alloced = true;
+    if (pool) {
+        pool->is_alloced = true;
+    }
 }
 
 
 static inline void
 qp_pool_unset_inited(qp_pool_t pool)
 { 
-    pool->is_inited = false;
+    if (pool) {
+        pool->is_inited = false;
+    }
 }
 
 
 static inline void
 qp_manager_set_inited(qp_manager_t manager)
 { 
-    manager->is_inited = true;
+    if (manager) {
+        manager->is_inited = true;
+    }
 }
 
 
 static inline void
 qp_manager_set_alloced(qp_manager_t manager)
 { 
-    manager->is_alloced = true;
+    if (manager) {
+        manager->is_alloced = true;
+    }
 }
 
 
@@ -66,7 +76,9 @@ qp_manager_set_alloced(qp_manager_t manager)
 static inline void
 qp_manager_unset_inited(qp_manager_t manager)
 { 
-    manager->is_inited = false;
+    if (manager) {
+        manager->is_inited = false;
+    }
 }
 
 
@@ -265,7 +277,7 @@ qp_int_t
 qp_manager_destroy(qp_manager_t manager, bool force)
 {
     if (qp_manager_is_inited(manager)) {
-        if (!force && (manager->ecount > 2)) {
+        if (!force && (manager->ecount > 0/*manager->ecount > 2*/)) {
             return QP_ERROR;
         }
         
@@ -287,18 +299,20 @@ qp_manager_destroy(qp_manager_t manager, bool force)
 }
 
 
-inline size_t 
+size_t 
 qp_manager_available(qp_manager_t manager) 
 {
     return manager->nfree;
 }
 
 
-inline size_t
+size_t
 qp_manager_used(qp_manager_t manager)
 {
     return manager->pool_count * manager->ecount - manager->nfree;
 }
+
+
 void* 
 qp_manager_alloc(qp_manager_t manager, size_t size)
 {
@@ -360,8 +374,8 @@ qp_manager_free(qp_manager_t manager, void* ptr)
         return QP_ERROR;
     }
     
-    manager->nfree++;
     qp_pool_free(pool, ptr);
+    manager->nfree++;
     // if not added to available list, add
     if (NULL == qp_list_first(&elm->link)) {
         qp_list_push(&manager->available_pools, &elm->link);

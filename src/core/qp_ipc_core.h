@@ -91,42 +91,42 @@ struct qp_ipc_shm_s {
 static inline bool
 qp_lock_is_inited(qp_lock_t lock)
 { 
-    return lock->is_inited; 
+    return lock ? lock->is_inited : false; 
 }
 
 
 static inline bool
 qp_rwlock_is_inited(qp_rwlock_t rwlock)
 { 
-    return rwlock->is_inited; 
+    return rwlock ? rwlock->is_inited : false; 
 }
 
 
 static inline bool
 qp_cond_is_inited(qp_cond_t cond)
 { 
-    return cond->is_inited; 
+    return cond ? cond->is_inited : false; 
 }
 
 
 static inline bool
 qp_sem_is_inited(qp_sem_t sem)
 { 
-    return sem->is_inited; 
+    return sem ? sem->is_inited : false; 
 }
 
 
 static inline bool
 qp_shm_is_inited(qp_shm_t shm)
 { 
-    return shm->is_inited; 
+    return shm ? shm->is_inited : false; 
 }
 
 
 static inline bool
 qp_lock_is_alloced(qp_lock_t lock)
 { 
-    return lock->is_alloced; 
+    return lock ? lock->is_alloced : false; 
 }
 
 
@@ -140,56 +140,56 @@ qp_rwlock_is_alloced(qp_rwlock_t rwlock)
 static inline bool
 qp_cond_is_alloced(qp_cond_t cond)
 { 
-    return cond->is_alloced; 
+    return cond ? cond->is_alloced : false; 
 }
 
 
 static inline bool
 qp_sem_is_alloced(qp_sem_t sem)
 { 
-    return sem->is_alloced; 
+    return sem ? sem->is_alloced : false; 
 }
 
 
 static inline bool
 qp_shm_is_alloced(qp_shm_t shm)
 { 
-    return shm->is_alloced; 
+    return shm ? shm->is_alloced : false; 
 }
 
 
 static inline bool
 qp_lock_is_shared(qp_lock_t lock)
 { 
-    return lock->is_shared; 
+    return lock ? lock->is_shared : false; 
 }
 
 
 static inline bool
 qp_rwlock_is_shared(qp_rwlock_t rwlock)
 { 
-    return rwlock->is_shared; 
+    return rwlock ? rwlock->is_shared : false; 
 }
 
 
 static inline bool
 qp_cond_is_shared(qp_cond_t cond)
 { 
-    return cond->is_shared; 
+    return cond ? cond->is_shared : false; 
 }
 
 
 static inline bool
 qp_sem_is_shared(qp_sem_t sem)
 { 
-    return sem->is_shared; 
+    return sem ? sem->is_shared : false; 
 }
 
 
 static inline bool
 qp_lock_is_spin(qp_lock_t lock)
 { 
-    return lock->is_spin; 
+    return lock ? lock->is_spin : false; 
 }
 
 #ifdef __cplusplus

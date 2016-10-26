@@ -43,14 +43,109 @@ qp_alloc_align(size_t alignment, size_t size)
 
 #endif
 
+
+static inline void
+qp_rbtree_set_red(qp_rbtree_node_t node)
+{ 
+    if (node) {
+        node->color = QP_RBTREE_RED;
+    }
+}
+
+
+static inline void
+qp_rbtree_set_black(qp_rbtree_node_t node)
+{ 
+    if (node) {
+        node->color = QP_RBTREE_BLACK;
+    }
+}
+
+
+static inline bool
+qp_rbtree_is_red(qp_rbtree_node_t node)
+{ 
+    return node ? node->color == QP_RBTREE_RED : false;
+}
+
+
+static inline bool
+qp_rbtree_is_black(qp_rbtree_node_t node)
+{ 
+    return node ? node->color == QP_RBTREE_BLACK : false;
+}
+
+
+static inline qp_rbtree_node_t
+qp_rbtree_parent(qp_rbtree_node_t node)
+{ 
+    return node ? node->parent : NULL;
+}
+
+
+static inline qp_rbtree_node_t
+qp_rbtree_grandpa(qp_rbtree_node_t node)
+{ 
+    return qp_rbtree_parent(qp_rbtree_parent(node));
+}
+
+
+static inline bool
+qp_rbtree_is_left(qp_rbtree_node_t node)
+{ 
+    return node ? (node == qp_rbtree_parent(node)->left) : false;
+}
+
+
+static inline bool
+qp_rbtree_is_right(qp_rbtree_node_t node)
+{ 
+    return node ? (node == qp_rbtree_parent(node)->right) : false;
+}
+
+
+static inline qp_rbtree_node_t
+qp_rbtree_uncle(qp_rbtree_node_t node)
+{ 
+    return !node ? NULL : qp_rbtree_is_left(qp_rbtree_parent(node)) ? \
+        qp_rbtree_grandpa(node)->right : \
+        qp_rbtree_grandpa(node)->left;
+}
+
+
+static inline qp_rbtree_node_t
+qp_rbtree_brother(qp_rbtree_node_t node)
+{
+    return !node ? NULL : qp_rbtree_is_left(node) ? \
+        qp_rbtree_parent(node)->right : \
+        qp_rbtree_parent(node)->left;
+}
+
+
+static inline qp_rbtree_node_t
+qp_rbtree_nil(qp_rbtree_t rbtree)
+{ 
+    return rbtree ? &rbtree->sentinel : NULL;
+}
+
+
+static inline bool
+qp_rbtree_is_empty(qp_rbtree_t rbtree)
+{ 
+    return rbtree ? rbtree->root == qp_rbtree_nil(rbtree) : false;
+}
+
+
 void
 qp_rbtree_init(qp_rbtree_t rbtree)
 {
-    rbtree->sentinel.left = qp_rbtree_nil(rbtree);
-    rbtree->sentinel.right = qp_rbtree_nil(rbtree);
-    rbtree->sentinel.parent = qp_rbtree_nil(rbtree);
-    qp_rbtree_set_black(qp_rbtree_nil(rbtree));
-    rbtree->root = qp_rbtree_nil(rbtree);
+    if (rbtree) {
+        rbtree->sentinel.left = qp_rbtree_nil(rbtree);
+        rbtree->sentinel.right = qp_rbtree_nil(rbtree);
+        rbtree->sentinel.parent = qp_rbtree_nil(rbtree);
+        qp_rbtree_set_black(qp_rbtree_nil(rbtree));
+        rbtree->root = qp_rbtree_nil(rbtree);
+    }
 }
 
 void

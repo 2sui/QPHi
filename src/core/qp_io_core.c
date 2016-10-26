@@ -30,35 +30,45 @@
 static inline void
 qp_fd_set_inited(qp_fd_t fd)
 { 
-    fd->is_inited = true;
+    if (fd) {
+        fd->is_inited = true;
+    }
 }
 
 
 static inline void
 qp_fd_set_alloced(qp_fd_t fd)
 { 
-    fd->is_alloced = true;
+    if (fd) {
+        fd->is_alloced = true;
+    }
 }
 
 
 static inline void
 qp_fd_set_noblock(qp_fd_t fd)
 { 
-    fd->is_noblock = true;
+    if (fd) {
+        fd->is_noblock = true;
+    }
 }
 
 
 static inline void
 qp_fd_unset_inited(qp_fd_t fd)
 { 
-    fd->is_inited = false;
+    if (fd) {
+        fd->is_inited = false;
+    }
 }
 
 
 static inline void
 qp_fd_unset_noblock(qp_fd_t fd)
 { 
-    fd->is_noblock = false;
+    if (fd) {
+        fd->is_noblock = false;
+    }
 }
 
 
@@ -133,7 +143,7 @@ qp_fd_destroy(qp_fd_t fd)
 qp_int_t
 qp_fd_setNoBlock(qp_fd_t fd)
 {
-    if (fd->aio) {
+    if (!fd || fd->aio) {
         return QP_ERROR;
     }
     
@@ -157,7 +167,7 @@ qp_fd_setNoBlock(qp_fd_t fd)
 qp_int_t
 qp_fd_setBlock(qp_fd_t fd)
 {
-    if (fd->aio) {
+    if (!fd || fd->aio) {
         return QP_ERROR;
     }
     

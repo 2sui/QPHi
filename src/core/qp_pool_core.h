@@ -74,28 +74,28 @@ struct qp_manager_s {
 static inline bool
 qp_pool_is_inited(qp_pool_t pool) 
 { 
-    return pool->is_inited;
+    return pool ? pool->is_inited : false;
 }
 
 
 static inline bool
 qp_pool_is_alloced(qp_pool_t pool)
 { 
-    return pool->is_alloced;
+    return pool ? pool->is_alloced : false;
 }
 
 
 static inline bool
 qp_manager_is_inited(qp_manager_t manager)
 { 
-    return manager->is_inited;
+    return manager ? manager->is_inited : false;
 }
 
 
 static inline bool
 qp_manager_is_alloced(qp_manager_t manager)
 { 
-    return manager->is_alloced;
+    return manager ? manager->is_alloced : false;
 }
 
 #ifdef __cplusplus
