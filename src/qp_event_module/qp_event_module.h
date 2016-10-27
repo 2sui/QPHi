@@ -115,7 +115,7 @@ struct qp_event_source_s {
 
 
 struct  qp_event_s {
-    struct qp_pool_s         source_cache_pool; /* read/write cache pool */
+    struct qp_manager_s      source_cache_pool; /* read/write cache pool */
     size_t                   source_cachepool_size; /* cache pool size */
     struct qp_pool_s         event_pool;        /* event mem pool */
     size_t                   eventpool_size;    /* event mem pool size */

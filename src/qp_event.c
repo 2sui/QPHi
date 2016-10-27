@@ -87,7 +87,7 @@ qp_event_source_alloc_read_cache(qp_event_t event, qp_event_source_t source)
     
     source->read_cache_size = QP_EVENT_READCACHE_SIZE;
     source->read_cache = \
-          (qp_uchar_t*)qp_pool_alloc(&event->source_cache_pool, \
+          (qp_uchar_t*)qp_manager_alloc(&event->source_cache_pool, \
           source->read_cache_size);
     
     if (!source->read_cache) {
@@ -106,7 +106,7 @@ qp_event_source_free_read_cache(qp_event_t event, qp_event_source_t source)
         return QP_ERROR;
     }
     
-    qp_pool_free(&event->source_cache_pool, source->read_cache);
+    qp_manager_free(&event->source_cache_pool, source->read_cache);
     source->read_cache_size = 0;
     source->read_cache = NULL;
     return QP_SUCCESS;
@@ -122,7 +122,7 @@ qp_event_source_alloc_write_cache(qp_event_t event, qp_event_source_t source)
     
     source->write_cache_size = QP_EVENT_READCACHE_SIZE;
     source->write_cache_cur_offset = 0;
-    source->write_cache = (qp_uchar_t*)qp_pool_alloc(&event->source_cache_pool,\
+    source->write_cache = (qp_uchar_t*)qp_manager_alloc(&event->source_cache_pool,\
         source->write_cache_size);
     
     if (!source->write_cache) {
@@ -141,7 +141,7 @@ qp_event_source_free_write_cache(qp_event_t event, qp_event_source_t source)
         return QP_ERROR;
     }
     
-    qp_pool_free(&event->source_cache_pool, source->write_cache);
+    qp_manager_free(&event->source_cache_pool, source->write_cache);
     source->write_cache_size = 0;
     source->write_cache = NULL;
     return QP_SUCCESS;
@@ -343,7 +343,7 @@ qp_event_init(qp_event_t event, qp_int_t max_event_size, bool noblock, bool edge
     if (!event->bucket 
         || !qp_pool_init(&event->event_pool, sizeof(struct qp_event_source_s),\
         event->eventpool_size * 2)
-        || !qp_pool_init(&event->source_cache_pool, \
+        || !qp_manager_init(&event->source_cache_pool, \
            QP_EVENT_READCACHE_SIZE, event->source_cachepool_size))
     {
         qp_event_destroy(event);
@@ -456,7 +456,7 @@ qp_event_destroy(qp_event_t event)
 #endif
         
         qp_pool_destroy(&event->event_pool, true);
-        qp_pool_destroy(&event->source_cache_pool, true);
+        qp_manager_destroy(&event->source_cache_pool, true);
         
         if (qp_event_is_alloced(event)) {
             qp_free(event);
