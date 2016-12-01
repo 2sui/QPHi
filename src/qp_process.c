@@ -46,6 +46,7 @@ struct qp_process_handler_s {
 
 struct  qp_thread_s {
     pthread_t                     tid;
+    cpuid_t                       cid; 
     struct qp_thread_handler_s    handler;
     bool                          is_inited;
     bool                          is_alloced;
@@ -221,6 +222,26 @@ qp_process_is_running(qp_process_t process)
     return process ? process->is_running : false;
 }
 
+static qp_int_t
+qp_thread_cpu_setaffinity(pthread_t tid, cpuid_t cid) {
+    if (cid < 0 || tid < 0) {
+        return QP_CPUID_INVALID;
+    }
+    
+    cpuset_t *cset = cpuset_create();
+    if (!cset) {
+        return QP_CPUID_INVALID;
+    }
+    
+    cpuset_set(cid, cset);
+    if (QP_SUCCESS != pthread_setaffinity_np(tid, cpuset_size(cset), cset)) {
+        cid = QP_CPUID_INVALID;
+    }
+    
+    cpuset_destroy(cset);
+    return cid;
+}
+
 
 qp_thread_t
 qp_thread_create(qp_thread_t thread)
@@ -240,6 +261,7 @@ qp_thread_create(qp_thread_t thread)
     }
 
     thread->tid  = QP_THREAD_INVALID;
+    trhead->cid = QP_CPUID_INVALID;
     qp_thread_set_inited(thread);
     return thread;
 }
@@ -283,6 +305,13 @@ qp_thread_destroy(qp_thread_t  thread)
     return QP_ERROR;
 }
 
+void
+qp_thread_set_affinity(qp_thread_t thread, cpuid_t id) 
+{
+    if (thread && id >= 0) {
+        thread->cid = id;
+    }
+}  
 
 static void* 
 qp_thread_runner(void *arg)
@@ -301,6 +330,8 @@ qp_thread_runner(void *arg)
     }
     
     qp_thread_set_running(thread);
+    // set cpu affinity if needed
+    qp_thread_cpu_setaffinity(thread->tid, thread->cid);
     
     if (thread->handler.handler_ptr) {
         thread->handler.ret = \

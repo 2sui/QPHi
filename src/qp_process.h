@@ -34,6 +34,7 @@ extern "C" {
 #include "core/qp_defines.h"
 
     
+# define QP_CPUID_INVALID         -1
 # define QP_THREAD_INVALID        0
 # define QP_PROCESS_INVALID       0
 # define QP_PROCESS_STACK_SIZE    8388608 /* system default 8M */
@@ -66,6 +67,11 @@ qp_thread_init(qp_thread_t thread, bool detach);
 qp_int_t
 qp_thread_destroy(qp_thread_t thread);
 
+/**
+ * Set cpu affinity.
+ */
+void
+qp_thread_set_affinity(qp_thread_t thread, cpuid_t id);
 
 qp_int_t
 qp_thread_start(qp_thread_t thread, void* (*handler_ptr)(void*), void* arg);
